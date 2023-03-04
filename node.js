@@ -779,6 +779,8 @@ class CompareVariableNode extends PassNode {
 		this.b = new VariableString();
 		super._setup(createInfo);
 	}
+	
+	changedVar(app, scope) { }
 
 	_newInit() {
 		this.outs.push(new Output());
