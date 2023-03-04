@@ -79,6 +79,9 @@ function app() {
 		}
 
 		if (jumpToId > 0) {
+			web2d.each(this.nodes, (key, val) => {
+				val.initializeOuts(this.nodes);
+			});
 			this.jumpTo(jumpToId);
 		} else {
 			let jump = null;
