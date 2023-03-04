@@ -686,32 +686,6 @@ function app() {
 	document.addEventListener("mouseup", this.dragEnd.bind(this));
 	document.addEventListener("touchend", this.dragEnd.bind(this));
 	document.addEventListener("touchcancel", this.dragEnd.bind(this));
-	document.addEventListener("wheel", (e) => {
-		e = getEvent(e);
-
-		// Allow the user to be able to still scroll in text areas that
-		// are currently overflowed
-		if (e.target.type === "textarea") {
-			if (e.target.clientHeight < e.target.scrollHeight) {
-				return;
-			}
-		}
-
-		let toX = window.scrollX + (e.deltaY * 20);
-		let fullWidth = document.body.scrollWidth - window.innerWidth;
-
-		if (toX > fullWidth) {
-			canvas.resize(toX + window.innerWidth, document.body.scrollHeight);
-			web2d.canvasHelpers.start(canvas);
-		} else if (e.deltaY < 0 && toX + window.innerWidth > farthestX) {
-			canvas.resize(toX + window.innerWidth, document.body.scrollHeight);
-			web2d.canvasHelpers.start(canvas);
-		}
-
-		window.scrollTo(toX, lastPageY);
-		e.preventDefault();
-		return false;
-	});
 
 	web2d.input.keyUp.register((key) => {
 		// Escape key should close all manager windows
