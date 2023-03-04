@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>View</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+		<link rel="stylesheet" type="text/css" href="css/view.css" />
+		<script type="text/javascript" src="js/localforage.min.js"></script>
+		<script type="text/javascript" src="js/web2d.js"></script>
+		<script type="text/javascript" src="js/knockout.js"></script>
+		<script type="text/javascript" src="js/node.js"></script>
+	</head>
+	<body>
+		<div id="container">
+			<div class="containerBg" data-bind="style:{backgroundImage:`url(${backgroundImage()})`, opacity:backgroundImageOpacity()}"></div>
+			<div class="containerBgBuffer" data-bind="style:{backgroundImage:`url(${backgroundImageBuffer()})`, opacity:backgroundImageBufferOpacity()}"></div>
+			<div class="containerOverlay">
+				<!-- ko if: node() -->
+					<div class="displayBox">
+						<!-- ko if: 'character' in node() -->
+						<h2 data-bind="text: characters[node().character.Value].name"></h2>
+						<!-- /ko -->
+						<!-- ko if: 'text' in node() -->
+						<p data-bind="html: parseText(node().text.value()), style: {fontStyle:textStyle()}"></p>
+						<!-- /ko -->
+					</div>
+					<div class="optionBox">
+						<!-- ko if: node() instanceof OptionNode && node().options().length -->
+						<ul data-bind="foreach: node().options">
+							<li><button data-bind="text: $data, click: $root.next.bind($root, $index())"></button></li>
+						</ul>
+						<!-- /ko -->
+						<!-- ko if: !(node() instanceof OptionNode) || !node().options().length -->
+						<button data-bind="click:next.bind($root, 0)">Continue</button>
+						<!-- /ko -->
+					</div>
+				<!-- /ko -->
+				<div class="slideUpPanel statsPanel" data-bind="style: {display:statsPanelDisplay()}">
+					<h2>Stats</h2>
+					<table>
+						<tr>
+							<td>Health</td>
+							<td>100</td>
+						</tr>
+					</table>
+				</div>
+				<div class="slideUpPanel inventoryPanel" data-bind="style: {display:inventoryPanelDisplay()}">
+					<h2>Inventory</h2>
+				</div>
+				<div class="slideUpPanel logPanel" data-bind="style: {display:logPanelDisplay()}">
+					<h2>Log</h2>
+					<br />
+					<div data-bind="visible: !openedLog(), foreach: logs">
+						<div class="fakeLink" data-bind="text: title, click: () => {$root.openedLog($data);}"></div>
+					</div>
+					<!-- ko if: openedLog() -->
+					<div>
+						<h3 data-bind="text: openedLog().title"></h3>
+						<br />
+						<p data-bind="text: openedLog().text"></p>
+						<br />
+						<div class="fakeLink" style="text-align:center;" data-bind="click: () => {$root.openedLog(null);}">Back</div>
+					</div>
+					<!-- /ko -->
+				</div>
+			</div>
+			<footer>
+				<div class="healthBar"></div>
+				<div class="buttonInputs">
+					<button data-bind="click:togglePanel.bind($root, statsPanelDisplay)">Stats</button>
+					<button data-bind="click:togglePanel.bind($root, inventoryPanelDisplay)">Inventory</button>
+					<button data-bind="click:togglePanel.bind($root, logPanelDisplay)">Log</button>
+					<button>Settings</button>
+				</div>
+			</footer>
+		</div>
+		<script type="text/javascript" src="js/view.js"></script>
+	</body>
+</html>
