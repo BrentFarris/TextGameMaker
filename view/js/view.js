@@ -10,10 +10,11 @@ function app() {
 	this.textStyle = ko.observable("normal");
 	this.remoteFunctions = {};
 	this.fileStack = [];
-	this.currentFile = "";
+	this.currentFile = null;
 	this.inventory = [];
 	this.logs = ko.observableArray([]);
 	this.openedLog = ko.observable(null);
+	this.loadedFiles = [];
 
 	this.statsPanelDisplay = ko.observable("none");
 	this.inventoryPanelDisplay = ko.observable("none");
@@ -33,6 +34,37 @@ function app() {
 			}
 		}, 10);
 	});
+
+	this.importFolder = function(scope, event) {
+		let files = event.target.files;
+		for (let i = 0; i < files.length; i++) {
+			if (files[i].type === "application/json") {
+				let reader = new FileReader();
+				reader.readAsText(files[i]);
+				if (files[i].name === "meta.json") {
+					reader.onload = (e) => this.importMeta(JSON.parse(e.target.result));
+				} else {
+					reader.onload = (e) => {
+						this.loadedFiles.push({
+							name: files[i].name,
+							json: JSON.parse(reader.result)
+						});
+						if (files[i].name === "start.json")
+							this.load(this.loadedFiles[this.loadedFiles.length - 1]);
+					};
+				}
+			} else if (files[i].type === "audio/mpeg" || files[i].type === "audio/wav") {
+				let audio = new Audio();
+				audio.src = URL.createObjectURL(files[i]);
+				audio.load();
+				// TODO:  Keep this guy around in the background
+			} else if (files[i].type === "image/png" || files[i].type === "image/jpeg") {
+				let img = new Image();
+				img.src = URL.createObjectURL(files[i]);
+				// TODO:  Keep this guy around in the background
+			}
+		}
+	};
 
 	this.importMeta = function(json) {
 		if (json.variables) {
@@ -79,6 +111,9 @@ function app() {
 		}
 
 		if (jumpToId > 0) {
+			web2d.each(this.nodes, (key, val) => {
+				val.initializeOuts(this.nodes);
+			});
 			this.jumpTo(jumpToId);
 		} else {
 			let jump = null;
@@ -110,20 +145,27 @@ function app() {
 		});
 	};
 
-	this.load = async function(src, holdId, jumpToId) {
+	this.load = function(loadedFile, holdId, jumpToId) {
+		if (typeof loadedFile === "string") {
+			let found = false;
+			for (let i = 0; i < this.loadedFiles.length && !found; ++i) {
+				found = `json/${this.loadedFiles[i].name}` == loadedFile;
+				if (found)
+					loadedFile = this.loadedFiles[i];
+			}
+		}
 		if (holdId) {
 			this.fileStack.push({
 				file: this.currentFile,
 				id: holdId
 			});
 		}
-		let data = await web2d.http.get(src);
 		if (jumpToId > 0) {
-			this.import(data, jumpToId);
+			this.import(loadedFile.json, jumpToId);
 		} else {
-			this.import(data);
+			this.import(loadedFile.json);
 		}
-		this.currentFile = src;
+		this.currentFile = loadedFile;
 	};
 
 	this.returnToPrevious = async function() {
@@ -139,6 +181,7 @@ function app() {
 
 	this.next = function(source) {
 		let to = null;
+
 		if (source instanceof Output) {
 			to = source.to();
 		} else {
@@ -244,11 +287,10 @@ window.onerror = (msg, url, linenumber) => {
 	return false;
 };
 
-(async () => {
-	application.importMeta(await web2d.http.get("json/meta.json"));
-	application.load("json/start.json");
-})();
-
 application.addRemoteFunction("yell", () => {
 	alert("This is a remote function call");
 });
+
+function loadFolder(evt) {
+	application.importFolder(null, evt)
+}
