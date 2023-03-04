@@ -1,1 +1,0 @@
-{"name":"Store","nodes":[{"type":"Story","outs":[34],"text":"Get out... Nothing left to sell, we're out of business.","id":33,"x":736,"y":308,"options":[]},{"type":"Return","outs":[null],"id":34,"x":1024,"y":325},{"type":"Start","outs":[33],"id":36,"x":456,"y":358}]}
