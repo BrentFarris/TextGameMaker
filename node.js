@@ -436,6 +436,8 @@ class CopyVariableToVariableNode extends PassNode {
 		super._setup(createInfo);
 	}
 
+	changedVar(app, scope) { }
+
 	get color() {
 		return "darkviolet";
 	}
