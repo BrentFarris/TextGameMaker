@@ -710,7 +710,7 @@ function app() {
 
 		window.scrollTo(toX, lastPageY);
 		e.preventDefault();
-		e.returnValue = false;
+		return false;
 	});
 
 	web2d.input.keyUp.register((key) => {
