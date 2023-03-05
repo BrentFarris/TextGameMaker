@@ -35,12 +35,15 @@
 							</select>
 							<!-- /ko -->
 							<!-- ko if: $data instanceof VariableString -->
-								<!-- ko if: $data.hint.length > 0 -->
-								<span data-bind="text: $data.hint"></span>
+								<!-- ko if: $data.prefix.length > 0 -->
+								<span data-bind="text: $data.prefix"></span>
 								<!-- /ko -->
 							<select data-bind="value: value, foreach: $root.variables, event: {change:$parent.changedVar.bind($parent, $root)}">
 								<option data-bind="value:name, text:name"></option>
 							</select>
+								<!-- ko if: $data.postfix.length > 0 -->
+								<span data-bind="text: $data.postfix"></span>
+								<!-- /ko -->
 							<br />
 							<!-- /ko -->
 							<!-- ko if: $data instanceof BigString -->

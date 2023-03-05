@@ -72,10 +72,11 @@ class ItemIndex extends IndexValue {
 }
 
 class VariableString extends ValueType {
-	constructor(hint) {
+	constructor(prefix, postfix) {
 		super();
 		this.Value = "";
-		this.hint = hint || "";
+		this.prefix = prefix || "";
+		this.postfix = postfix || "";
 	}
 }
 
@@ -404,7 +405,7 @@ class TodoNode extends PassNode {
 class VariableNode extends PassNode {
 	constructor(createInfo, app) {
 		super(createInfo);
-		this.key = new VariableString();
+		this.key = new VariableString(null, "=");
 		this.value = new VariableValueString();
 		this.key.value.subscribe((val) => {
 			this.value.setType(app, val);
