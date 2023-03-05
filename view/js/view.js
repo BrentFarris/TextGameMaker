@@ -45,12 +45,22 @@ function app() {
 					reader.onload = (e) => this.importMeta(JSON.parse(e.target.result));
 				} else {
 					reader.onload = (e) => {
+						let json = JSON.parse(e.target.result);
 						this.loadedFiles.push({
 							name: files[i].name,
-							json: JSON.parse(reader.result)
+							json: json
 						});
-						if (files[i].name === "start.json")
+						// Go through the nodes and find the start node
+						let foundStart = false;
+						for (let j = 0; j < json.nodes.length && !foundStart; j++) {
+							if (json.nodes[j].type.toLowerCase() === "start") {
+								this.loadedFiles[this.loadedFiles.length - 1].startId = json.nodes[j].id;
+								foundStart = true;
+							}
+						}
+						if (foundStart) {
 							this.load(this.loadedFiles[this.loadedFiles.length - 1]);
+						}
 					};
 				}
 			} else if (files[i].type === "audio/mpeg" || files[i].type === "audio/wav") {
