@@ -195,13 +195,13 @@ class ViewManager extends Manager {
 
 	show(scope) {
 		super.show(this.app);
-
 		if (scope.type === "Story") {
 			this.title("Story");
+		} else if (scope.type === "Comment") {
+			this.title("Comment");
 		} else {
-			this.title(scope.character);
+			this.title(this.app.characters()[scope.character.Value].name);
 		}
-		
 		this.value(scope.text.Value);
 	}
 }
