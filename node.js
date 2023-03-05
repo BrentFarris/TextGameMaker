@@ -33,9 +33,10 @@ class BoolValue extends ValueType {
 }
 
 class IntValue extends ValueType {
-	constructor(placeholder) {
+	constructor(placeholder, prefix) {
 		super(placeholder);
-		this.Value = 0;
+		this.Value = placeholder ? null : 0;
+		this.prefix = prefix || "";
 	}
 
 	get Value() {
@@ -707,7 +708,8 @@ class MusicNode extends SourceNode {
 class OptionAvailabilityNode extends PassNode {
 	constructor(createInfo) {
 		super(createInfo);
-		this.nodeId = new IntValue("Node ID");
+		this.nodeId = new IntValue("Node ID", "Node ID:");
+		this.optionIdx = new IntValue("Option index (0 - n)", "Option Index:");
 		this.active = new BoolValue("Activate?");
 		super._setup(createInfo);
 	}

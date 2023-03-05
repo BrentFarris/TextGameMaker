@@ -13,6 +13,10 @@ body {
 	background-color: white;
 }
 
+.small-text {
+	font-size: 0.8rem;
+}
+
 #canvas {
 	position: absolute;
 	left: 0;
