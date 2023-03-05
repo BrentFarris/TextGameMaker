@@ -726,6 +726,10 @@ function app() {
 	web2d.input.keyDown.register((key) => {
 		if (key.keyCode == web2d.input.keys.Escape) {
 			this.cancelOutLink();
+		} else if (key.keyCode == web2d.input.keys.Backspace) {
+			if (this.hoveringNode) {
+				this.deleteNode(this.hoveringNode.scope);
+			}
 		} else if (key.keyCode === web2d.input.keys.Left || key.keyCode === web2d.input.keys.Right) {
 			if (web2d.input.Ctrl && web2d.input.Alt) {
 				let change = 10;
