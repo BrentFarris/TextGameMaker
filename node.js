@@ -1,74 +1,168 @@
+/**
+ * MyNewType definition
+ * @template T
+ * @typedef {Function} Observable
+ * @param {T} value
+ * @returns T
+ */
+
+/**
+ * MyNewType definition
+ * @template T
+ * @typedef {Function} ObservableArray
+ * @param {T[]} value
+ * @returns T[]
+ */
+
+/**
+ * Base class for values that are presented in nodes and read by the viewer
+ * @abstract
+ */
 class ValueType {
+	/** @type {Observable<any>} */
+	value = ko.observable(null);
+
+	/** @type {string} */
+	placeholder = "";
+
+	/** @type {Observable<string>} */
+	hint = ko.observable("");
+
+	/** @type {string} */
+	prefix = "";
+
+	/** @type {string} */
+	postfix = "";
+
+	/**
+	 * @param {string} placeholder 
+	 */
 	constructor(placeholder) {
-		this.value = ko.observable(null);
-		this.placeholder = ko.observable(placeholder || "");
-		this.hint = ko.observable("");
-		this.prefix = "";
-		this.postfix = "";
+		this.placeholder = placeholder
 	}
 
+	/**
+	 * @returns {string}
+	 */
 	get Value() {
 		return this.value();
 	}
 
+	/**
+	 * @param {string} val
+	 */
 	set Value(val) {
 		this.value(val);
 	}
 }
 
+/**
+ * Shows checkbox in editor
+ * @extends ValueType
+ */
 class BoolValue extends ValueType {
+	/**
+	 * @param {string} prefix 
+	 */
 	constructor(prefix) {
 		super();
 		this.Value = false;
 		this.prefix = prefix || "";
 	}
 
+	/**
+	 * @returns {boolean}
+	 */
 	get Value() {
 		return this.value();
 	}
 
+	/**
+	 * @param {boolean} val
+	 */
 	set Value(val) {
 		this.value(val);
 	}
 }
 
+/**
+ * Shows number input in editor
+ * @extends ValueType
+ */
 class IntValue extends ValueType {
+	/**
+	 * @param {string} placeholder 
+	 * @param {string} prefix 
+	 */
 	constructor(placeholder, prefix) {
 		super(placeholder);
 		this.Value = placeholder ? null : 0;
 		this.prefix = prefix || "";
 	}
 
+	/**
+	 * @returns {number}
+	 */
 	get Value() {
 		return parseInt(this.value());
 	}
 
+	/**
+	 * @param {number} val
+	 */
 	set Value(val) {
 		this.value(val);
 	}
 }
 
+/**
+ * Base class for manager indexing
+ * @extends ValueType
+ * @abstract
+ */
 class IndexValue extends ValueType {
+	/**
+	 * @param {string} placeholder
+	 */
 	constructor() {
 		super();
 		this.Value = 0;
 	}
 }
 
+/**
+ * Shows text area input in editor
+ * @extends ValueType
+ */
 class BigString extends ValueType {
+	/**
+	 * @param {string} placeholder 
+	 */
 	constructor(placeholder) {
-		super(placeholder);
+		super();
 		this.Value = "";
+		this.placeholder = placeholder || "";
 	}	
 }
 
+/**
+ * Shows text input in editor
+ * @extends ValueType
+ */
 class ShortString extends ValueType {
+	/**
+	 * @param {string} placeholder 
+	 */
 	constructor(placeholder) {
 		super(placeholder);
 		this.Value = "";
 	}
 }
 
+/**
+ * Shows number input in editor
+ * @extends IndexValue
+ */
 class CharacterIndex extends IndexValue {
 	constructor() {
 		super();
@@ -76,6 +170,10 @@ class CharacterIndex extends IndexValue {
 	}
 }
 
+/**
+ * Shows number input in editor
+ * @extends IndexValue
+ */
 class BeastIndex extends IndexValue {
 	constructor() {
 		super();
@@ -83,6 +181,10 @@ class BeastIndex extends IndexValue {
 	}
 }
 
+/**
+ * Shows number input in editor
+ * @extends IndexValue
+ */
 class ItemIndex extends IndexValue {
 	constructor() {
 		super();
@@ -90,6 +192,10 @@ class ItemIndex extends IndexValue {
 	}
 }
 
+/**
+ * Shows button in the editor to pick a node
+ * @extends IndexValue
+ */
 class NodeIndex extends IndexValue {
 	constructor() {
 		super();
@@ -97,6 +203,10 @@ class NodeIndex extends IndexValue {
 	}
 }
 
+/**
+ * Shows button in the editor to pick a node
+ * @extends IndexValue
+ */
 class NodeOptionIndex extends ValueType {
 	constructor() {
 		super();
@@ -104,7 +214,14 @@ class NodeOptionIndex extends ValueType {
 	}
 }
 
+/**
+ * Shows a variable selection box in the editor
+ */
 class VariableString extends ValueType {
+	/**
+	 * @param {string} prefix 
+	 * @param {string} postfix 
+	 */
 	constructor(prefix, postfix) {
 		super();
 		this.Value = "";
@@ -113,12 +230,24 @@ class VariableString extends ValueType {
 	}
 }
 
+/**
+ * Shows input text box to set the value of a variable
+ */
 class VariableValueString extends ValueType {
+	/** @type {Observable<string>} */
+	_type = ko.observable("");
+
+	/**
+	 * @param {string} placeholder 
+	 */
 	constructor(placeholder) {
 		super(placeholder);
-		this._type = ko.observable("");
 	}
 
+	/**
+	 * @param {Application} app 
+	 * @param {string} varName 
+	 */
 	setType(app, varName) {
 		if (typeof app.variables === "function") {
 			let vars = app.variables();
@@ -133,14 +262,19 @@ class VariableValueString extends ValueType {
 		} else {
 			this._type(app.variables[varName].type);
 		}
-
 		this.Value = this.value();
 	}
 
+	/**
+	 * @returns {string}
+	 */
 	get Value() {
 		return this.value();
 	}
 
+	/**
+	 * @param {string} val
+	 */
 	set Value(val) {
 		if (val === null) {
 			return;
@@ -175,50 +309,93 @@ class VariableValueString extends ValueType {
 	}
 }
 
+/**
+ * Shows a conditional string option in the editor
+ */
 class ConditionString extends ValueType {
+	/**
+	 * @param {string} placeholder 
+	 */
 	constructor(placeholder) {
 		super(placeholder);
 		this.Value = "";
 	}
 }
 
+/**
+ * Represents a single output of a node
+ */
 class Output {
-	constructor() {
-		this.to = ko.observable(null);
-	}
+	/** @type {Observable<CoreNode>} */
+	to = ko.observable(null);
+
+	constructor() {}
 }
 
+/**
+ * The base class for all nodes
+ * @abstract
+ */
 class CoreNode {
+	/** @type {number} */
+	id = 0;
+
+	/** @type {number} */
+	x = 0;
+
+	/** @type {number} */
+	y = 0;
+
+	/** @type {string} */
+	type = "";
+
+	/** @type {ValueType[]} */
+	fields = [];
+
+	/** @type {Output[]} */
+	outs = ko.observableArray([]);
+
+	/** @type {CoreNode[]} */
+	tos = null;
+
+	/**
+	 * @param {CoreNode|number} createInfo
+	 */
 	constructor(createInfo) {
 		this.type = this.typeName;
-		this.fields = [];
-		this.outs = ko.observableArray([]);
-
 		if (typeof createInfo === "number") {
 			this.id = createInfo;
-			this.x = 0;
-			this.y = 0;
 			this.outs.push(new Output());
 		}
 	}
 
+	/**
+	 * @param {CoreNode|number} info
+	 * @private
+	 */
 	_setup(info) {
 		web2d.each(this, (key, val) => {
 			if (val instanceof ValueType) {
 				this.fields.push(val);
 			}
 		});
-		
 		if (typeof info === "number") {
 			this._newInit();
 			return;
 		}
-
 		this._init(info);
 	}
 
+	/**
+	 * Abstract function to be called after the new node has been created
+	 * @protected
+	 */
 	_newInit() { }
 
+	/**
+	 * @param {CoreNode|number} info
+	 * @private
+	 */
 	_init(info) {
 		web2d.each(this, (key, val) => {
 			if (val instanceof ValueType) {
@@ -227,91 +404,122 @@ class CoreNode {
 				}
 			}
 		});
-
 		this.id = info.id;
 		this.x = info.x;
 		this.y = info.y;
 		this.tos = info.outs;
-
 		for (let i = 0; i < info.outs.length; i++) {
 			this.outs.push(new Output());
 		}
-
 		if (!info.outs.length) {
 			this.outs.push(new Output());
 		}
 	}
 
+	/**
+	 * @param {CoreNode[]} nodes 
+	 */
 	initializeOuts(nodes) {
 		for (let i = 0; i < this.tos.length; i++) {
 			if (this.tos[i] === null) {
 				continue;
 			}
-
 			web2d.each(nodes, (key, val) => {
 				if (val.id === this.tos[i]) {
 					this.outs()[i].to(val);
 					return false;
 				}
 			});
-
 		}
-
 		delete this.tos;
 	}
 
+	/**
+	 * @returns {JSON}
+	 */
 	serialize() {
 		let obj = {};
 		web2d.each(this, (key, val) => {
 			if (key === "outs") {
 				obj.outs = [];
-
 				for (let i = 0; i < this.outs().length; i++) {
 					let to = this.outs()[i].to();
-
 					if (!to) {
 						obj.outs.push(null);
 						continue;
 					}
-
 					obj.outs.push(to.id);
 				}
-
-				return;
+				return null;
 			} else if (key === "fields") {
-				return;
+				return null;
 			} else if (val instanceof ValueType) {
 				obj[key] = val.Value;
-				return;
+				return null;
 			}
-
 			obj[key] = val;
 		});
-
 		return JSON.parse(JSON.stringify(obj));
 	}
 
+	/**
+	 * Used to set the color of the handle/title bar of the node
+	 * @returns {string}
+	 * @protected
+	 * @virtual
+	 */
 	get color() {
 		return "grey";
 	}
 
+	/**
+	 * @returns {string}
+	 */
 	get typeName() {
 		return this.constructor.name.replace("Node", "");
 	}
 
+	/**
+	 * Virtual base function to be called when the node is executed
+	 * @param {Application} app 
+	 * @virtual
+	 */
 	execute(app) { }
 }
 
+/**
+ * @typedef {Object} NodeOptionEntry
+ * @property {string} text
+ * @property {boolean} active
+ */
+
+/**
+ * Base representation of a node that can have options/choices
+ * @extends {CoreNode}
+ * @abstract
+ */
 class OptionNode extends CoreNode {
+	/** @type {NodeOptionEntry[]} */
+	options = ko.observableArray([]);
+
+	/**
+	 * @param {OptionNode} createInfo 
+	 */
 	constructor(createInfo) {
 		super(createInfo);
-		this.options = ko.observableArray([]);
 	}
 
+	/**
+	 * @param {string} text 
+	 * @param {boolean} active 
+	 */
 	_addOption(text, active) {
 		this.options.push({text:ko.observable(text),active:ko.observable(active)});
 	}
 
+	/**
+	 * @param {OptionNode} info 
+	 */
 	_init(info) {
 		super._init(info);
 		for (let i = 0; i < info.options.length; i++) {
@@ -319,6 +527,9 @@ class OptionNode extends CoreNode {
 		}
 	}
 
+	/**
+	 * Add an option to this node and create an output for it
+	 */
 	addOption() {
 		this._addOption("", true);
 		if (this.options().length > 1) {
@@ -326,6 +537,10 @@ class OptionNode extends CoreNode {
 		}
 	}
 	
+	/**
+	 * @param {number} index 
+	 * @param {HTMLElement} elm 
+	 */
 	toggleActive(index, elm) {
 		// This is nonsense, but KO is trippin, probably because I'm trippin...
 		setTimeout(() => {
@@ -333,6 +548,9 @@ class OptionNode extends CoreNode {
 		}, 10);
 	}
 
+	/**
+	 * @param {number} index 
+	 */
 	removeOption(index) {
 		if (index === -1) {
 			return;
@@ -344,6 +562,9 @@ class OptionNode extends CoreNode {
 		}
 	}
 
+	/**
+	 * @returns {JSON}
+	 */
 	serialize() {
 		let obj = super.serialize();
 		obj.options = [];
@@ -354,54 +575,109 @@ class OptionNode extends CoreNode {
 	}
 }
 
+/**
+ * A dialog node which is used to allow for a character to speak
+ * @extends {OptionNode}
+ */
 class DialogNode extends OptionNode {
+	/** @type {CharacterIndex} */
+	character = new CharacterIndex();
+
+	/** @type {BigString} */
+	text = new BigString();
+
+	/**
+	 * @param {DialogNode} createInfo 
+	 */
 	constructor(createInfo) {
 		super(createInfo);
-		this.character = new CharacterIndex();
-		this.text = new BigString();
 		super._setup(createInfo);
 	}
 }
 
+/**
+ * A story node which is used to display a story message
+ * @extends {OptionNode}
+ */
 class StoryNode extends OptionNode {
+	/** @type {BigString} */
+	text = new BigString();
+
+	/**
+	 * @param {StoryNode} createInfo 
+	 */
 	constructor(createInfo) {
 		super(createInfo);
-		this.text = new BigString();
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @returns {string}
+	 * @override
+	 */
 	get color() {
 		return "darkcyan";
 	}
 }
 
+/**
+ * A node that can be used as a junction or as a base node, when this node
+ * executes, it simply moves on to the first output
+ * @extends {CoreNode}
+ */
 class PassNode extends CoreNode {
+	/**
+	 * @param {PassNode} createInfo 
+	 */
 	constructor(createInfo) {
 		super(createInfo);
-
 		// Only call setup from the farthest child class
 		if (this.typeName === "Pass") {
 			super._setup(createInfo);
 		}
 	}
 
+	/**
+	 * @param {Application} app 
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		return this.outs()[0];
 	}
 }
 
+/**
+ * A node that denotes this is the start of the text based adventure, there
+ * should only be one of these nodes in the whole game
+ */
 class StartNode extends PassNode {
+	/**
+	 * @param {StoryNode} createInfo 
+	 */
 	constructor(createInfo) {
 		super(createInfo);
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @returns {string}
+	 * @override
+	 */
 	get color() {
 		return "green";
 	}
 }
 
+/**
+ * A node that is used to add log entries to the player's log. This is something
+ * that they can view at any time by pulling up their log.
+ * @extends {PassNode}
+ */
 class LogNode extends PassNode {
+	/**
+	 * @param {LogNode} createInfo 
+	 */
 	constructor(createInfo) {
 		super(createInfo);
 		this.title = new ShortString();
@@ -409,37 +685,71 @@ class LogNode extends PassNode {
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @returns {string}
+	 * @override
+	 */
 	get color() {
 		return "darkgoldenrod";
 	}
 
+	/**
+	 * @param {Application} app 
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		app.logs.shift({
 			title: this.title.Value,
 			text: this.text.Value
 		});
-
 		return super.execute(app);
 	}
 }
 
+/**
+ * A node that is used as a comment in the editor so that the writer is able
+ * to leave notes for themselves
+ * @extends {PassNode}
+ */
 class CommentNode extends PassNode {
+	/**
+	 * 
+	 * @param {CommentNode} createInfo 
+	 */
 	constructor(createInfo) {
 		super(createInfo);
 		this.text = new BigString();
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @returns {string}
+	 * @override
+	 */
 	get color() {
 		return "red";
 	}
 
+	/**
+	 * @param {Application} app 
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		return super.execute(app);
 	}
 }
 
+/**
+ * A node that allows the writer to set the value of a variable
+ * @extends {PassNode}
+ */
 class VariableNode extends PassNode {
+	/**
+	 * @param {VariableNode} createInfo 
+	 * @param {Application} app 
+	 */
 	constructor(createInfo, app) {
 		super(createInfo);
 		this.key = new VariableString(null, "=");
@@ -453,14 +763,27 @@ class VariableNode extends PassNode {
 		}
 	}
 
+	/**
+	 * @param {Application} app 
+	 * @param {ValueType} scope 
+	 */
 	changedVar(app, scope) {
 		this.value.setType(app, scope.Value);
 	}
 
+	/**
+	 * @returns {string}
+	 * @override
+	 */
 	get color() {
 		return "darkviolet";
 	}
 
+	/**
+	 * @param {Application} app 
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		let variable = app.variables[this.key.Value];
 		variable.value = this.value.Value;
@@ -468,39 +791,80 @@ class VariableNode extends PassNode {
 	}
 }
 
+/**
+ * A node that allows the writer to copy the value of one variable to another
+ * @extends {PassNode}
+ */
 class CopyVariableToVariableNode extends PassNode {
+	/** @type {VariableString} */
+	from = new VariableString("From:");
+
+	/** @type {VariableString} */
+	to = new VariableString("To:");
+
+	/**
+	 * @param {CopyVariableToVariableNode} createInfo 
+	 * @param {Application} app 
+	 */
 	constructor(createInfo, app) {
 		super(createInfo);
-		this.from = new VariableString("From:");
-		this.to = new VariableString("To:");
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @param {Application} app 
+	 * @param {ValueType} scope 
+	 */
 	changedVar(app, scope) { }
 
+	/**
+	 * @returns {string}
+	 * @override
+	 */
 	get color() {
 		return "darkviolet";
 	}
 
+	/**
+	 * @param {Application} app 
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		app.variables[this.to.Value].value = app.variables[this.from.Value].value;
 		return super.execute(app);
 	}
 }
 
+/**
+ * A node that allows the writer to add a value to a variable
+ * @extends {VariableNode}
+ */
 class AddToVariableNode extends VariableNode {
+	/**
+	 * @param {AddToVariableNode} createInfo 
+	 * @param {Application} app 
+	 */
 	constructor(createInfo, app) {
 		super(createInfo, app);
 		super._setup(createInfo);
 	}
-	
+
+	/**
+	 * @returns {string}
+	 * @override
+	 */
 	get color() {
 		return "purple";
 	}
 
+	/**
+	 * @param {Application} app 
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		let variable = app.variables[this.key.Value];
-
 		switch (variable.type) {
 			case "number":
 			case "whole":
@@ -514,30 +878,52 @@ class AddToVariableNode extends VariableNode {
 				console.error(`${variable.type} not yet supported for the AddVariable node`);
 				break;
 		}
-
-		console.log(`Updated the variable ${this.key.Value} to ${variable.value}`);
 		return super.execute(app);
 	}
 }
 
+/**
+ * A node that allows the writer to add the value of one variable to another
+ * @extends {PassNode}
+ */
 class AddVariableToVariableNode extends PassNode {
+	/** @type {VariableString} */
+	alter = new VariableString("Add:");
+
+	/** @type {VariableString} */
+	source = new VariableString("To:");
+
+	/**
+	 * @param {AddVariableToVariableNode} createInfo
+	 * @param {Application} app
+	 */
 	constructor(createInfo, app) {
 		super(createInfo, app);
-		this.alter = new VariableString("Add:");
-		this.source = new VariableString("To:");
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @param {Application} app
+	 * @param {ValueType} scope
+	 */
 	changedVar(app, scope) { }
 	
+	/**
+	 * @returns {string}
+	 * @override
+	 */
 	get color() {
 		return "purple";
 	}
 
+	/**
+	 * @param {Application} app
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		let leftHand = app.variables[this.source.Value];
 		let rightHand = app.variables[this.alter.Value];
-
 		switch (leftHand.type) {
 			case "number":
 			case "whole":
@@ -551,30 +937,52 @@ class AddVariableToVariableNode extends PassNode {
 				console.error(`${leftHand.type} not yet supported for the AddVariable node`);
 				break;
 		}
-
-		console.log(`Updated the variable ${this.source.Value} to ${leftHand.value}`);
 		return super.execute(app);
 	}
 }
 
+/**
+ * A node that allows the writer to subtract a value from a variable
+ * @extends {VariableNode}
+ */
 class SubVariableFromVariableNode extends PassNode {
+	/** @type {VariableString} */
+	alter = new VariableString("Subtract:");
+
+	/** @type {VariableString} */
+	source = new VariableString("From:");
+
+	/**
+	 * @param {SubVariableFromVariableNode} createInfo
+	 * @param {Application} app
+	 */
 	constructor(createInfo, app) {
 		super(createInfo, app);
-		this.alter = new VariableString("Subtract:");
-		this.source = new VariableString("From:");
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @param {Application} app
+	 * @param {ValueType} scope
+	 */
 	changedVar(app, scope) { }
 
+	/**
+	 * @returns {string}
+	 * @override
+	 */
 	get color() {
 		return "purple";
 	}
 
+	/**
+	 * @param {Application} app 
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		let leftHand = app.variables[this.source.Value];
 		let rightHand = app.variables[this.alter.Value];
-
 		switch (leftHand.type) {
 			case "number":
 			case "whole":
@@ -588,40 +996,63 @@ class SubVariableFromVariableNode extends PassNode {
 				console.error(`${leftHand.type} not yet supported for the AddVariable node`);
 				break;
 		}
-
-		console.log(`Updated the variable ${this.source.Value} to ${leftHand.value}`);
 		return super.execute(app);
 	}
 }
 
+/**
+ * A node that allows the writer to assign a random value to a variable
+ * @extends {PassNode}
+ */
 class RandomVariableNode extends PassNode {
+	/** @type {VariableString} */
+	key = new VariableString(null, "=");
+
+	/** @type {VariableValueString} */
+	min = new VariableValueString("Minimum value");
+
+	/** @type {VariableValueString} */
+	max = new VariableValueString("Maximum value");
+
+	/**
+	 * @param {RandomVariableNode} createInfo
+	 * @param {Application} app
+	 */
 	constructor(createInfo, app) {
 		super(createInfo, app);
-		this.key = new VariableString(null, "=");
-		this.min = new VariableValueString("Minimum value");
-		this.max = new VariableValueString("Maximum value");
 		this.key.value.subscribe((val) => {
 			this.min.setType(app, val);
 			this.max.setType(app, val);
 		});
-
 		if (this.typeName === "RandomVariable") {
 			super._setup(createInfo);
 		}
 	}
 
+	/**
+	 * @param {Application} app
+	 * @param {ValueType} scope
+	 */
 	changedVar(app, scope) {
 		this.min.setType(app, scope.Value);
 		this.max.setType(app, scope.Value);
 	}
 	
+	/**
+	 * @returns {string}
+	 * @override
+	 */
 	get color() {
 		return "purple";
 	}
 
+	/**
+	 * @param {Application} app
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		let variable = app.variables[this.key.Value];
-
 		switch (variable.type) {
 			case "number":
 			case "whole":
@@ -635,21 +1066,31 @@ class RandomVariableNode extends PassNode {
 				console.error(`${variable.type} not yet supported for the AddRandomVariableNode node`);
 				break;
 		}
-
-		console.log(`Updated the variable ${this.key.Value} to ${variable.value}`);
 		return super.execute(app);
 	}
 }
 
+/**
+ * A node that allows the writer to add a random value to a variable
+ * @extends {RandomVariableNode}
+ */
 class AddRandomToVariableNode extends RandomVariableNode {
+	/**
+	 * @param {AddRandomToVariableNode} createInfo 
+	 * @param {Application} app 
+	 */
 	constructor(createInfo, app) {
 		super(createInfo, app);
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @param {Application} app 
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		let variable = app.variables[this.key.Value];
-
 		switch (variable.type) {
 			case "number":
 			case "whole":
@@ -663,29 +1104,53 @@ class AddRandomToVariableNode extends RandomVariableNode {
 				console.error(`${variable.type} not yet supported for the AddRandomVariableNode node`);
 				break;
 		}
-
-		console.log(`Updated the variable ${this.key.Value} to ${variable.value}`);
 		return super.execute(app);
 	}
 }
 
+/**
+ * A base node for nodes that require a source (image, sound, etc.)
+ * @extends {PassNode}
+ * @abstract
+ */
 class SourceNode extends PassNode {
-	constructor(createInfo, placeholder) {
+	/** @type {ShortString} */
+	src = new ShortString("Source:");
+
+	/**
+	 * @param {SourceNode} createInfo 
+	 */
+	constructor(createInfo) {
 		super(createInfo);
-		this.src = new ShortString(placeholder);
 	}
 }
 
+/**
+ * A node that allows the writer to play a sound
+ * @extends {SourceNode}
+ */
 class SoundNode extends SourceNode {
+	/**
+	 * @param {SoundNode} createInfo 
+	 */
 	constructor(createInfo) {
 		super(createInfo);
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @returns {string}
+	 * @override
+	 */
 	get color() {
 		return "blue";
 	}
 
+	/**
+	 * @param {Application} app
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		let sound = new web2d.audio(`audio/${this.src.Value}`);
 		sound.play();
@@ -693,16 +1158,32 @@ class SoundNode extends SourceNode {
 	}
 }
 
+/**
+ * A node that allows the writer to play music
+ * @extends {SourceNode}
+ */
 class MusicNode extends SourceNode {
+	/**
+	 * @param {MusicNode} createInfo 
+	 */
 	constructor(createInfo) {
 		super(createInfo);
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @returns {string}
+	 * @override
+	 */
 	get color() {
 		return "blue";
 	}
 
+	/**
+	 * @param {Application} app 
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		if (app.bgm) {
 			app.bgm.stop();
@@ -719,7 +1200,16 @@ class MusicNode extends SourceNode {
 	}
 }
 
+/**
+ * A node that allows the writer to change the availability of a given option
+ * on a node that has options. This displays a button for the writer to click
+ * on to select which option to control the availability of.
+ * @extends {PassNode}
+ */
 class OptionAvailabilityNode extends PassNode {
+	/**
+	 * @type {NodeOptionIndex}
+	 */
 	constructor(createInfo) {
 		super(createInfo);
 		this.optionIdx = new NodeOptionIndex();
@@ -727,10 +1217,19 @@ class OptionAvailabilityNode extends PassNode {
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @returns {string}
+	 * @override
+	 */
 	get color() {
 		return "gray";
 	}
 
+	/**
+	 * @param {Application} app
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		debugger;
 		app.nodeById(this.optionIdx.Value.id).options()[this.optionIdx.Value.option].active(this.active.Value);
@@ -738,17 +1237,33 @@ class OptionAvailabilityNode extends PassNode {
 	}
 }
 
+/**
+ * A node that allows the writer to jump to a given node in a given file
+ * @extends {SourceNode}
+ */
 class JumpNode extends SourceNode {
+	/**
+	 * @type {IntValue}
+	 */
 	constructor(createInfo) {
 		super(createInfo, "File or blank for this file...");
 		this.nodeId = new IntValue();
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @returns {string}
+	 * @override
+	 */
 	get color() {
 		return "black";
 	}
 
+	/**
+	 * @param {Application} app
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		if (!this.src.Value && this.nodeId.Value > 0) {
 			app.jumpTo(this.nodeId.Value);
@@ -763,27 +1278,55 @@ class JumpNode extends SourceNode {
 	}
 }
 
+/**
+ * A node that allows the writer to go back and continue from a jump node
+ * @extends {PassNode}
+ */
 class ReturnNode extends PassNode {
+	/**
+	 * @param {ReturnNode} createInfo
+	 * @param {Application} app
+	 */
 	constructor(createInfo, app) {
 		super(createInfo, app);
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @param {Application} app 
+	 * @override
+	 */
 	execute(app) {
 		app.returnToPrevious();
 	}
 }
 
+/**
+ * A node that allows the writer to change the background image
+ * @extends {SourceNode}
+ */
 class BackgroundNode extends SourceNode {
+	/**
+	 * @param {BackgroundNode} createInfo
+	 */
 	constructor(createInfo) {
 		super(createInfo);
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @returns {string}
+	 * @override
+	 */
 	get color() {
 		return "olivedrab";
 	}
 
+	/**
+	 * @param {Application} app
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		app.backgroundImageBuffer(app.backgroundImage());
 		app.backgroundImage(`img/${this.src.Value}`);
@@ -791,10 +1334,20 @@ class BackgroundNode extends SourceNode {
 	}
 }
 
+/**
+ * A node that allows the writer to branch given a condition on a variable
+ * @extends {VariableNode}
+ */
 class IfVariableNode extends VariableNode {
+	/** @type {ConditionString} */
+	condition = new ConditionString();
+
+	/**
+	 * @param {IfVariableNode} createInfo
+	 * @param {Application} app
+	 */
 	constructor(createInfo, app) {
 		super(createInfo, app);
-		this.condition = new ConditionString();
 		super._setup(createInfo);
 
 		let target = this.fields[this.fields.length - 1];
@@ -802,10 +1355,16 @@ class IfVariableNode extends VariableNode {
 		this.fields[this.fields.length - 2] = target;
 	}
 
+	/**
+	 * @override
+	 */
 	_newInit() {
 		this.outs.push(new Output());
 	}
 
+	/**
+	 * @returns {string}
+	 */
 	execute(app) {
 		let result = false;
 		switch (this.condition.Value) {
@@ -828,7 +1387,6 @@ class IfVariableNode extends VariableNode {
 				result = app.variables[this.key.Value].value > this.value.Value;
 				break;
 		}
-
 		if (result) {
 			return this.outs()[0];
 		} else {
@@ -837,21 +1395,48 @@ class IfVariableNode extends VariableNode {
 	}
 }
 
+/**
+ * A node that allows the writer to branch given a condition on two variables
+ * @extends {PassNode}
+ */
 class CompareVariableNode extends PassNode {
+	/** @type {VariableString} */
+	a = new VariableString();
+
+	/** @type {ConditionString} */
+	condition = new ConditionString();
+
+	/** @type {VariableString} */
+	b = new VariableString();
+
+	/**
+	 * @param {CompareVariableNode} createInfo
+	 * @param {Application} app
+	 */
 	constructor(createInfo, app) {
 		super(createInfo, app);
-		this.a = new VariableString();
-		this.condition = new ConditionString();
-		this.b = new VariableString();
 		super._setup(createInfo);
 	}
 	
+	/**
+	 * @param {Application} app
+	 * @param {ValueType} scope
+	 * @override
+	 */
 	changedVar(app, scope) { }
 
+	/**
+	 * @override
+	 */
 	_newInit() {
 		this.outs.push(new Output());
 	}
 
+	/**
+	 * @param {Application} app
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		let result = false;
 		switch (this.condition.Value) {
@@ -874,7 +1459,6 @@ class CompareVariableNode extends PassNode {
 				result = app.variables[this.a.Value].value > app.variables[this.b.Value].value;
 				break;
 		}
-
 		if (result) {
 			return this.outs()[0];
 		} else {
@@ -883,87 +1467,175 @@ class CompareVariableNode extends PassNode {
 	}
 }
 
+/**
+ * A node that allows the writer to call a custom registered JavaScript function
+ * @extends {PassNode}
+ */
 class FunctionCallNode extends PassNode {
+	/**
+	 * @param {FunctionCallNode} createInfo
+	 * @param {Application} app
+	 */
 	constructor(createInfo, app) {
 		super(createInfo, app);
 		this.functionName = new ShortString();
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @param {Application} app
+	 * @returns {Output} The first output
+	 */
 	execute(app) {
 		app.remoteCall(this.functionName.Value);
 		return super.execute(app);
 	}
 }
 
-// Abstract
+/**
+ * A node that will create a number of outputs that are not bound to an
+ * option/choice that the player can make
+ * @extends {PassNode}
+ * @abstract
+ */
 class OutsNode extends PassNode {
 	constructor(createInfo, app) {
 		super(createInfo, app);
 	}
 
+	/**
+	 * 
+	 */
 	addOut() {
 		this.outs.push(new Output());
 	}
 
+	/**
+	 * 
+	 */
 	removeOut(target) {
 		this.outs.remove(target);
 	}
 }
 
+/**
+ * A node that can have a series of outputs and one will be chosen at random
+ * @extends {OutsNode}
+ */
 class RandomNode extends OutsNode {
+	/**
+	 * @param {RandomNode} createInfo
+	 * @param {Application} app
+	 */
 	constructor(createInfo, app) {
 		super(createInfo, app);
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @param {Application} app
+	 * @returns {Output} The randomly selected output from the list of outs
+	 * @override
+	 */
 	execute(app) {
 		let outs = this.outs();
 		return outs[random(0, outs.length)];
 	}
 }
 
+/**
+ * The base node for inventory nodes
+ * @extends {PassNode}
+ * @abstract
+ */
 class InventoryNode extends PassNode {
+	/** @type {ItemIndex} */
+	inventory = new ItemIndex();
+
+	/**
+	 * @param {InventoryNode} createInfo
+	 * @param {Application} app
+	 */
 	constructor(createInfo, app) {
 		super(createInfo, app);
-		this.inventory = new ItemIndex();
 	}
 }
 
+/**
+ * A node that adds an item to the inventory
+ * @extends {InventoryNode}
+ */
 class InventoryAddNode extends InventoryNode {
+	/**
+	 * @param {InventoryAddNode} createInfo
+	 * @param {Application} app
+	 */
 	constructor(createInfo, app) {
 		super(createInfo, app);
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @param {Application} app
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		app.inventory.push(this.inventory.Value);
 		return super.execute(app);
 	}
 }
 
+/**
+ * A node that removes an item from the inventory
+ * @extends {InventoryNode}
+ */
 class InventoryRemoveNode extends InventoryNode {
+	/**
+	 * @param {InventoryRemoveNode} createInfo
+	 * @param {Application} app
+	 */
 	constructor(createInfo, app) {
 		super(createInfo, app);
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @param {Application} app
+	 * @returns {Output} The first output
+	 * @override
+	 */
 	execute(app) {
 		app.inventory.remove(this.inventory.Value);
 		return super.execute(app);
 	}
 }
 
+/**
+ * A node that checks if an item is in the inventory
+ * @extends {InventoryNode}
+ */
 class InventoryExistsNode extends InventoryNode {
+	/**
+	 * @param {InventoryExistsNode} createInfo
+	 * @param {Application} app
+	 */
 	constructor(createInfo, app) {
 		super(createInfo, app);
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @override
+	 */
 	_newInit() {
 		this.outs.push(new Output());
 	}
 
+	/**
+	 * @param {Application} app
+	 * @returns {Output} The first output if the item is in the inventory, the second output otherwise
+	 */
 	execute(app) {
 		if (app.inventory.indexOf(this.inventory.Value) !== -1) {
 			return this.outs()[0];
@@ -973,7 +1645,15 @@ class InventoryExistsNode extends InventoryNode {
 	}
 }
 
+/**
+ * A node that checks the number of items in the inventory
+ * @extends {InventoryNode}
+ */
 class InventoryCountNode extends InventoryNode {
+	/**
+	 * @param {InventoryCountNode} createInfo
+	 * @param {Application} app
+	 */
 	constructor(createInfo, app) {
 		super(createInfo, app);
 		this.condition = new ConditionString();
@@ -981,14 +1661,21 @@ class InventoryCountNode extends InventoryNode {
 		super._setup(createInfo);
 	}
 
+	/**
+	 * @override
+	 */
 	_newInit() {
 		this.outs.push(new Output());
 	}
 
+	/**
+	 * @param {Application} app
+	 * @returns {Output} The first output if the condition is met, the second output otherwise
+	 * @override
+	 */
 	execute(app) {
 		let result = false;
 		let count = app.inventory.count(this.inventory.Value);
-
 		switch (this.condition.Value) {
 			case "==":
 				result = count === this.value.Value;
@@ -1009,7 +1696,6 @@ class InventoryCountNode extends InventoryNode {
 				result = count > this.value.Value;
 				break;
 		}
-
 		if (result) {
 			return this.outs()[0];
 		} else {
