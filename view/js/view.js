@@ -136,6 +136,17 @@ function app() {
 		this.updateText();
 	};
 
+	this.nodeById = function(id) {
+		let node = null;
+		web2d.each(this.nodes, (key, val) => {
+			if (val.id === id) {
+				node = val;
+				return false;
+			}
+		});
+		return node;
+	};
+
 	this.jumpTo = function(toId) {
 		web2d.each(this.nodes, (key, val) => {
 			if (val.id === toId) {

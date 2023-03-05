@@ -719,7 +719,8 @@ class OptionAvailabilityNode extends PassNode {
 	}
 
 	execute(app) {
-
+		app.nodeById(this.nodeId.Value).options()[this.optionIdx.Value].active(this.active.Value);
+		return super.execute(app);
 	}
 }
 

@@ -125,6 +125,17 @@ function app() {
 		this.fileOptionsVisible(false);
 	};
 
+	this.nodeById = function(id) {
+		let node = null;
+		web2d.each(this.nodes, (key, val) => {
+			if (val.id === id) {
+				node = val;
+				return false;
+			}
+		});
+		return node;
+	};
+
 	this.jumpLoad = async function(scope) {
 		let data = await web2d.http.get("view/json/" + scope.src.Value);
 		if (data) {

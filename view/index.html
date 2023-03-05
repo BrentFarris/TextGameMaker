@@ -27,7 +27,7 @@
 					<div class="optionBox">
 						<!-- ko if: node() instanceof OptionNode && node().options().length -->
 						<ul data-bind="foreach: node().options">
-							<li><button data-bind="text: $data, click: $root.next.bind($root, $index())"></button></li>
+							<li><button data-bind="text:text, enable:active, click: $root.next.bind($root, $index())"></button></li>
 						</ul>
 						<!-- /ko -->
 						<!-- ko if: !(node() instanceof OptionNode) || !node().options().length -->
