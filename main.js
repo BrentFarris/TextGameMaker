@@ -40,6 +40,9 @@ function app() {
 	this.jumpStack = [];
 	this.lastData = null;
 
+	this.pendingSelectNode = null;
+	this.pendingSelectNodeOption = null;
+
 	web2d.each(Node.typeMap, (key, val) => {
 		this.nodeTypes.push(key);
 	});
@@ -237,6 +240,7 @@ function app() {
 		}
 
 		this.fileOptionsVisible(false);
+		this.initializeNode(Node.typeMap["Start"]);
 	}
 
 	this.saveTemp = async function(anything) {
@@ -345,6 +349,23 @@ function app() {
 		this.nodes.remove(scope);
 		this.saveTemp();
 	};
+
+	this.selectNode = function(scope, elm) {
+		elm.textContent = "Click on a node";
+		this.pendingSelectNode = scope;
+	};
+
+	this.selectNodeOption = function(scope, elm) {
+		elm.textContent = "Now click on an option";
+		this.pendingSelectNodeOption = scope;
+	};
+
+	this.optionClick = function(scope, index) {
+		if (this.pendingSelectNodeOption) {
+			this.pendingSelectNodeOption.Value = { id: scope.id, option: index };
+		}
+		this.pendingSelectNodeOption = null;
+	}
 
 	this.makeTemplate = function(scope) {
 		if (!confirm("Are you sure you would like to make this node into a template?")) {

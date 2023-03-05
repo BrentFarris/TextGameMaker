@@ -34,6 +34,12 @@
 								<option data-bind="value:$index(), text:name"></option>
 							</select>
 							<!-- /ko -->
+							<!-- ko if: $data instanceof NodeIndex -->
+							<button data-bind="text:value()!==null?` Node ID: ${value()} `:' Click to select node ', click:$root.selectNode.bind($root, $data, $element)"></button>
+							<!-- /ko -->
+							<!-- ko if: $data instanceof NodeOptionIndex -->
+							<button data-bind="text:value()!==null?` Node (${value().id}) | Option (${value().option}) `:' Click to pick option ', click:$root.selectNodeOption.bind($root, $data, $element)"></button>
+							<!-- /ko -->
 							<!-- ko if: $data instanceof VariableString -->
 								<!-- ko if: $data.prefix.length > 0 -->
 								<span data-bind="text: $data.prefix"></span>
@@ -85,7 +91,7 @@
 								<!-- ko if: $data.prefix.length > 0 -->
 								<span data-bind="text:prefix"></span>
 								<!-- /ko -->
-							<input type="checkbox" data-bind="checked: value, click:toggleCheck(value, $element)" />
+							<input type="checkbox" data-bind="checked: value, click:toggleCheck.bind(null, value, $element)" />
 							<!-- /ko -->
 							<!-- ko if: $data instanceof ConditionString -->
 							<select data-bind="value: value, foreach: ['==', '!=', '<=', '>=', '>', '<']">
@@ -95,8 +101,8 @@
 						</div>
 						<!-- ko if: $data instanceof OptionNode -->
 						<div data-bind="foreach: options">
-							<div class="nodeOption">
-								<input type="checkbox" data-bind="checked:active, click:toggleCheck(active, $element)"/>
+							<div class="nodeOption" data-bind="click:$root.optionClick.bind($root, $parent, $index())">
+								<input type="checkbox" data-bind="checked:active, click:toggleCheck.bind(null, active, $element)"/>
 								<input class="inputs value" type="text" data-bind="value:text" />
 								<button data-bind="click:$parent.removeOption.bind($parent, $index())">x</button>
 							</div>

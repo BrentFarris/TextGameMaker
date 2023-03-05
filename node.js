@@ -90,6 +90,20 @@ class ItemIndex extends IndexValue {
 	}
 }
 
+class NodeIndex extends IndexValue {
+	constructor() {
+		super();
+		this.Value = null;
+	}
+}
+
+class NodeOptionIndex extends ValueType {
+	constructor() {
+		super();
+		this.Value = null;
+	}
+}
+
 class VariableString extends ValueType {
 	constructor(prefix, postfix) {
 		super();
@@ -708,8 +722,7 @@ class MusicNode extends SourceNode {
 class OptionAvailabilityNode extends PassNode {
 	constructor(createInfo) {
 		super(createInfo);
-		this.nodeId = new IntValue("Node ID", "Node ID:");
-		this.optionIdx = new IntValue("Option index (0 - n)", "Option Index:");
+		this.optionIdx = new NodeOptionIndex();
 		this.active = new BoolValue("Activate?");
 		super._setup(createInfo);
 	}
@@ -719,7 +732,8 @@ class OptionAvailabilityNode extends PassNode {
 	}
 
 	execute(app) {
-		app.nodeById(this.nodeId.Value).options()[this.optionIdx.Value].active(this.active.Value);
+		debugger;
+		app.nodeById(this.optionIdx.Value.id).options()[this.optionIdx.Value.option].active(this.active.Value);
 		return super.execute(app);
 	}
 }
