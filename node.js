@@ -696,7 +696,12 @@ class JumpNode extends SourceNode {
 		if (!this.src.Value && this.nodeId.Value > 0) {
 			app.jumpTo(this.nodeId.Value);
 		} else {
-			app.load(`json/${this.src.Value}`, this.id, this.nodeId.Value);
+			// Check to see if this.src.Value ends with .json
+			if (this.src.Value.endsWith(".json")) {
+				app.load(`json/${this.src.Value}`, this.id, this.nodeId.Value);
+			} else {
+				app.load(`json/${this.src.Value}.json`, this.id, this.nodeId.Value);
+			}
 		}
 	}
 }
