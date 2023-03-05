@@ -110,7 +110,7 @@
 						<!-- ko if: $data instanceof OutsNode -->
 						<button data-bind="click:addOut">+</button>
 						<!-- /ko -->
-						<button data-bind="visible:typeName==='Dialog' || typeName==='Story', click:$root.viewManager.show.bind($root.viewManager)">View</button>
+						<button data-bind="visible:typeName==='Dialog' || typeName==='Story' || typeName==='Comment', click:$root.viewManager.show.bind($root.viewManager)">View</button>
 						<button data-bind="click:$root.deleteNode.bind($root)">Delete</button>
 						<button data-bind="click:$root.makeTemplate.bind($root)">^</button>
 						<button data-bind="click:$root.dupeNode.bind($root)">Dupe</button>

@@ -385,10 +385,10 @@ class LogNode extends PassNode {
 	}
 }
 
-class TodoNode extends PassNode {
+class CommentNode extends PassNode {
 	constructor(createInfo) {
 		super(createInfo);
-		this.todo = new BigString();
+		this.text = new BigString();
 		super._setup(createInfo);
 	}
 
@@ -397,7 +397,6 @@ class TodoNode extends PassNode {
 	}
 
 	execute(app) {
-		alert(`TODO:  ${this.todo.Value}`);
 		return super.execute(app);
 	}
 }
@@ -962,6 +961,7 @@ Node.typeMap = {
 	"AddToVariable": AddToVariableNode,
 	"AddVariableToVariable": AddVariableToVariableNode,
 	"Background": BackgroundNode,
+	"Comment": CommentNode,
 	"CompareVariable": CompareVariableNode,
 	"CopyVariableToVariable": CopyVariableToVariableNode,
 	"Dialog": DialogNode,
@@ -982,6 +982,5 @@ Node.typeMap = {
 	"Start": StartNode,
 	"Story": StoryNode,
 	"SubVariableFromVariable": SubVariableFromVariableNode,
-	"Todo": TodoNode,
 	"Variable": VariableNode
 };
