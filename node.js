@@ -3,6 +3,24 @@ class ValueType {
 		this.value = ko.observable(null);
 		this.placeholder = ko.observable(placeholder || "");
 		this.hint = ko.observable("");
+		this.prefix = "";
+		this.postfix = "";
+	}
+
+	get Value() {
+		return this.value();
+	}
+
+	set Value(val) {
+		this.value(val);
+	}
+}
+
+class BoolValue extends ValueType {
+	constructor(prefix) {
+		super();
+		this.Value = false;
+		this.prefix = prefix || "";
 	}
 
 	get Value() {
@@ -275,29 +293,36 @@ class OptionNode extends CoreNode {
 		this.options = ko.observableArray([]);
 	}
 
+	_addOption(text, active) {
+		this.options.push({text:ko.observable(text),active:ko.observable(active)});
+	}
+
 	_init(info) {
 		super._init(info);
-		
 		for (let i = 0; i < info.options.length; i++) {
-			this.options.push(ko.observable(info.options[i]));
+			this._addOption(info.options[i].text, info.options[i].active);
 		}
 	}
 
 	addOption() {
-		this.options.push(ko.observable(""));
-
+		this._addOption("", true);
 		if (this.options().length > 1) {
 			this.outs.push(new Output());
 		}
+	}
+	
+	toggleActive(index, elm) {
+		// This is nonsense, but KO is trippin, probably because I'm trippin...
+		setTimeout(() => {
+			elm.checked = this.options()[index].active();
+		}, 10);
 	}
 
 	removeOption(index) {
 		if (index === -1) {
 			return;
 		}
-
 		this.options.splice(index, 1);
-
 		if (this.options().length >= 1) {
 			// Add one because the first one is the standard out
 			this.outs.splice(index, 1);
@@ -307,11 +332,9 @@ class OptionNode extends CoreNode {
 	serialize() {
 		let obj = super.serialize();
 		obj.options = [];
-
 		for (let i = 0; i < this.options().length; i++) {
-			obj.options.push(this.options()[i]());
+			obj.options.push({text:this.options()[i].text(),active:this.options()[i].active()});
 		}
-
 		return obj;
 	}
 }
@@ -681,6 +704,23 @@ class MusicNode extends SourceNode {
 	}
 }
 
+class OptionAvailabilityNode extends PassNode {
+	constructor(createInfo) {
+		super(createInfo);
+		this.nodeId = new IntValue("Node ID");
+		this.active = new BoolValue("Activate?");
+		super._setup(createInfo);
+	}
+
+	get color() {
+		return "gray";
+	}
+
+	execute(app) {
+
+	}
+}
+
 class JumpNode extends SourceNode {
 	constructor(createInfo) {
 		super(createInfo, "File or blank for this file...");
@@ -979,6 +1019,7 @@ Node.typeMap = {
 	"Jump": JumpNode,
 	"Log": LogNode,
 	"Music": MusicNode,
+	"OptionAvailability": OptionAvailabilityNode,
 	"Pass": PassNode,
 	"Random": RandomNode,
 	"RandomVariable": RandomVariableNode,

@@ -772,6 +772,13 @@ function app() {
 
 ko.applyBindings(new app(), document.body);
 
+function toggleCheck(value, elm) {
+	// This is nonsense, but KO is trippin, probably because I'm trippin...
+	setTimeout(() => {
+		elm.checked = value();
+	}, 10);
+}
+
 window.onerror = (msg, url, linenumber) => {
 	alert(`Error message: ${msg}\nURL:${url}\nLine Number: ${linenumber}`);
 	return false;

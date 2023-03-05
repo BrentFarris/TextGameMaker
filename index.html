@@ -78,6 +78,12 @@
 							<!-- ko if: $data instanceof IntValue -->
 							<input class="inputs value" type="number" data-bind="value: value, attr: {placeholder: placeholder}" />
 							<!-- /ko -->
+							<!-- ko if: $data instanceof BoolValue -->
+								<!-- ko if: $data.prefix.length > 0 -->
+								<span data-bind="text:prefix"></span>
+								<!-- /ko -->
+							<input type="checkbox" data-bind="checked: value, click:toggleCheck(value, $element)" />
+							<!-- /ko -->
 							<!-- ko if: $data instanceof ConditionString -->
 							<select data-bind="value: value, foreach: ['==', '!=', '<=', '>=', '>', '<']">
 								<option data-bind="value:$data, text:$data"></option>
@@ -87,7 +93,8 @@
 						<!-- ko if: $data instanceof OptionNode -->
 						<div data-bind="foreach: options">
 							<div class="nodeOption">
-								<input class="inputs value" type="text" data-bind="value: $parent.options()[$index()]" />
+								<input type="checkbox" data-bind="checked:active, click:toggleCheck(active, $element)"/>
+								<input class="inputs value" type="text" data-bind="value:text" />
 								<button data-bind="click:$parent.removeOption.bind($parent, $index())">x</button>
 							</div>
 						</div>
