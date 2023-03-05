@@ -738,7 +738,7 @@ function app() {
 				}
 	
 				for (let i = 0; i < this.nodes().length; i++) {
-					if (this.nodes()[i].x > web2d.input.mousePosition.x + window.scrollX) {
+					if (this.nodes()[i].x < web2d.input.mousePosition.x + window.scrollX) {
 						continue;
 					}
 
