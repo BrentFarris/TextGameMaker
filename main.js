@@ -34,6 +34,7 @@ function app() {
 	this.nodeTemplates = ko.observableArray([]);
 	this.name = ko.observable("");
 	this.settingTo = null;
+	this.hoveringNode = null;
 	this.view = ko.observable(null);
 	this.nodeTypes = [];
 	this.jumpStack = [];
@@ -283,18 +284,18 @@ function app() {
 	};
 	
 	this.nodeMouseOver = function(elm, scope, e) {
+		this.hoveringNode = { scope: scope, elm: elm };
 		if (!this.settingTo || this.settingTo === scope) {
 			return;
 		}
-
 		elm.style.borderColor = "red";
 	};
 	
 	this.nodeMouseOut = function(elm, scope, e) {
+		this.hoveringNode = null;
 		if (!this.settingTo || this.settingTo === scope) {
 			return;
 		}
-
 		elm.style.borderColor = "black";
 	};
 
@@ -626,6 +627,17 @@ function app() {
 		}
 	};
 
+	this.cancelOutLink = function() {
+		if (this.hoveringNode) {
+			this.hoveringNode.elm.style.borderColor = "black";
+		}
+		this.settingTo = null;
+	}
+
+	this.canvasClick = function(scope, elm) {
+		this.cancelOutLink();
+	};
+
 	canvas.drawing.register(() => {
 		for (let i = 0; i < this.nodes().length; i++) {
 			if (!this.nodes()[i].outs().length) {
@@ -712,7 +724,9 @@ function app() {
 	})();
 
 	web2d.input.keyDown.register((key) => {
-		if (key.keyCode === web2d.input.keys.Left || key.keyCode === web2d.input.keys.Right) {
+		if (key.keyCode == web2d.input.keys.Escape) {
+			this.cancelOutLink();
+		} else if (key.keyCode === web2d.input.keys.Left || key.keyCode === web2d.input.keys.Right) {
 			if (web2d.input.Ctrl && web2d.input.Alt) {
 				let change = 10;
 				if (key.keyCode === web2d.input.keys.Left) {
