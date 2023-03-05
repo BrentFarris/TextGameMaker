@@ -2,6 +2,7 @@ class ValueType {
 	constructor(placeholder) {
 		this.value = ko.observable(null);
 		this.placeholder = ko.observable(placeholder || "");
+		this.hint = ko.observable("");
 	}
 
 	get Value() {
@@ -71,9 +72,10 @@ class ItemIndex extends IndexValue {
 }
 
 class VariableString extends ValueType {
-	constructor() {
+	constructor(hint) {
 		super();
 		this.Value = "";
+		this.hint = hint || "";
 	}
 }
 
@@ -431,8 +433,8 @@ class VariableNode extends PassNode {
 class CopyVariableToVariableNode extends PassNode {
 	constructor(createInfo, app) {
 		super(createInfo);
-		this.from = new VariableString();
-		this.to = new VariableString();
+		this.from = new VariableString("From:");
+		this.to = new VariableString("To:");
 		super._setup(createInfo);
 	}
 
@@ -483,8 +485,8 @@ class AddToVariableNode extends VariableNode {
 class AddVariableToVariableNode extends PassNode {
 	constructor(createInfo, app) {
 		super(createInfo, app);
-		this.alter = new VariableString();
-		this.source = new VariableString();
+		this.alter = new VariableString("Add:");
+		this.source = new VariableString("To:");
 		super._setup(createInfo);
 	}
 
@@ -520,8 +522,8 @@ class AddVariableToVariableNode extends PassNode {
 class SubVariableFromVariableNode extends PassNode {
 	constructor(createInfo, app) {
 		super(createInfo, app);
-		this.alter = new VariableString();
-		this.source = new VariableString();
+		this.alter = new VariableString("Subtract:");
+		this.source = new VariableString("From:");
 		super._setup(createInfo);
 	}
 

@@ -35,9 +35,13 @@
 							</select>
 							<!-- /ko -->
 							<!-- ko if: $data instanceof VariableString -->
+								<!-- ko if: $data.hint.length > 0 -->
+								<span data-bind="text: $data.hint"></span>
+								<!-- /ko -->
 							<select data-bind="value: value, foreach: $root.variables, event: {change:$parent.changedVar.bind($parent, $root)}">
 								<option data-bind="value:name, text:name"></option>
 							</select>
+							<br />
 							<!-- /ko -->
 							<!-- ko if: $data instanceof BigString -->
 							<textarea class="inputs dialog" data-bind="value: value, attr: {placeholder: placeholder}" onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'></textarea>
