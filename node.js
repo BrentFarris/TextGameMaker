@@ -560,7 +560,7 @@ class SubVariableFromVariableNode extends PassNode {
 class RandomVariableNode extends PassNode {
 	constructor(createInfo, app) {
 		super(createInfo, app);
-		this.key = new VariableString();
+		this.key = new VariableString(null, "=");
 		this.min = new VariableValueString("Minimum value");
 		this.max = new VariableValueString("Maximum value");
 		this.key.value.subscribe((val) => {
