@@ -240,7 +240,6 @@ function app() {
 		}
 
 		this.fileOptionsVisible(false);
-		this.initializeNode(Node.typeMap["Start"]);
 	}
 
 	this.saveTemp = async function(anything) {
