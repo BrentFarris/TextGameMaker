@@ -5,12 +5,12 @@ export class Input {
 	/**
 	 * @type {string}
 	 */
-	static _keyString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	static #keyString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 	/**
 	 * @type {string}
 	 */
-	static _keyNumberStrings = "0123456789";
+	static #keyNumberStrings = "0123456789";
 
 	/** @type {boolean} */
 	static Left = false;
@@ -168,7 +168,7 @@ export class Input {
 	/**
 	 * @param {MouseEvent|TouchEvent} evt
 	 */
-	static _inputMousePosition(evt) {
+	static #inputMousePosition(evt) {
 		evt = evt || window.event;
 		let isTouch = web2d.undefined(evt.clientX);
 		Input.mousePosition.x = !isTouch ? evt.clientX : evt.changedTouches[0].clientX;
@@ -179,7 +179,7 @@ export class Input {
 	/**
 	 * 
 	 */
-	static _inputMouseDown() {
+	static #inputMouseDown() {
 		Input.mouseIsDown = true;
 		Input.mouseDown.fire([Input.mousePosition]);
 	}
@@ -187,7 +187,7 @@ export class Input {
 	/**
 	 * 
 	 */
-	static _inputMouseUp() {
+	static #inputMouseUp() {
 		Input.mouseIsDown = false;
 		Input.mouseUp.fire();
 	}
@@ -195,8 +195,8 @@ export class Input {
 	/**
 	 * 
 	 */
-	static _inputKeyDown(key) {
-		if (Input._setKeyDown(key)) {
+	static #inputKeyDown(key) {
+		if (Input.#setKeyDown(key)) {
 			Input.keyDown.fire([key]);
 		}
 	}
@@ -204,40 +204,40 @@ export class Input {
 	/**
 	 * 
 	 */
-	static _inputKeyUp(key) {
-		if (Input._setKeyUp(key))
+	static #inputKeyUp(key) {
+		if (Input.#setKeyUp(key))
 			Input.keyUp.fire([key]);
 	}
 
 	/**
 	 * @param {Object} key
 	 */
-	static _setKeyDown(key) {
-		for (let i = 0; i < Input._keyString.length; i++) {
-			if (key.keyCode === Input.keys[Input._keyString[i]]) {
-				if (this[Input._keyString.charAt(i)]) {
+	static #setKeyDown(key) {
+		for (let i = 0; i < Input.#keyString.length; i++) {
+			if (key.keyCode === Input.keys[Input.#keyString[i]]) {
+				if (this[Input.#keyString.charAt(i)]) {
 					return false;
 				}
 
-				this[Input._keyString.charAt(i)] = true;
+				this[Input.#keyString.charAt(i)] = true;
 				return true;
 			}
 		}
-		for (let i = 0; i < Input._keyNumberStrings.length; i++) {
-			if (key.keyCode === Input.keys["Num" + Input._keyNumberStrings[i]]) {
-				if (this["Num" + Input._keyNumberStrings.charAt(i)])
+		for (let i = 0; i < Input.#keyNumberStrings.length; i++) {
+			if (key.keyCode === Input.keys["Num" + Input.#keyNumberStrings[i]]) {
+				if (this["Num" + Input.#keyNumberStrings.charAt(i)])
 					return false;
 
-				this["Num" + Input._keyNumberStrings.charAt(i)] = true;
+				this["Num" + Input.#keyNumberStrings.charAt(i)] = true;
 				return true;
 			}
 		}
-		for (let i = 0; i < Input._keyNumberStrings.length; i++) {
-			if (key.keyCode === Input.keys["Numpad" + Input._keyNumberStrings[i]]) {
-				if (this["Numpad" + Input._keyNumberStrings.charAt(i)])
+		for (let i = 0; i < Input.#keyNumberStrings.length; i++) {
+			if (key.keyCode === Input.keys["Numpad" + Input.#keyNumberStrings[i]]) {
+				if (this["Numpad" + Input.#keyNumberStrings.charAt(i)])
 					return false;
 
-				this["Numpad" + Input._keyNumberStrings.charAt(i)] = true;
+				this["Numpad" + Input.#keyNumberStrings.charAt(i)] = true;
 				return true;
 			}
 		}
@@ -321,31 +321,31 @@ export class Input {
 	/**
 	 * @param {Object} key
 	 */
-	static _setKeyUp(key) {
-		for (let i = 0; i < Input._keyString.length; i++) {
-			if (key.keyCode === Input.keys[Input._keyString[i]]) {
-				if (!this[Input._keyString.charAt(i)])
+	static #setKeyUp(key) {
+		for (let i = 0; i < Input.#keyString.length; i++) {
+			if (key.keyCode === Input.keys[Input.#keyString[i]]) {
+				if (!this[Input.#keyString.charAt(i)])
 					return false;
 
-				this[Input._keyString.charAt(i)] = false;
+				this[Input.#keyString.charAt(i)] = false;
 				return true;
 			}
 		}
-		for (let i = 0; i < Input._keyNumberStrings.length; i++) {
-			if (key.keyCode === Input.keys["Num" + Input._keyNumberStrings[i]]) {
-				if (!this["Num" + Input._keyNumberStrings.charAt(i)])
+		for (let i = 0; i < Input.#keyNumberStrings.length; i++) {
+			if (key.keyCode === Input.keys["Num" + Input.#keyNumberStrings[i]]) {
+				if (!this["Num" + Input.#keyNumberStrings.charAt(i)])
 					return false;
 
-				this["Num" + Input._keyNumberStrings.charAt(i)] = false;
+				this["Num" + Input.#keyNumberStrings.charAt(i)] = false;
 				return true;
 			}
 		}
-		for (let i = 0; i < Input._keyNumberStrings.length; i++) {
-			if (key.keyCode === Input.keys["Numpad" + Input._keyNumberStrings[i]]) {
-				if (!this["Numpad" + Input._keyNumberStrings.charAt(i)])
+		for (let i = 0; i < Input.#keyNumberStrings.length; i++) {
+			if (key.keyCode === Input.keys["Numpad" + Input.#keyNumberStrings[i]]) {
+				if (!this["Numpad" + Input.#keyNumberStrings.charAt(i)])
 					return false;
 
-				this["Numpad" + Input._keyNumberStrings.charAt(i)] = false;
+				this["Numpad" + Input.#keyNumberStrings.charAt(i)] = false;
 				return true;
 			}
 		}
@@ -429,7 +429,7 @@ export class Input {
 	/**
 	 * @param {WheelEvent} evt
 	 */
-	static _wheelScroll(evt) {
+	static #wheelScroll(evt) {
 		Input.wheelScroll.fire([evt.deltaY]);
 	}
 

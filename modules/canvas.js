@@ -51,14 +51,16 @@ export class Canvas {
 	deltaTime = 0;
 
 	/**
-     * @param {HTMLCanvasElement} elm The Canvas element on the page to reference
+     * @param {HTMLElement|null} elm The Canvas element on the page to reference
      * @param {!number} [widthPercent] The width scale factor of the Canvas (if null uses default width set in the Canvas tag)
      * @param {!number} [heightPercent] The height scale factor of the Canvas (if null uses default height set in the Canvas tag)
      */
 	constructor(elm, widthPercent, heightPercent) {
 		if (!elm)
             throw "The Canvas id passed was not valid";
-		this.elm = elm;
+		if (typeof elm !== "object" || elm.tagName !== "CANVAS")
+			throw "The Canvas id passed was not a Canvas element";
+		this.elm = /** @type {HTMLCanvasElement} */ (elm);
 		this.context.Value = this.elm.getContext("2d");
 		if (widthPercent != null) {
 			let width = this.elm.parentElement?.clientWidth;

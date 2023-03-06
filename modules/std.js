@@ -60,7 +60,7 @@ export async function eachAsync(arrobj, callback) {
 		if (response === false)
 			break;
 	}
-},
+}
 
 export class StringHelpers {
 	/**

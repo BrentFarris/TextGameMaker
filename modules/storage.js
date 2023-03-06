@@ -1,4 +1,6 @@
 import { ArrayHelpers, Optional } from "./std.js";
+import * as JSZip from "../jszip.min.js";
+import * as localforage from "../localforage.min.js";
 
 /**
  * @param {ArrayBuffer} buffer The array buffer to be turned into a string
@@ -63,7 +65,7 @@ export class Folder {
 	}
 }
 
-class Storage {
+export class Storage {
 	/** @type {Optional<Folder>} */
 	fs = new Optional();
 
@@ -229,7 +231,7 @@ class Storage {
 	/**
 	 * @param {Folder} folder The folder that the file is found within
 	 * @param {string} fileName The name of the file that is to be written to
-	 * @param {ArrayBuffer|string|string} data The data that is to be written to the file
+	 * @param {ArrayBuffer|string|Object} data The data that is to be written to the file
 	 * @async
 	 */
 	async writeFile(folder, fileName, data) {
