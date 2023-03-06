@@ -60,9 +60,12 @@ export class ViewApplication extends Application {
 
 	async importMedia(files) {
 		for (let i = 0; i < files.length; i++) {
-			if (files[i].type === "audio/mpeg" || files[i].type === "audio/wav")
+			console.log(files[i].type);
+			if (files[i].type === "audio/mpeg" || files[i].type === "audio/wav"
+				|| files[i].type === "video/ogg" || files[i].type === "audio/x-wav")
+			{
 				await this.media.audioDatabase.add(files[i], URL.createObjectURL(files[i]));
-			else if (files[i].type === "image/png" || files[i].type === "image/jpeg")
+			} else if (files[i].type === "image/png" || files[i].type === "image/jpeg")
 				await this.media.imageDatabase.add(files[i], URL.createObjectURL(files[i]));
 		}
 	}

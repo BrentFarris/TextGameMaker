@@ -24,12 +24,10 @@ export class AudioDatabase {
 		let path = file.webkitRelativePath.substring(file.webkitRelativePath.indexOf('/') + 1);
 		return new Promise((res, rej) => {
 			let audio = new Audio();
-			audio.onload = () => {
-				this.#resources[path] = { elm: audio, url: src };
-				res();
-			};
 			audio.src = src;
 			audio.load();
+			this.#resources[path] = { elm: audio, url: src };
+			res();
 		});
 	}
 
