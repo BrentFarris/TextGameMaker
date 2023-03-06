@@ -16,6 +16,7 @@
 
 /**
  * Base class for values that are presented in nodes and read by the viewer
+ * @class
  * @abstract
  */
 class ValueType {
@@ -58,6 +59,7 @@ class ValueType {
 
 /**
  * Shows checkbox in editor
+ * @class
  * @extends ValueType
  */
 class BoolValue extends ValueType {
@@ -87,6 +89,7 @@ class BoolValue extends ValueType {
 
 /**
  * Shows number input in editor
+ * @class
  * @extends ValueType
  */
 class IntValue extends ValueType {
@@ -117,6 +120,7 @@ class IntValue extends ValueType {
 
 /**
  * Base class for manager indexing
+ * @class
  * @extends ValueType
  * @abstract
  */
@@ -133,6 +137,7 @@ class IndexValue extends ValueType {
 /**
  * Shows text area input in editor
  * @extends ValueType
+ * @class
  */
 class BigString extends ValueType {
 	/**
@@ -147,6 +152,7 @@ class BigString extends ValueType {
 
 /**
  * Shows text input in editor
+ * @class
  * @extends ValueType
  */
 class ShortString extends ValueType {
@@ -161,6 +167,7 @@ class ShortString extends ValueType {
 
 /**
  * Shows number input in editor
+ * @class
  * @extends IndexValue
  */
 class CharacterIndex extends IndexValue {
@@ -172,6 +179,7 @@ class CharacterIndex extends IndexValue {
 
 /**
  * Shows number input in editor
+ * @class
  * @extends IndexValue
  */
 class BeastIndex extends IndexValue {
@@ -183,6 +191,7 @@ class BeastIndex extends IndexValue {
 
 /**
  * Shows number input in editor
+ * @class
  * @extends IndexValue
  */
 class ItemIndex extends IndexValue {
@@ -194,6 +203,7 @@ class ItemIndex extends IndexValue {
 
 /**
  * Shows button in the editor to pick a node
+ * @class
  * @extends IndexValue
  */
 class NodeIndex extends IndexValue {
@@ -205,6 +215,7 @@ class NodeIndex extends IndexValue {
 
 /**
  * Shows button in the editor to pick a node
+ * @class
  * @extends IndexValue
  */
 class NodeOptionIndex extends ValueType {
@@ -216,6 +227,7 @@ class NodeOptionIndex extends ValueType {
 
 /**
  * Shows a variable selection box in the editor
+ * @class
  */
 class VariableString extends ValueType {
 	/**
@@ -232,6 +244,7 @@ class VariableString extends ValueType {
 
 /**
  * Shows input text box to set the value of a variable
+ * @class
  */
 class VariableValueString extends ValueType {
 	/** @type {Observable<string>} */
@@ -311,6 +324,7 @@ class VariableValueString extends ValueType {
 
 /**
  * Shows a conditional string option in the editor
+ * @class
  */
 class ConditionString extends ValueType {
 	/**
@@ -324,6 +338,7 @@ class ConditionString extends ValueType {
 
 /**
  * Represents a single output of a node
+ * @class
  */
 class Output {
 	/** @type {Observable<CoreNode>} */
@@ -334,6 +349,7 @@ class Output {
 
 /**
  * The base class for all nodes
+ * @class
  * @abstract
  */
 class CoreNode {
@@ -495,6 +511,7 @@ class CoreNode {
 
 /**
  * Base representation of a node that can have options/choices
+ * @class
  * @extends {CoreNode}
  * @abstract
  */
@@ -577,6 +594,7 @@ class OptionNode extends CoreNode {
 
 /**
  * A dialog node which is used to allow for a character to speak
+ * @class
  * @extends {OptionNode}
  */
 class DialogNode extends OptionNode {
@@ -597,6 +615,7 @@ class DialogNode extends OptionNode {
 
 /**
  * A story node which is used to display a story message
+ * @class
  * @extends {OptionNode}
  */
 class StoryNode extends OptionNode {
@@ -623,6 +642,7 @@ class StoryNode extends OptionNode {
 /**
  * A node that can be used as a junction or as a base node, when this node
  * executes, it simply moves on to the first output
+ * @class
  * @extends {CoreNode}
  */
 class PassNode extends CoreNode {
@@ -650,6 +670,7 @@ class PassNode extends CoreNode {
 /**
  * A node that denotes this is the start of the text based adventure, there
  * should only be one of these nodes in the whole game
+ * @class
  */
 class StartNode extends PassNode {
 	/**
@@ -672,6 +693,7 @@ class StartNode extends PassNode {
 /**
  * A node that is used to add log entries to the player's log. This is something
  * that they can view at any time by pulling up their log.
+ * @class
  * @extends {PassNode}
  */
 class LogNode extends PassNode {
@@ -710,6 +732,7 @@ class LogNode extends PassNode {
 /**
  * A node that is used as a comment in the editor so that the writer is able
  * to leave notes for themselves
+ * @class
  * @extends {PassNode}
  */
 class CommentNode extends PassNode {
@@ -743,6 +766,7 @@ class CommentNode extends PassNode {
 
 /**
  * A node that allows the writer to set the value of a variable
+ * @class
  * @extends {PassNode}
  */
 class VariableNode extends PassNode {
@@ -793,6 +817,7 @@ class VariableNode extends PassNode {
 
 /**
  * A node that allows the writer to copy the value of one variable to another
+ * @class
  * @extends {PassNode}
  */
 class CopyVariableToVariableNode extends PassNode {
@@ -838,6 +863,7 @@ class CopyVariableToVariableNode extends PassNode {
 
 /**
  * A node that allows the writer to add a value to a variable
+ * @class
  * @extends {VariableNode}
  */
 class AddToVariableNode extends VariableNode {
@@ -884,6 +910,7 @@ class AddToVariableNode extends VariableNode {
 
 /**
  * A node that allows the writer to add the value of one variable to another
+ * @class
  * @extends {PassNode}
  */
 class AddVariableToVariableNode extends PassNode {
@@ -943,6 +970,7 @@ class AddVariableToVariableNode extends PassNode {
 
 /**
  * A node that allows the writer to subtract a value from a variable
+ * @class
  * @extends {VariableNode}
  */
 class SubVariableFromVariableNode extends PassNode {
@@ -1002,6 +1030,7 @@ class SubVariableFromVariableNode extends PassNode {
 
 /**
  * A node that allows the writer to assign a random value to a variable
+ * @class
  * @extends {PassNode}
  */
 class RandomVariableNode extends PassNode {
@@ -1072,6 +1101,7 @@ class RandomVariableNode extends PassNode {
 
 /**
  * A node that allows the writer to add a random value to a variable
+ * @class
  * @extends {RandomVariableNode}
  */
 class AddRandomToVariableNode extends RandomVariableNode {
@@ -1110,6 +1140,7 @@ class AddRandomToVariableNode extends RandomVariableNode {
 
 /**
  * A base node for nodes that require a source (image, sound, etc.)
+ * @class
  * @extends {PassNode}
  * @abstract
  */
@@ -1127,6 +1158,7 @@ class SourceNode extends PassNode {
 
 /**
  * A node that allows the writer to play a sound
+ * @class
  * @extends {SourceNode}
  */
 class SoundNode extends SourceNode {
@@ -1160,6 +1192,7 @@ class SoundNode extends SourceNode {
 
 /**
  * A node that allows the writer to play music
+ * @class
  * @extends {SourceNode}
  */
 class MusicNode extends SourceNode {
@@ -1204,6 +1237,7 @@ class MusicNode extends SourceNode {
  * A node that allows the writer to change the availability of a given option
  * on a node that has options. This displays a button for the writer to click
  * on to select which option to control the availability of.
+ * @class
  * @extends {PassNode}
  */
 class OptionAvailabilityNode extends PassNode {
@@ -1239,6 +1273,7 @@ class OptionAvailabilityNode extends PassNode {
 
 /**
  * A node that allows the writer to jump to a given node in a given file
+ * @class
  * @extends {SourceNode}
  */
 class JumpNode extends SourceNode {
@@ -1280,6 +1315,7 @@ class JumpNode extends SourceNode {
 
 /**
  * A node that allows the writer to go back and continue from a jump node
+ * @class
  * @extends {PassNode}
  */
 class ReturnNode extends PassNode {
@@ -1303,6 +1339,7 @@ class ReturnNode extends PassNode {
 
 /**
  * A node that allows the writer to change the background image
+ * @class
  * @extends {SourceNode}
  */
 class BackgroundNode extends SourceNode {
@@ -1336,6 +1373,7 @@ class BackgroundNode extends SourceNode {
 
 /**
  * A node that allows the writer to branch given a condition on a variable
+ * @class
  * @extends {VariableNode}
  */
 class IfVariableNode extends VariableNode {
@@ -1397,6 +1435,7 @@ class IfVariableNode extends VariableNode {
 
 /**
  * A node that allows the writer to branch given a condition on two variables
+ * @class
  * @extends {PassNode}
  */
 class CompareVariableNode extends PassNode {
@@ -1469,6 +1508,7 @@ class CompareVariableNode extends PassNode {
 
 /**
  * A node that allows the writer to call a custom registered JavaScript function
+ * @class
  * @extends {PassNode}
  */
 class FunctionCallNode extends PassNode {
@@ -1495,6 +1535,7 @@ class FunctionCallNode extends PassNode {
 /**
  * A node that will create a number of outputs that are not bound to an
  * option/choice that the player can make
+ * @class
  * @extends {PassNode}
  * @abstract
  */
@@ -1520,6 +1561,7 @@ class OutsNode extends PassNode {
 
 /**
  * A node that can have a series of outputs and one will be chosen at random
+ * @class
  * @extends {OutsNode}
  */
 class RandomNode extends OutsNode {
@@ -1545,6 +1587,7 @@ class RandomNode extends OutsNode {
 
 /**
  * The base node for inventory nodes
+ * @class
  * @extends {PassNode}
  * @abstract
  */
@@ -1563,6 +1606,7 @@ class InventoryNode extends PassNode {
 
 /**
  * A node that adds an item to the inventory
+ * @class
  * @extends {InventoryNode}
  */
 class InventoryAddNode extends InventoryNode {
@@ -1588,6 +1632,7 @@ class InventoryAddNode extends InventoryNode {
 
 /**
  * A node that removes an item from the inventory
+ * @class
  * @extends {InventoryNode}
  */
 class InventoryRemoveNode extends InventoryNode {
@@ -1613,6 +1658,7 @@ class InventoryRemoveNode extends InventoryNode {
 
 /**
  * A node that checks if an item is in the inventory
+ * @class
  * @extends {InventoryNode}
  */
 class InventoryExistsNode extends InventoryNode {
@@ -1647,6 +1693,7 @@ class InventoryExistsNode extends InventoryNode {
 
 /**
  * A node that checks the number of items in the inventory
+ * @class
  * @extends {InventoryNode}
  */
 class InventoryCountNode extends InventoryNode {
