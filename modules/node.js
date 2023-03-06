@@ -1,5 +1,5 @@
-import * as ko from "./knockout.js";
-import { ArrayHelpers, each } from "./modules/std.js";
+import { GameAudio } from "./game_audio.js";
+import { ArrayHelpers, each, random } from "./std.js";
 
 export const NODE_WIDTH = 200;
 export const NODE_HANDLE_HEIGHT = 24;
@@ -46,6 +46,10 @@ export class ValueType {
 	 */
 	set Value(val) {
 		this.value(val);
+	}
+
+	get TypeName() {
+		return this.constructor.name;
 	}
 }
 
@@ -368,7 +372,7 @@ export class CoreNode {
 	 * @param {CoreNode|number} createInfo
 	 */
 	constructor(createInfo) {
-		this.type = this.typeName;
+		this.type = this.TypeName;
 		if (typeof createInfo === "number") {
 			this.id = createInfo;
 			this.outs.push(new Output());
@@ -411,7 +415,7 @@ export class CoreNode {
 		this.id = info.id;
 		this.x = info.x;
 		this.y = info.y;
-		this.tos = info.outs();
+		this.tos = info.outs;
 		for (let i = 0; i < info.outs.length; i++)
 			this.outs.push(new Output());
 		if (!info.outs.length)
@@ -469,14 +473,14 @@ export class CoreNode {
 	 * @protected
 	 * @virtual
 	 */
-	get color() {
+	get Color() {
 		return "grey";
 	}
 
 	/**
 	 * @returns {string}
 	 */
-	get typeName() {
+	get TypeName() {
 		return this.constructor.name.replace("Node", "");
 	}
 
@@ -619,7 +623,7 @@ export class StoryNode extends OptionNode {
 	 * @returns {string}
 	 * @override
 	 */
-	get color() {
+	get Color() {
 		return "darkcyan";
 	}
 }
@@ -637,7 +641,7 @@ export class PassNode extends CoreNode {
 	constructor(createInfo) {
 		super(createInfo);
 		// Only call setup from the farthest child class
-		if (this.typeName === "Pass") {
+		if (this.TypeName === "Pass") {
 			super._setup(createInfo);
 		}
 	}
@@ -670,7 +674,7 @@ export class StartNode extends PassNode {
 	 * @returns {string}
 	 * @override
 	 */
-	get color() {
+	get Color() {
 		return "green";
 	}
 }
@@ -696,7 +700,7 @@ export class LogNode extends PassNode {
 	 * @returns {string}
 	 * @override
 	 */
-	get color() {
+	get Color() {
 		return "darkgoldenrod";
 	}
 
@@ -735,7 +739,7 @@ export class CommentNode extends PassNode {
 	 * @returns {string}
 	 * @override
 	 */
-	get color() {
+	get Color() {
 		return "red";
 	}
 
@@ -767,7 +771,7 @@ export class VariableNode extends PassNode {
 			this.value.setType(app, val);
 		});
 
-		if (this.typeName === "Variable") {
+		if (this.TypeName === "Variable") {
 			super._setup(createInfo);
 		}
 	}
@@ -784,7 +788,7 @@ export class VariableNode extends PassNode {
 	 * @returns {string}
 	 * @override
 	 */
-	get color() {
+	get Color() {
 		return "darkviolet";
 	}
 
@@ -831,7 +835,7 @@ export class CopyVariableToVariableNode extends PassNode {
 	 * @returns {string}
 	 * @override
 	 */
-	get color() {
+	get Color() {
 		return "darkviolet";
 	}
 
@@ -865,7 +869,7 @@ export class AddToVariableNode extends VariableNode {
 	 * @returns {string}
 	 * @override
 	 */
-	get color() {
+	get Color() {
 		return "purple";
 	}
 
@@ -924,7 +928,7 @@ export class AddVariableToVariableNode extends PassNode {
 	 * @returns {string}
 	 * @override
 	 */
-	get color() {
+	get Color() {
 		return "purple";
 	}
 
@@ -956,7 +960,7 @@ export class AddVariableToVariableNode extends PassNode {
 /**
  * A node that allows the writer to subtract a value from a variable
  * @class
- * @extends {VariableNode}
+ * @extends {PassNode}
  */
 export class SubVariableFromVariableNode extends PassNode {
 	/** @type {VariableString} */
@@ -984,7 +988,7 @@ export class SubVariableFromVariableNode extends PassNode {
 	 * @returns {string}
 	 * @override
 	 */
-	get color() {
+	get Color() {
 		return "purple";
 	}
 
@@ -1038,7 +1042,7 @@ export class RandomVariableNode extends PassNode {
 			this.min.setType(app, val);
 			this.max.setType(app, val);
 		});
-		if (this.typeName === "RandomVariable") {
+		if (this.TypeName === "RandomVariable") {
 			super._setup(createInfo);
 		}
 	}
@@ -1056,7 +1060,7 @@ export class RandomVariableNode extends PassNode {
 	 * @returns {string}
 	 * @override
 	 */
-	get color() {
+	get Color() {
 		return "purple";
 	}
 
@@ -1159,7 +1163,7 @@ export class SoundNode extends SourceNode {
 	 * @returns {string}
 	 * @override
 	 */
-	get color() {
+	get Color() {
 		return "blue";
 	}
 
@@ -1169,7 +1173,7 @@ export class SoundNode extends SourceNode {
 	 * @override
 	 */
 	execute(app) {
-		let sound = new web2d.audio(`audio/${this.src.Value}`);
+		let sound = new GameAudio(`audio/${this.src.Value}`);
 		sound.play();
 		return super.execute(app);
 	}
@@ -1193,7 +1197,7 @@ export class MusicNode extends SourceNode {
 	 * @returns {string}
 	 * @override
 	 */
-	get color() {
+	get Color() {
 		return "blue";
 	}
 
@@ -1209,7 +1213,7 @@ export class MusicNode extends SourceNode {
 		}
 
 		if (this.src.Value) {
-			app.bgm = new web2d.audio(`audio/${this.src.Value}`);
+			app.bgm = new GameAudio(`audio/${this.src.Value}`);
 			app.bgm.setLoopCount(0);
 			app.bgm.play();
 		}
@@ -1240,7 +1244,7 @@ export class OptionAvailabilityNode extends PassNode {
 	 * @returns {string}
 	 * @override
 	 */
-	get color() {
+	get Color() {
 		return "gray";
 	}
 
@@ -1250,7 +1254,6 @@ export class OptionAvailabilityNode extends PassNode {
 	 * @override
 	 */
 	execute(app) {
-		debugger;
 		app.nodeById(this.optionIdx.Value.id).options()[this.optionIdx.Value.option].active(this.active.Value);
 		return super.execute(app);
 	}
@@ -1275,7 +1278,7 @@ export class JumpNode extends SourceNode {
 	 * @returns {string}
 	 * @override
 	 */
-	get color() {
+	get Color() {
 		return "black";
 	}
 
@@ -1306,10 +1309,9 @@ export class JumpNode extends SourceNode {
 export class ReturnNode extends PassNode {
 	/**
 	 * @param {ReturnNode} createInfo
-	 * @param {Application} app
 	 */
-	constructor(createInfo, app) {
-		super(createInfo, app);
+	constructor(createInfo) {
+		super(createInfo);
 		super._setup(createInfo);
 	}
 
@@ -1340,7 +1342,7 @@ export class BackgroundNode extends SourceNode {
 	 * @returns {string}
 	 * @override
 	 */
-	get color() {
+	get Color() {
 		return "olivedrab";
 	}
 
@@ -1436,10 +1438,9 @@ export class CompareVariableNode extends PassNode {
 
 	/**
 	 * @param {CompareVariableNode} createInfo
-	 * @param {Application} app
 	 */
-	constructor(createInfo, app) {
-		super(createInfo, app);
+	constructor(createInfo) {
+		super(createInfo);
 		super._setup(createInfo);
 	}
 	

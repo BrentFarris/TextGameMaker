@@ -1,6 +1,5 @@
-import * as ko from "./knockout.js";
-import { CoreNode } from "../node";
-import { each, Optional } from "../modules/std.js";
+import { CoreNode, NodeTypeMap } from "../node.js";
+import { each, Optional } from "../std.js";
 
 export class NodeManager {
 	/** @type {KnockoutObservableArray<CoreNode>} */
@@ -8,6 +7,19 @@ export class NodeManager {
 
 	/** @type {Optional<CoreNode>} */
 	#selectedNode = new Optional();
+
+	/** @type {string[]} */
+	#nodeTypes = [];
+
+	constructor() {
+		each(NodeTypeMap, (key, val) => {
+			this.#nodeTypes.push(/** @type {string} */ (key));
+		});
+	}
+
+	get NodeTypes() {
+		return this.#nodeTypes;
+	}
 
 	/**
 	 * @return {CoreNode[]}

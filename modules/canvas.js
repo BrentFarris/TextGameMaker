@@ -26,13 +26,13 @@ export class Canvas {
 	viewScale = new Vec2(1, 1);
 
 	/**
-	 * Fires at the beginning this objects <a href="web2d.canvas.html#method_Draw">Draw</a> function before the <a href="web2d.canvas.html#event_Draw">drawing</a> event fires
+	 * Fires at the beginning this objects draw function before the drawing event fires
 	 * @event
 	 */
 	updating = new JSEvent();
 
 	/**
-	 * Fires whenever this objects <a href="web2d.canvas.html#method_Draw">Draw</a> function is called
+	 * Fires whenever this objects draw function is called
 	 * @event
 	 * @param {Canvas} canvas This canvas element
 	 */
@@ -122,7 +122,7 @@ export class Canvas {
 	}
 
 	/**
-	 * Calls all of the events registered to <a href="web2d.canvas.html#event_drawing">drawing</a> event on this Canvas object 
+	 * Calls all of the events registered to drawing event on this Canvas object 
 	*/
 	draw() {
 		let now = new Date();
@@ -134,7 +134,7 @@ export class Canvas {
 	}
 
 	/**
-	 * Calls the web2d.canvas#resize and the web2d.canvas#scale method internally
+	 * Calls the resize and the scale method internally
 	 * @method
 	 * @param {number} baseWidth The base width to be multiplied by the ratio
 	 * @param {number} baseHeight The base height to be multiplied by the ratio

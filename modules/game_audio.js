@@ -1,4 +1,3 @@
-
 /**
  * Controls and play audio
  * @property {Audio} clip The audio clip to play

@@ -1,51 +1,89 @@
-function app() {
-	this.characters = [];
-	this.variables = {};
-	this.nodes = {};
-	this.node = ko.observable(null);
-	this.backgroundImage = ko.observable("");
-	this.backgroundImageBuffer = ko.observable("");
-	this.backgroundImageBufferOpacity = ko.observable(0.0);
-	this.backgroundImageOpacity = ko.observable(1.0);
-	this.textStyle = ko.observable("normal");
-	this.remoteFunctions = {};
-	this.fileStack = [];
-	this.currentFile = null;
-	this.inventory = [];
-	this.logs = ko.observableArray([]);
-	this.openedLog = ko.observable(null);
-	this.loadedFiles = [];
+import { each, StringHelpers } from "../std.js";
+import { NodeTypeMap, Output, StartNode, StoryNode } from "../node.js";
 
-	this.statsPanelDisplay = ko.observable("none");
-	this.inventoryPanelDisplay = ko.observable("none");
-	this.logPanelDisplay = ko.observable("none");
-	let panels = [this.statsPanelDisplay, this.inventoryPanelDisplay, this.logPanelDisplay];
+/**
+ * @typedef GameVariable
+ * @property {string} type
+ * @property {any} value
+ */
 
-	this.backgroundImage.subscribe(() => {
-		this.backgroundImageBufferOpacity(1.0);
-		this.backgroundImageOpacity(1.0);
-		let changeBgmInterval = setInterval(() => {
-			this.backgroundImageBufferOpacity(this.backgroundImageBufferOpacity() - 0.01);
+export class Application {
+	/** @type {string[]} */
+	characters = [];
 
-			if (this.backgroundImageBufferOpacity() <= 0.0) {
-				this.backgroundImageBufferOpacity(0.0);
-				this.backgroundImageOpacity(1.0);
-				clearInterval(changeBgmInterval);
-			}
-		}, 10);
-	});
+	/** @type {Object<string,GameVariable>} */
+	variables = {};
+	
+	nodes = {};
+	node = ko.observable(null);
 
-	this.importFolder = function(scope, event) {
+	/** @type {KnockoutObservable<string>} */
+	backgroundImage = ko.observable("");
+
+	/** @type {KnockoutObservable<string>} */
+	backgroundImageBuffer = ko.observable("");
+
+	/** @type {KnockoutObservable<number>} */
+	backgroundImageBufferOpacity = ko.observable(0.0);
+
+	/** @type {KnockoutObservable<number>} */
+	backgroundImageOpacity = ko.observable(1.0);
+
+	/** @type {KnockoutObservable<string>} */
+	textStyle = ko.observable("normal");
+	
+	remoteFunctions = {};
+	fileStack = [];
+	currentFile = null;
+	inventory = [];
+
+	/** @type {KnockoutObservableArray<string>} */
+	logs = ko.observableArray();
+
+	openedLog = ko.observable();
+	loadedFiles = [];
+
+	/** @type {KnockoutObservable<string>} */
+	statsPanelDisplay = ko.observable("none");
+
+	/** @type {KnockoutObservable<string>} */
+	inventoryPanelDisplay = ko.observable("none");
+
+	/** @type {KnockoutObservable<string>} */
+	logPanelDisplay = ko.observable("none");
+
+	/** @type {KnockoutObservable<string>[]} */
+	#panels = [];
+
+	constructor() {
+		this.#panels = [this.statsPanelDisplay, this.inventoryPanelDisplay, this.logPanelDisplay];
+		this.backgroundImage.subscribe(() => {
+			this.backgroundImageBufferOpacity(1.0);
+			this.backgroundImageOpacity(1.0);
+			let changeBgmInterval = setInterval(() => {
+				this.backgroundImageBufferOpacity(this.backgroundImageBufferOpacity() - 0.01);
+	
+				if (this.backgroundImageBufferOpacity() <= 0.0) {
+					this.backgroundImageBufferOpacity(0.0);
+					this.backgroundImageOpacity(1.0);
+					clearInterval(changeBgmInterval);
+				}
+			}, 10);
+		});
+	}
+
+	importFolder(event) {
 		let files = event.target.files;
 		for (let i = 0; i < files.length; i++) {
 			if (files[i].type === "application/json") {
 				let reader = new FileReader();
 				reader.readAsText(files[i]);
 				if (files[i].name === "meta.json") {
-					reader.onload = (e) => this.importMeta(JSON.parse(e.target.result));
+					reader.onload = (e) => this.importMeta(
+						JSON.parse(/** @type {string} } */ (e.target.result)));
 				} else {
 					reader.onload = (e) => {
-						let json = JSON.parse(e.target.result);
+						let json = JSON.parse(/** @type {string} } */ (e.target.result));
 						this.loadedFiles.push({
 							name: files[i].name,
 							json: json
@@ -74,18 +112,15 @@ function app() {
 				// TODO:  Keep this guy around in the background
 			}
 		}
-	};
+	}
 
-	this.importMeta = function(json) {
+	importMeta(json) {
 		if (json.variables) {
 			for (let i = 0; i < json.variables.length; i++) {
-				if (json.variables[i].name in this.variables) {
+				if (json.variables[i].name in this.variables)
 					continue;
-				}
-
 				let type = json.variables[i].type;
 				let value = null;
-
 				switch (type) {
 					case "string":
 						value = "";
@@ -100,73 +135,63 @@ function app() {
 						value = false;
 						break;
 				}
-
 				this.variables[json.variables[i].name] = {
 					type: type,
 					value: value
 				};
 			}
 		}
-
-		if (json.characters) {
+		if (json.characters)
 			this.characters = json.characters;
-		}
-	};
+	}
 
-	this.import = function(json, jumpToId) {
+	import(json, jumpToId) {
 		this.nodes = {};
-
-		for (let i = 0; i < json.nodes.length; i++) {
+		for (let i = 0; i < json.nodes.length; i++)
 			this.nodes[json.nodes[i].id] = new NodeTypeMap[json.nodes[i].type](json.nodes[i], this);
-		}
-
 		if (jumpToId > 0) {
-			web2d.each(this.nodes, (key, val) => {
+			each(this.nodes, (key, val) => {
 				val.initializeOuts(this.nodes);
 			});
 			this.jumpTo(jumpToId);
 		} else {
 			let jump = null;
-			web2d.each(this.nodes, (key, val) => {
+			each(this.nodes, (key, val) => {
 				val.initializeOuts(this.nodes);
 				if (jump == null)
 					jump = val;
-				if (val instanceof StartNode && (jumpToId == null || jumpToId <= 0)) {
+				if (val instanceof StartNode && (jumpToId == null || jumpToId <= 0))
 					jump = val;
-				}
 			});
 			this.node(jump);
 		}
-
 		let out = this.node().execute(this);
-		if (out) {
+		if (out)
 			this.next(out);
-		}
-		
 		this.updateText();
-	};
+	}
 
-	this.nodeById = function(id) {
+	nodeById(id) {
 		let node = null;
-		web2d.each(this.nodes, (key, val) => {
+		each(this.nodes, (key, val) => {
 			if (val.id === id) {
 				node = val;
 				return false;
 			}
 		});
 		return node;
-	};
+	}
 
-	this.jumpTo = function(toId) {
-		web2d.each(this.nodes, (key, val) => {
+	jumpTo(toId) {
+		each(this.nodes, (key, val) => {
 			if (val.id === toId) {
 				this.node(val);
 				return false;
 			}
 		});
-	};
+	}
 
-	this.load = function(loadedFile, holdId, jumpToId) {
+	load(loadedFile, holdId, jumpToId) {
 		if (typeof loadedFile === "string") {
 			let found = false;
 			for (let i = 0; i < this.loadedFiles.length && !found; ++i) {
@@ -181,126 +206,102 @@ function app() {
 				id: holdId
 			});
 		}
-		if (jumpToId > 0) {
+		if (jumpToId > 0)
 			this.import(loadedFile.json, jumpToId);
-		} else {
+		else
 			this.import(loadedFile.json);
-		}
 		this.currentFile = loadedFile;
-	};
+	}
 
-	this.returnToPrevious = async function() {
+	async returnToPrevious() {
 		let target = this.fileStack.pop();
 		await this.load(target.file);
 		this.returnTo(target.id);
 	};
 
-	this.returnTo = function(id) {
+	returnTo(id) {
 		this.node(this.nodes[id]);
 		this.next(this.nodes[id].outs()[0]);
 	};
 
-	this.next = function(source) {
+	next(source) {
 		let to = null;
-
-		if (source instanceof Output) {
+		if (source instanceof Output)
 			to = source.to();
-		} else {
+		else
 			to = this.node().outs()[source].to();
-		}
-
-		if (!to) {
+		if (!to)
 			return;
-		}
-
 		this.node(to);
 		let newTo = this.node().execute(this);
 
-		if (newTo) {
+		if (newTo)
 			this.next(newTo);
-		} else {
+		else
 			this.updateText();
-		}
-	};
+	}
 
-	this.updateText = function() {
-		if (this.node() instanceof StoryNode) {
+	updateText() {
+		if (this.node() instanceof StoryNode)
 			this.textStyle("italic");
-		} else {
+		else
 			this.textStyle("normal");
-		}
-	};
+	}
 
-	this.checkRequires = function(requires) {
-		if (!requires || !requires.length) {
+	checkRequires(requires) {
+		if (!requires || !requires.length)
 			return true;
-		}
-		
 		for (let i = 0; i < requires.length; i++) {
 			let variable = this.variables[requires[i].variable];
-
 			if (variable.type === "bool") {
 				let boolVal = requires[i].value != 0 && requires[i].value.toLowerCase() !== "false";
-				if (variable.value != boolVal) {
+				if (variable.value != boolVal)
 					return false;
-				} else {
+				else
 					continue;
-				}
 			}
-
-			if (variable.value != requires[i].value) {
+			if (variable.value != requires[i].value)
 				return false;
-			}
 		}
-
 		return true;
 	};
 
-	this.togglePanel = function(scope) {
-		for (let i = 0; i < panels.length; i++) {
-			if (panels[i] === scope) {
+	togglePanel(scope) {
+		for (let i = 0; i < this.#panels.length; i++) {
+			if (this.#panels[i] === scope)
 				continue;
-			}
-
-			panels[i]("none");
+			this.#panels[i]("none");
 		}
-
-		if (scope() === "none") {
+		if (scope() === "none")
 			scope("block");
-		} else {
+		else
 			scope("none");
-		}
 	};
 
-	this.addRemoteFunction = function(name, expression) {
-		if (name in this.remoteFunctions) {
+	addRemoteFunction(name, expression) {
+		if (name in this.remoteFunctions)
 			console.error(`A function with the name ${name} has already been register to the app`);
-		}
-
 		this.remoteFunctions[name] = expression;
-	};
+	}
 
-	this.remoteCall = function(name) {
+	remoteCall(name) {
 		this.remoteFunctions[name](this);
-	};
+	}
 
-	this.parseText = function(text, scope) {
+	parseText(text, scope) {
 		let matches = text.match(/\{[a-zA-Z0-9\s]+\}/gi);
-
 		if (matches) {
 			for (let i = 0; i < matches.length; i++) {
 				let varName = matches[i].substring(1, matches[i].length - 1);
-				if (varName in this.variables) {
+				if (varName in this.variables)
 					text = text.replace(matches[i], this.variables[varName].value);
-				}
 			}
 		}
-		
-		return web2d.nl2br(text);
+		return StringHelpers.nl2br(text);
 	};
 }
 
-let application = new app();
+let application = new Application();
 ko.applyBindings(application, document.body);
 
 window.onerror = (msg, url, linenumber) => {
@@ -313,5 +314,5 @@ application.addRemoteFunction("yell", () => {
 });
 
 function loadFolder(evt) {
-	application.importFolder(null, evt)
+	application.importFolder(evt)
 }

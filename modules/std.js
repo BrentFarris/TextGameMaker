@@ -46,7 +46,7 @@ export function each(arrobj, callback) {
 /**
  * Loop through an array or object and call a callback function for each item
  * @param {Array|Object} arrobj
- * @param {EachCallback} callback
+ * @param {EachCallback|Function} callback
  * @returns {Promise<void>}
  * @async
  */
@@ -119,11 +119,12 @@ export class StringHelpers {
 
 	/**
 	 * Replaces any instance of a new line character '\n' with a break tag
-	 * @param {boolean} is_xhtml 
+	 * @param {string} str 
+	 * @param {boolean} [isXHTML] 
 	 * @returns {string}
 	 */
-	static nl2br(str, is_xhtml) {
-		var breakTag = is_xhtml || typeof is_xhtml === "undefined" ? "<br />" : "<br>";
+	static nl2br(str, isXHTML) {
+		var breakTag = isXHTML || typeof isXHTML === "undefined" ? "<br />" : "<br>";
 		return (str + "").replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, "$1" + breakTag + "$2");
 	}
 }
@@ -555,7 +556,7 @@ export class Optional {
 
 	/** @returns {boolean} */
 	get HasValue() {
-		return this.#value !== null;
+		return this.#value !== null && this.#value !== undefined;
 	}
 
 	/**

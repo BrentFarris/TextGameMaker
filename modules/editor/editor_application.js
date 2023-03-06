@@ -1,14 +1,13 @@
-import * as ko from "./knockout.js";
-import { Manager, CharacterManager, BeastManager, ItemManager, VariableManager, ViewManager, NodeTemplateManager } from "./manager.js";
-import { Canvas } from "./modules/canvas.js";
-import { each } from "./modules/std.js";
-import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT } from "./node.js";
-import { ArrayHelpers } from "./modules/std.js";
-import { Input } from "./modules/input.js";
-import { Storage } from "./modules/storage.js";
-import { HTTP } from "./modules/http.js";
-import { EditorCanvas } from "./editor/editor_canvas.js";
-import { NodeManager } from "./editor/node_manager.js";
+import { Manager, CharacterManager, BeastManager, ItemManager,
+	VariableManager, ViewManager, NodeTemplateManager, CharacterEntry,
+	BeastEntry, ItemEntry, VariableEntry, TemplateEntry } from "./manager.js";
+import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT } from "../node.js";
+import { ArrayHelpers } from "../std.js";
+import { Input } from "../input.js";
+import { Storage } from "../storage.js";
+import { HTTP } from "../http.js";
+import { EditorCanvas } from "./editor_canvas.js";
+import { NodeManager } from "./node_manager.js";
 
 function getEvent(e) { return e || window.event; }
 
@@ -34,32 +33,6 @@ function getEvent(e) { return e || window.event; }
  * @property {CoreNode} scope
  * @property {HTMLElement} elm
  */
-/**
- * @typedef {Object} CharacterEntry
- * @property {string} name
- */
-
-/**
- * @typedef {Object} BeastEntry
- * @property {string} name
- */
-
-/**
- * @typedef {Object} ItemEntry
- * @property {string} name
- */
-
-/**
- * @typedef {Object} VariableEntry
- * @property {string} name
- * @property {string} type
- */
-
-/**
- * @typedef {Object} NodeTemplate
- * @property {string} name
- * @property {string} template
- */
 
 /**
  * @typedef {Object} FileJSON
@@ -73,7 +46,7 @@ function getEvent(e) { return e || window.event; }
  * @property {BeastEntry[]} beasts
  * @property {ItemEntry[]} items
  * @property {VariableEntry[]} variables
- * @property {NodeTemplate[]} nodeTemplates
+ * @property {TemplateEntry[]} nodeTemplates
  */
 
 export class EditorApplication {
@@ -115,23 +88,6 @@ export class EditorApplication {
 	/** @type {NodeManager} */
 	nodeManager = new NodeManager();
 
-	/** @type {KnockoutObservableArray<CharacterEntry>} */
-	characters = ko.observableArray();
-
-	/** @type {KnockoutObservableArray<BeastEntry>} */
-	beasts = ko.observableArray();
-
-	/** @type {KnockoutObservableArray<ItemEntry>} */
-	items = ko.observableArray();
-
-	// TODO:  Is this the correct type?
-	/** @type {KnockoutObservableArray<VariableEntry>} */
-	variables = ko.observableArray();
-
-	// TODO:  Is this the correct type?
-	/** @type {KnockoutObservableArray<NodeTemplate>} */
-	nodeTemplates = ko.observableArray();
-
 	/** @type {KnockoutObservable<string>} */
 	name = ko.observable("");
 	
@@ -146,9 +102,6 @@ export class EditorApplication {
 
 	/** @type {Output|null} */
 	settingTo = null;
-
-	/** @type {string[]} */
-	nodeTypes = [];
 	
 	// TODO:  This and lastData should be typedefs
 	/** @type {JSON[]} */
@@ -175,21 +128,21 @@ export class EditorApplication {
 	constructor() {
 		this.#canvas = new EditorCanvas(this.nodeManager);
 
-		each(NodeTypeMap, (key, val) => {
-			this.nodeTypes.push(/** @type {string} */ (key));
-		});
-
-		// TODO:
-		//document.addEventListener("mousemove", this.drag.bind(this));
-		//document.addEventListener("touchmove", this.drag.bind(this));
-		//document.addEventListener("mouseup", this.dragEnd.bind(this));
-		//document.addEventListener("touchend", this.dragEnd.bind(this));
-		//document.addEventListener("touchcancel", this.dragEnd.bind(this));
+		document.addEventListener("mousemove", this.drag.bind(this));
+		document.addEventListener("touchmove", this.drag.bind(this));
+		document.addEventListener("mouseup", this.dragEnd.bind(this));
+		document.addEventListener("touchend", this.dragEnd.bind(this));
+		document.addEventListener("touchcancel", this.dragEnd.bind(this));
 	
 		Input.keyUp.register((key) => {
 			// Escape key should close all manager windows
-			if (key.keyCode === Input.keys.Escape)
-				Manager.closeManagers();
+			if (key.keyCode === Input.keys.Escape) {
+				this.characterManager.close();
+				this.beastManager.close();
+				this.itemManager.close();
+				this.templateManager.close();
+				this.viewManager.close();
+			}
 		}, this);
 	
 		(async () => {
@@ -256,15 +209,15 @@ export class EditorApplication {
 				return;
 		}
 		if (json.characters)
-			this.characters(json.characters);
+			this.characterManager.characters(json.characters);
 		if (json.beasts)
-			this.beasts(json.beasts);
+			this.beastManager.beasts(json.beasts);
 		if (json.items)
-			this.items(json.items);
+			this.itemManager.items(json.items);
 		if (json.variables)
-			this.variables(json.variables);
+			this.variableManager.variables(json.variables);
 		if (json.nodeTemplates)
-			this.nodeTemplates(json.nodeTemplates);
+			this.templateManager.nodeTemplates(json.nodeTemplates);
 		alert("The metadata has been imported");
 		this.metaChanged(false);
 	}
@@ -295,7 +248,7 @@ export class EditorApplication {
 			if ("characters" in json)
 				this.importMeta(json);
 			else {
-				if (!this.characters().length) {
+				if (!this.characterManager.characters().length) {
 					if (confirm("You have not imported any meta information, you should import your meta file first. Would you still like to continue loading the node information?")) {
 						this.import(json);
 					}
@@ -352,12 +305,34 @@ export class EditorApplication {
 	 */
 	getMetaJson() {
 		return {
-			characters: this.characters(),
-			beasts: this.beasts(),
-			items: this.items(),
-			variables: this.variables(),
-			nodeTemplates: this.nodeTemplates()
+			characters: this.characterManager.characters(),
+			beasts: this.beastManager.beasts(),
+			items: this.itemManager.items(),
+			variables: this.variableManager.variables(),
+			nodeTemplates: this.templateManager.nodeTemplates()
 		};
+	}
+
+	/**
+	 * @param {Manager} manager
+	 */
+	showManager(manager, scope) {
+		manager.show(scope);
+		this.fileOptionsVisible(false);
+	}
+
+	/**
+	 * @param {Manager} manager
+	 * @param {EditorApplication} self
+	 * @param {KeyboardEvent} e 
+	 */
+	managerInputExec(manager, self, e) {
+		e = getEvent(e);
+		if (e.keyCode === Input.keys.Enter) {
+			manager.inputExec();
+			this.saveTemp();
+			this.metaChanged(true);
+		}
 	}
 
 	exportJson() {
@@ -391,14 +366,14 @@ export class EditorApplication {
 		this.#canvas.drawFrame();
 		if (confirm("Would you also like completely new meta data?")) {
 			await this.storage.deleteFile(folder.Value, EditorApplication.TEMP_META_FILE_NAME);
-			this.characters.removeAll();
-			this.beasts.removeAll();
-			this.items.removeAll();
-			this.variables.removeAll();
-			this.nodeTemplates.removeAll();
+			this.characterManager.characters.removeAll();
+			this.beastManager.beasts.removeAll();
+			this.itemManager.items.removeAll();
+			this.variableManager.variables.removeAll();
+			this.templateManager.nodeTemplates.removeAll();
 			this.metaChanged(false);
 			this.name("start");
-			//this.importMeta(await web2d.http.get("view/json/meta.json"));
+			//this.importMeta(await HTTP.get("view/json/meta.json"));
 		}
 		this.fileOptionsVisible(false);
 	}
@@ -516,19 +491,19 @@ export class EditorApplication {
 		if (!name || !name.trim())
 			return;
 		name = name.trim();
-		let templates = this.nodeTemplates();
+		let templates = this.templateManager.nodeTemplates();
 		for (let i = 0; i < templates.length; i++) {
 			if (templates[i].name.toLowerCase() === name.toLowerCase()) {
 				if (!confirm("A template with that name already exists, would you like to overwrite it?"))
 					return;
-				this.nodeTemplates.splice(i, 1);
+				this.templateManager.nodeTemplates.splice(i, 1);
 				break;
 			}
 		}
 		let info = scope.serialize();
 		for (let i = 0; i < info.outs.length; i++)
 			info.outs[i] = null;
-		this.nodeTemplates.push({
+		this.templateManager.nodeTemplates.push({
 			name: name,
 			template: info
 		});
@@ -544,7 +519,7 @@ export class EditorApplication {
 	}
 
 	deleteNodeTemplate(scope) {
-		this.nodeTemplates.remove(scope);
+		this.templateManager.nodeTemplates.remove(scope);
 		this.metaChanged(true);
 	}
 
@@ -677,15 +652,15 @@ export class EditorApplication {
 		scope.name = newName;
 		// Splice and valueHasMutated are not calling refresh, so we are going to have to do
 		// a "dirty" refresh by re-assigning the array
-		let contents = this.characters();
-		this.characters([]);
-		this.characters(contents);
+		let contents = this.characterManager.characters();
+		this.characterManager.characters([]);
+		this.characterManager.characters(contents);
 	}
 
 	deleteCharacter(scope) {
 		if (!confirm(`Are you sure you wish to delete the character: ${scope.name}?`))
 			return;
-		this.characters.remove(scope);
+		this.characterManager.characters.remove(scope);
 		this.metaChanged(true);
 		this.saveTemp();
 	};
@@ -700,15 +675,15 @@ export class EditorApplication {
 		scope.name = newName;
 		// Splice and valueHasMutated are not calling refresh, so we are going to have to do
 		// a "dirty" refresh by re-assigning the array
-		let contents = this.beasts();
-		this.beasts([]);
-		this.beasts(contents);
+		let contents = this.beastManager.beasts();
+		this.beastManager.beasts([]);
+		this.beastManager.beasts(contents);
 	}
 
 	deleteBeast(scope) {
 		if (!confirm(`Are you sure you wish to delete the beast: ${scope.name}?`))
 			return;
-		this.beasts.remove(scope);
+		this.beastManager.beasts.remove(scope);
 		this.metaChanged(true);
 		this.saveTemp();
 	}
@@ -723,15 +698,15 @@ export class EditorApplication {
 		scope.name = newName;
 		// Splice and valueHasMutated are not calling refresh, so we are going to have to do
 		// a "dirty" refresh by re-assigning the array
-		let contents = this.items();
-		this.items([]);
-		this.items(contents);
+		let contents = this.itemManager.items();
+		this.itemManager.items([]);
+		this.itemManager.items(contents);
 	}
 
 	deleteItem(scope) {
 		if (!confirm(`Are you sure you wish to delete the beast: ${scope.name}?`))
 			return;
-		this.items.remove(scope);
+		this.itemManager.items.remove(scope);
 		this.metaChanged(true);
 		this.saveTemp();
 	}
@@ -739,7 +714,7 @@ export class EditorApplication {
 	deleteVariable(scope) {
 		if (!confirm(`Are you sure you wish to delete the variable: ${scope.name}?`))
 			return;
-		this.variables.remove(scope);
+		this.variableManager.variables.remove(scope);
 		this.saveTemp();
 	}
 

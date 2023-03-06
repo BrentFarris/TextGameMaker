@@ -3,11 +3,11 @@
 		<title>Dialog</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
-		<link rel="stylesheet" type="text/css" href="index.css" />
-		<script type="module" src="localforage.min.js"></script>
-		<script type="module" src="knockout.js"></script>
-		<script type="module" src="jszip.min.js"></script>
-		<script type="text/javascript" src="FileSaver.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/index.css" />
+		<script type="text/javascript" src="js/ext/jszip.min.js"></script>
+		<script type="text/javascript" src="js/ext/localforage.min.js"></script>
+		<script type="text/javascript" src="js/ext/knockout.js"></script>
+		<script type="text/javascript" src="js/ext/FileSaver.js"></script>
 
 		<script type="module" src="modules/canvas.js"></script>
 		<script type="module" src="modules/color.js"></script>
@@ -17,44 +17,46 @@
 		<script type="module" src="modules/std.js"></script>
 		<script type="module" src="modules/storage.js"></script>
 		<script type="module" src="modules/vec2.js"></script>
-		
-		<script type="module" src="node.js"></script>
-		<script type="module" src="manager.js"></script>
+		<script type="module" src="modules/node.js"></script>
+
+		<script type="module" src="modules/editor/editor_canvas.js"></script>
+		<script type="module" src="modules/editor/node_manager.js"></script>
+		<script type="module" src="modules/editor/manager.js"></script>
 	</head>
 	<body>
 		<div id="container">
 			<canvas id="canvas" data-bind="click:$root.canvasClick.bind($root, $element)"></canvas>
-			<div data-bind="foreach: nodes">
+			<div data-bind="foreach: nodeManager.Nodes">
 				<div class="node" data-bind="click:$root.nodeClick.bind($root, $element), event: {mouseover:$root.nodeMouseOver.bind($root, $element),mouseout:$root.nodeMouseOut.bind($root, $element)}, style: { left: x + 'px', top: y + 'px' }, attr: {id:`node-${id}`}">
-					<div id="handle" class="nodeHandle" draggable="true" data-bind="text:` ${typeName}`, event: {mousedown:$root.dragStart.bind($root), touchstart:$root.dragStart.bind($root)}, style: {backgroundColor: color}"></div>
+					<div id="handle" class="nodeHandle" draggable="true" data-bind="text:` ${TypeName}`, event: {mousedown:$root.dragStart.bind($root), touchstart:$root.dragStart.bind($root)}, style: {backgroundColor: Color}"></div>
 					<div id="contents" class="nodeContents">
 						<div data-bind="foreach: fields">
-							<!-- ko if: $data instanceof CharacterIndex -->
-							<select data-bind="value: value, foreach: $root.characters">
+							<!-- ko if: $data.TypeName == "CharacterIndex" -->
+							<select data-bind="value: value, foreach: characterManager.characters">
 								<option data-bind="value:$index(), text:name"></option>
 							</select>
 							<!-- /ko -->
-							<!-- ko if: $data instanceof BeastIndex -->
-							<select data-bind="value: value, foreach: $root.beasts">
+							<!-- ko if: $data.TypeName == "BeastIndex" -->
+							<select data-bind="value: value, foreach: beastManager.beasts">
 								<option data-bind="value:$index(), text:name"></option>
 							</select>
 							<!-- /ko -->
-							<!-- ko if: $data instanceof ItemIndex -->
-							<select data-bind="value: value, foreach: $root.items">
+							<!-- ko if: $data.TypeName == "ItemIndex" -->
+							<select data-bind="value: value, foreach: itemManager.items">
 								<option data-bind="value:$index(), text:name"></option>
 							</select>
 							<!-- /ko -->
-							<!-- ko if: $data instanceof NodeIndex -->
+							<!-- ko if: $data.TypeName == "NodeIndex" -->
 							<button data-bind="text:value()!==null?` Node ID: ${value()} `:' Click to select node ', click:$root.selectNode.bind($root, $data, $element)"></button>
 							<!-- /ko -->
-							<!-- ko if: $data instanceof NodeOptionIndex -->
+							<!-- ko if: $data.TypeName == "NodeOptionIndex" -->
 							<button data-bind="text:value()!==null?` Node (${value().id}) | Option (${value().option}) `:' Click to pick option ', click:$root.selectNodeOption.bind($root, $data, $element)"></button>
 							<!-- /ko -->
-							<!-- ko if: $data instanceof VariableString -->
+							<!-- ko if: $data.TypeName == "VariableString" -->
 								<!-- ko if: $data.prefix.length > 0 -->
 								<span data-bind="text: $data.prefix"></span>
 								<!-- /ko -->
-							<select data-bind="value: value, foreach: $root.variables, event: {change:$parent.changedVar.bind($parent, $root)}">
+							<select data-bind="value: value, foreach: variableManager.variables, event: {change:$parent.changedVar.bind($parent, $root)}">
 								<option data-bind="value:name, text:name"></option>
 							</select>
 								<!-- ko if: $data.postfix.length > 0 -->
@@ -62,13 +64,13 @@
 								<!-- /ko -->
 							<br />
 							<!-- /ko -->
-							<!-- ko if: $data instanceof BigString -->
+							<!-- ko if: $data.TypeName == "BigString" -->
 							<textarea class="inputs dialog" data-bind="value: value, attr: {placeholder: placeholder}" onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'></textarea>
 							<!-- /ko -->
-							<!-- ko if: $data instanceof ShortString -->
+							<!-- ko if: $data.TypeName == "ShortString" -->
 							<input class="inputs value" type="text" data-bind="value: value, attr: {placeholder: placeholder}" />
 							<!-- /ko -->
-							<!-- ko if: $data instanceof VariableValueString -->
+							<!-- ko if: $data.TypeName == "VariableValueString" -->
 								<!-- ko if: $data._type() === "string" ||  $data._type() === "bool" ||  $data._type() === "number" -->
 								<input class="inputs value" type="" data-bind="value: value, attr: {placeholder: placeholder}" />
 								<!-- /ko -->
@@ -76,40 +78,40 @@
 								<input class="inputs value" type="number" data-bind="value: value, attr: {placeholder: placeholder}" />
 								<!-- /ko -->
 								<!-- ko if: $data._type() === "char" -->
-								<select data-bind="value: value, foreach: $root.characters">
+								<select data-bind="value: value, foreach: characterManager.characters">
 									<option data-bind="value:$index(), text:name"></option>
 								</select>
 								<!-- /ko -->
 								<!-- ko if: $data._type() === "beast" -->
-								<select data-bind="value: value, foreach: $root.beasts">
+								<select data-bind="value: value, foreach: beastManager.beasts">
 									<option data-bind="value:$index(), text:name"></option>
 								</select>
 								<!-- /ko -->
 								<!-- ko if: $data._type() === "item" -->
-								<select data-bind="value: value, foreach: $root.items">
+								<select data-bind="value: value, foreach: itemManager.items">
 									<option data-bind="value:$index(), text:name"></option>
 								</select>
 								<!-- /ko -->
 							<!-- /ko -->
-							<!-- ko if: $data instanceof IntValue -->
+							<!-- ko if: $data.TypeName == "IntValue" -->
 								<!-- ko if: $data.prefix.length > 0 -->
 								<span class="small-text" data-bind="text:prefix"></span>
 								<!-- /ko -->
 							<input class="inputs value" type="number" data-bind="value: value, attr: {placeholder: placeholder}" />
 							<!-- /ko -->
-							<!-- ko if: $data instanceof BoolValue -->
+							<!-- ko if: $data.TypeName == "BoolValue" -->
 								<!-- ko if: $data.prefix.length > 0 -->
 								<span data-bind="text:prefix"></span>
 								<!-- /ko -->
 							<input type="checkbox" data-bind="checked: value, click:toggleCheck.bind(null, value, $element)" />
 							<!-- /ko -->
-							<!-- ko if: $data instanceof ConditionString -->
+							<!-- ko if: $data.TypeName == "ConditionString" -->
 							<select data-bind="value: value, foreach: ['==', '!=', '<=', '>=', '>', '<']">
 								<option data-bind="value:$data, text:$data"></option>
 							</select>
 							<!-- /ko -->
 						</div>
-						<!-- ko if: $data instanceof OptionNode -->
+						<!-- ko if: $data.TypeName == "OptionNode" -->
 						<div data-bind="foreach: options">
 							<div class="nodeOption" data-bind="click:$root.optionClick.bind($root, $parent, $index())">
 								<input type="checkbox" data-bind="checked:active, click:toggleCheck.bind(null, active, $element)"/>
@@ -118,7 +120,7 @@
 							</div>
 						</div>
 						<!-- /ko -->
-						<!-- ko if: $data instanceof OutsNode -->
+						<!-- ko if: $data.TypeName == "OutsNode" -->
 						<div data-bind="foreach: outs">
 							<div class="nodeOutList">
 								<!-- ko if: $index() > 0 -->
@@ -130,20 +132,20 @@
 						<!-- /ko -->
 					</div>
 					<div class="setTo">
-						<!-- ko if: $data instanceof OptionNode -->
+						<!-- ko if: $data.TypeName == "OptionNode" -->
 						<button data-bind="click:addOption">+</button>
 						<!-- /ko -->
-						<!-- ko if: $data instanceof OutsNode -->
+						<!-- ko if: $data.TypeName == "OutsNode" -->
 						<button data-bind="click:addOut">+</button>
 						<!-- /ko -->
-						<button data-bind="visible:typeName==='Dialog' || typeName==='Story' || typeName==='Comment', click:$root.viewManager.show.bind($root.viewManager)">View</button>
+						<button data-bind="visible:TypeName==='Dialog' || TypeName==='Story' || TypeName==='Comment', click:$root.showManager.bind($root, $root.viewManager, $data)">View</button>
 						<button data-bind="click:$root.deleteNode.bind($root)">Delete</button>
 						<button data-bind="click:$root.makeTemplate.bind($root)">^</button>
 						<button data-bind="click:$root.dupeNode.bind($root)">Dupe</button>
-						<!-- ko if: $data instanceof JumpNode -->
+						<!-- ko if: $data.TypeName == "JumpNode" -->
 						<button data-bind="click:$root.jumpLoad.bind($root)">Go</button>
 						<!-- /ko -->
-						<!-- ko if: $data instanceof ReturnNode -->
+						<!-- ko if: $data.TypeName == "ReturnNode" -->
 						<button data-bind="click:$root.returnLoad.bind($root)">Go</button>
 						<!-- /ko -->
 					</div>
@@ -155,37 +157,37 @@
 			</div>
 		</div>
 		<div class="actionMenu">
-			<select data-bind="value: createNodeType, foreach: nodeTypes, event: {change:createNode}">
+			<select data-bind="value: createNodeType, foreach: nodeManager.NodeTypes, event: {change:createNode}">
 				<option data-bind="value: $data, text: $data" value="Pass"></option>
 			</select>
 			<button data-bind="click:createNode">Create Node</button>
 			<button data-bind="click:toggleFileOptions">File Menu</button>
 		</div>
 		<div id="characterManager" class="managerWindow">
-			<input type="text" data-bind="value: characterManager.name, event: {keyup: characterManager.create.bind(characterManager)}" />
-			<ul data-bind="foreach: characters()" class="scrollList">
+			<input type="text" data-bind="value: characterManager.name, event: {keyup: managerInputExec.bind($root, characterManager)}" />
+			<ul data-bind="foreach: characterManager.characters" class="scrollList">
 				<li><span data-bind="text: name"></span> <button data-bind="click:$root.renameCharacter.bind($root)">Rename</button> <button data-bind="click:$root.deleteCharacter.bind($root)">-</button></li>
 			</ul>
 			<div style="text-align:center;">
-				<button onclick="Manager._closeManagers()">Close</button>
+				<button data-bind="click:characterManager.close.bind(characterManager)">Close</button>
 			</div>
 		</div>
 		<div id="beastManager" class="managerWindow">
-			<input type="text" data-bind="value: beastManager.name, event: {keyup: beastManager.create.bind(beastManager)}" />
-			<ul data-bind="foreach: beasts()" class="scrollList">
+			<input type="text" data-bind="value: beastManager.name, event: {keyup: managerInputExec.bind($root, beastManager)}" />
+			<ul data-bind="foreach: beastManager.beasts" class="scrollList">
 				<li><span data-bind="text: name"></span> <button data-bind="click:$root.renameBeast.bind($root)">Rename</button> <button data-bind="click:$root.deleteBeast.bind($root)">-</button></li>
 			</ul>
 			<div style="text-align:center;">
-				<button onclick="Manager._closeManagers()">Close</button>
+				<button data-bind="click:beastManager.close.bind(beastManager)">Close</button>
 			</div>
 		</div>
 		<div id="itemManager" class="managerWindow">
-			<input type="text" data-bind="value: itemManager.name, event: {keyup: itemManager.create.bind(itemManager)}" />
-			<ul data-bind="foreach: items()" class="scrollList">
+			<input type="text" data-bind="value: itemManager.name, event: {keyup: managerInputExec.bind($root, itemManager)}" />
+			<ul data-bind="foreach: itemManager.items" class="scrollList">
 				<li><span data-bind="text: name"></span> <button data-bind="click:$root.renameItem.bind($root)">Rename</button> <button data-bind="click:$root.deleteItem.bind($root)">-</button></li>
 			</ul>
 			<div style="text-align:center;">
-				<button onclick="Manager._closeManagers()">Close</button>
+				<button data-bind="click:itemManager.close.bind(itemManager)">Close</button>
 			</div>
 		</div>
 		<div id="variableManager" class="managerWindow">
@@ -199,12 +201,12 @@
 				<option value="beast">Beast</option>
 				<option value="item">Item</option>
 			</select>
-			<input type="text" data-bind="value: variableManager.name, event: {keyup: variableManager.create.bind(variableManager)}" />
-			<ul data-bind="foreach: variables()" class="scrollList">
+			<input type="text" data-bind="value: variableManager.name, event: {keyup: managerInputExec.bind($root, variableManager)}" />
+			<ul data-bind="foreach: variableManager.variables" class="scrollList">
 				<li>[<span data-bind="text: type"></span>] <span data-bind="text: name"></span> <span class="fakeLink" data-bind="click:$root.deleteVariable.bind($root)">Delete</span></li>
 			</ul>
 			<div style="text-align:center;">
-				<button onclick="Manager._closeManagers()">Close</button>
+				<button data-bind="click:variableManager.close.bind(variableManager)">Close</button>
 			</div>
 		</div>
 		<div id="viewNodeManager" class="managerWindow">
@@ -213,16 +215,16 @@
 			<p data-bind="text: viewManager.value()"></p>
 			<!-- /ko -->
 			<div style="text-align:center;">
-				<button onclick="Manager._closeManagers()">Close</button>
+				<button data-bind="click:viewManager.close.bind(viewManager)">Close</button>
 			</div>
 		</div>
 		<div id="templateManager" class="managerWindow">
 			<!-- <input type="text" data-bind="value: characterManager.name, event: {keyup: characterManager.create.bind(characterManager)}" /> -->
-			<ul data-bind="foreach: nodeTemplates()" class="scrollList">
+			<ul data-bind="foreach: templateManager.nodeTemplates" class="scrollList">
 				<li><span data-bind="text: name"></span> <button data-bind="click:$root.createNodeFromTemplate.bind($root)">+</button> <button data-bind="click:$root.deleteNodeTemplate.bind($root)">-</button></li>
 			</ul>
 			<div style="text-align:center;">
-				<button onclick="Manager._closeManagers()">Close</button>
+				<button data-bind="click:templateManager.close.bind(templateManager)">Close</button>
 			</div>
 		</div>
 		<div class="pageName">
@@ -235,15 +237,15 @@
 				<li><button data-bind="click:saveTemp">Save Temp</button></li>
 				<li><button data-bind="click:exportJson">Export</button></li>
 				<li><button data-bind="click:exportMetaJson, style: {boxShadow:(metaChanged() ? '3px 3px' : '0px 0px')}">Export Meta</button></li>
-				<li><button data-bind="click:characterManager.show.bind(characterManager, $root)">Character Manager</button></li>
-				<li><button data-bind="click:beastManager.show.bind(beastManager, $root)">Bestiary </button></li>
-				<li><button data-bind="click:itemManager.show.bind(itemManager, $root)">Item Manager </button></li>
-				<li><button data-bind="click:variableManager.show.bind(variableManager, $root)">Variable Manager</button></li>
-				<li><button data-bind="click:templateManager.show.bind(templateManager, $root)">Template Manager</button></li>
+				<li><button data-bind="click:showManager.bind($root, characterManager)">Character Manager</button></li>
+				<li><button data-bind="click:showManager.bind($root, beastManager)">Bestiary </button></li>
+				<li><button data-bind="click:showManager.bind($root, itemManager)">Item Manager </button></li>
+				<li><button data-bind="click:showManager.bind($root, variableManager)">Variable Manager</button></li>
+				<li><button data-bind="click:showManager.bind($root, templateManager)">Template Manager</button></li>
 				<li><br /><hr /><br /></li>
 				<li><input type="file" accept="application/json" data-bind="event: {change:importJson}" /></li>
 			</ul>
 		</div>
-		<script type="module" src="main.js"></script>
+		<script type="module" src="modules/editor/editor_application.js"></script>
 	</body>
 </html>

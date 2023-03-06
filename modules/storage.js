@@ -1,6 +1,4 @@
-import { ArrayHelpers, Optional } from "./std.js";
-import * as JSZip from "../jszip.min.js";
-import * as localforage from "../localforage.min.js";
+import { each, eachAsync, ArrayHelpers, Optional } from "./std.js";
 
 /**
  * @param {ArrayBuffer} buffer The array buffer to be turned into a string
@@ -93,7 +91,7 @@ export class Storage {
 	 * @async
 	 */
 	async updateFileSystem() {
-		await this.set("/", this.fs);
+		await this.set("/", this.fs.Value);
 	}
 
 	/**
@@ -198,7 +196,7 @@ export class Storage {
 		let parent = await this.getFolder(this.getParentPath(f.path));
 		for (let i = 0; i < f.files.length; i++)
 			await this.deleteFile(f, f.files[i]);
-		web2d.each(f.children, async (key, val) => {
+		each(f.children, async (key, val) => {
 			await this.deleteFolder(val);
 		});
 		if (parent.HasValue)
@@ -304,14 +302,14 @@ export class Storage {
 			throw "Invalid folder supplied";
 		let readChildren = async (parent) => {
 			let pathName = this.getPath(parent.path);
-			await web2d.eachAsync(parent.files, async (idx, fileName) => {
+			await eachAsync(parent.files, async (idx, fileName) => {
 				let data = await this.readFile(parent, fileName);
 				if (typeof data === "string")
 					await expression(pathName, fileName, data);
 				else
 					await expression(pathName, fileName, JSON.stringify(data));
 			});
-			await web2d.eachAsync(parent.children, async (idx, folder) => {
+			await eachAsync(parent.children, async (idx, folder) => {
 				await readChildren(folder);
 			});
 		};
@@ -335,9 +333,7 @@ export class Storage {
 			throw "The specified file is not a zip file";
 		}
 		let zip = await JSZip.loadAsync(file);
-		let doneCounter = 0;
-		let fileCount = web2d.count(zip.files);
-		await web2d.eachAsync(zip.files, async (idx, zipFile) => {
+		await eachAsync(zip.files, async (idx, zipFile) => {
 			let targetFolder = await this.getFolder(this.getPath(zipFile.name));
 			let fileName = this.getName(zipFile.name);
 			if (!targetFolder.HasValue)

@@ -1,4 +1,4 @@
-import { Canvas } from "../modules/canvas.js"
+import { Canvas } from "../canvas.js"
 import { CoreNode, NODE_WIDTH, NODE_HANDLE_HEIGHT, NODE_LINE_OFFSET } from "../node.js";
 import { NodeManager } from "./node_manager.js";
 

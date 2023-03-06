@@ -169,10 +169,14 @@ export class Input {
 	 * @param {MouseEvent|TouchEvent} evt
 	 */
 	static #inputMousePosition(evt) {
-		evt = evt || window.event;
-		let isTouch = web2d.undefined(evt.clientX);
-		Input.mousePosition.x = !isTouch ? evt.clientX : evt.changedTouches[0].clientX;
-		Input.mousePosition.y = !isTouch ? evt.clientY : evt.changedTouches[0].clientY;
+		evt = evt || /** @type {MouseEvent|TouchEvent} */ (window.event);
+		let isTouch =  evt.hasOwnProperty("clientX");
+		Input.mousePosition.x = !isTouch
+			? /** @type {MouseEvent} */ (evt).clientX
+			: /** @type {TouchEvent} */ (evt).changedTouches[0].clientX;
+		Input.mousePosition.y = !isTouch
+			? /** @type {MouseEvent} */ (evt).clientY
+			: /** @type {TouchEvent} */ (evt).changedTouches[0].clientY;
 		Input.mouseMove.fire([Input.mousePosition.x, Input.mousePosition.y]);
 	}
 
