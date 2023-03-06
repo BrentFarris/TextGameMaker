@@ -1,32 +1,20 @@
-/**
- * MyNewType definition
- * @template T
- * @typedef {Function} Observable
- * @param {T} value
- * @returns T
- */
-
-/**
- * MyNewType definition
- * @template T
- * @typedef {Function} ObservableArray
- * @param {T[]} value
- * @returns T[]
- */
+import * as ko from "./knockout.js";
+import { ArrayHelpers, each } from "./modules/std.js";
 
 /**
  * Base class for values that are presented in nodes and read by the viewer
  * @class
+ * @template T
  * @abstract
  */
-class ValueType {
-	/** @type {Observable<any>} */
+export class ValueType {
+	/** @type {KnockoutObservable<any>} */
 	value = ko.observable(null);
 
 	/** @type {string} */
 	placeholder = "";
 
-	/** @type {Observable<string>} */
+	/** @type {KnockoutObservable<string>} */
 	hint = ko.observable("");
 
 	/** @type {string} */
@@ -36,21 +24,21 @@ class ValueType {
 	postfix = "";
 
 	/**
-	 * @param {string} placeholder 
+	 * @param {string} [placeholder] 
 	 */
 	constructor(placeholder) {
-		this.placeholder = placeholder
+		this.placeholder = placeholder || "";
 	}
 
 	/**
-	 * @returns {string}
+	 * @returns {T}
 	 */
 	get Value() {
 		return this.value();
 	}
 
 	/**
-	 * @param {string} val
+	 * @param {T} val
 	 */
 	set Value(val) {
 		this.value(val);
@@ -62,7 +50,7 @@ class ValueType {
  * @class
  * @extends ValueType
  */
-class BoolValue extends ValueType {
+export class BoolValue extends ValueType {
 	/**
 	 * @param {string} prefix 
 	 */
@@ -92,14 +80,15 @@ class BoolValue extends ValueType {
  * @class
  * @extends ValueType
  */
-class IntValue extends ValueType {
+export class IntValue extends ValueType {
 	/**
-	 * @param {string} placeholder 
-	 * @param {string} prefix 
+	 * @param {string} [placeholder] 
+	 * @param {string} [prefix] 
 	 */
 	constructor(placeholder, prefix) {
 		super(placeholder);
-		this.Value = placeholder ? null : 0;
+		if (!placeholder)
+			this.Value = 0;
 		this.prefix = prefix || "";
 	}
 
@@ -124,10 +113,7 @@ class IntValue extends ValueType {
  * @extends ValueType
  * @abstract
  */
-class IndexValue extends ValueType {
-	/**
-	 * @param {string} placeholder
-	 */
+export class IndexValue extends ValueType {
 	constructor() {
 		super();
 		this.Value = 0;
@@ -139,9 +125,9 @@ class IndexValue extends ValueType {
  * @extends ValueType
  * @class
  */
-class BigString extends ValueType {
+export class BigString extends ValueType {
 	/**
-	 * @param {string} placeholder 
+	 * @param {string} [placeholder] 
 	 */
 	constructor(placeholder) {
 		super();
@@ -155,9 +141,9 @@ class BigString extends ValueType {
  * @class
  * @extends ValueType
  */
-class ShortString extends ValueType {
+export class ShortString extends ValueType {
 	/**
-	 * @param {string} placeholder 
+	 * @param {string} [placeholder] 
 	 */
 	constructor(placeholder) {
 		super(placeholder);
@@ -170,7 +156,7 @@ class ShortString extends ValueType {
  * @class
  * @extends IndexValue
  */
-class CharacterIndex extends IndexValue {
+export class CharacterIndex extends IndexValue {
 	constructor() {
 		super();
 		this.Value = 0;
@@ -182,7 +168,7 @@ class CharacterIndex extends IndexValue {
  * @class
  * @extends IndexValue
  */
-class BeastIndex extends IndexValue {
+export class BeastIndex extends IndexValue {
 	constructor() {
 		super();
 		this.Value = 0;
@@ -194,7 +180,7 @@ class BeastIndex extends IndexValue {
  * @class
  * @extends IndexValue
  */
-class ItemIndex extends IndexValue {
+export class ItemIndex extends IndexValue {
 	constructor() {
 		super();
 		this.Value = 0;
@@ -206,7 +192,7 @@ class ItemIndex extends IndexValue {
  * @class
  * @extends IndexValue
  */
-class NodeIndex extends IndexValue {
+export class NodeIndex extends IndexValue {
 	constructor() {
 		super();
 		this.Value = null;
@@ -216,9 +202,9 @@ class NodeIndex extends IndexValue {
 /**
  * Shows button in the editor to pick a node
  * @class
- * @extends IndexValue
+ * @extends ValueType
  */
-class NodeOptionIndex extends ValueType {
+export class NodeOptionIndex extends ValueType {
 	constructor() {
 		super();
 		this.Value = null;
@@ -229,10 +215,10 @@ class NodeOptionIndex extends ValueType {
  * Shows a variable selection box in the editor
  * @class
  */
-class VariableString extends ValueType {
+export class VariableString extends ValueType {
 	/**
-	 * @param {string} prefix 
-	 * @param {string} postfix 
+	 * @param {string} [prefix] 
+	 * @param {string} [postfix] 
 	 */
 	constructor(prefix, postfix) {
 		super();
@@ -246,12 +232,12 @@ class VariableString extends ValueType {
  * Shows input text box to set the value of a variable
  * @class
  */
-class VariableValueString extends ValueType {
-	/** @type {Observable<string>} */
+export class VariableValueString extends ValueType {
+	/** @type {KnockoutObservable<string>} */
 	_type = ko.observable("");
 
 	/**
-	 * @param {string} placeholder 
+	 * @param {string} [placeholder] 
 	 */
 	constructor(placeholder) {
 		super(placeholder);
@@ -307,7 +293,7 @@ class VariableValueString extends ValueType {
 			case "bool":
 				if (typeof val === "boolean") {
 					this.value(val);
-				} else if (val == 0 || val.toLowerCase() === "false") {
+				} else if ((typeof val == "number" && val == 0) || val.toLowerCase() === "false") {
 					this.value(false);
 				} else {
 					this.value(true);
@@ -326,9 +312,9 @@ class VariableValueString extends ValueType {
  * Shows a conditional string option in the editor
  * @class
  */
-class ConditionString extends ValueType {
+export class ConditionString extends ValueType {
 	/**
-	 * @param {string} placeholder 
+	 * @param {string} [placeholder] 
 	 */
 	constructor(placeholder) {
 		super(placeholder);
@@ -340,8 +326,8 @@ class ConditionString extends ValueType {
  * Represents a single output of a node
  * @class
  */
-class Output {
-	/** @type {Observable<CoreNode>} */
+export class Output {
+	/** @type {KnockoutObservable<CoreNode|null>} */
 	to = ko.observable(null);
 
 	constructor() {}
@@ -352,7 +338,7 @@ class Output {
  * @class
  * @abstract
  */
-class CoreNode {
+export class CoreNode {
 	/** @type {number} */
 	id = 0;
 
@@ -368,11 +354,11 @@ class CoreNode {
 	/** @type {ValueType[]} */
 	fields = [];
 
-	/** @type {Output[]} */
-	outs = ko.observableArray([]);
+	/** @type {KnockoutObservableArray<Output>} */
+	outs = ko.observableArray();
 
-	/** @type {CoreNode[]} */
-	tos = null;
+	/** @type {Output[]} */
+	tos;
 
 	/**
 	 * @param {CoreNode|number} createInfo
@@ -387,13 +373,12 @@ class CoreNode {
 
 	/**
 	 * @param {CoreNode|number} info
-	 * @private
+	 * @protected
 	 */
 	_setup(info) {
-		web2d.each(this, (key, val) => {
-			if (val instanceof ValueType) {
+		each(this, (key, val) => {
+			if (val instanceof ValueType)
 				this.fields.push(val);
-			}
 		});
 		if (typeof info === "number") {
 			this._newInit();
@@ -409,27 +394,24 @@ class CoreNode {
 	_newInit() { }
 
 	/**
-	 * @param {CoreNode|number} info
-	 * @private
+	 * @param {CoreNode} info
+	 * @protected
 	 */
 	_init(info) {
-		web2d.each(this, (key, val) => {
+		each(this, (key, val) => {
 			if (val instanceof ValueType) {
-				if (key in info) {
+				if (key in info)
 					val.Value = info[key];
-				}
 			}
 		});
 		this.id = info.id;
 		this.x = info.x;
 		this.y = info.y;
-		this.tos = info.outs;
-		for (let i = 0; i < info.outs.length; i++) {
+		this.tos = info.outs();
+		for (let i = 0; i < info.outs.length; i++)
 			this.outs.push(new Output());
-		}
-		if (!info.outs.length) {
+		if (!info.outs.length)
 			this.outs.push(new Output());
-		}
 	}
 
 	/**
@@ -437,25 +419,24 @@ class CoreNode {
 	 */
 	initializeOuts(nodes) {
 		for (let i = 0; i < this.tos.length; i++) {
-			if (this.tos[i] === null) {
+			if (this.tos[i] === null)
 				continue;
-			}
-			web2d.each(nodes, (key, val) => {
+			each(nodes, (key, val) => {
 				if (val.id === this.tos[i]) {
 					this.outs()[i].to(val);
 					return false;
 				}
 			});
 		}
-		delete this.tos;
+		ArrayHelpers.clear(this.tos);
 	}
 
 	/**
-	 * @returns {JSON}
+	 * @returns {Object}
 	 */
 	serialize() {
 		let obj = {};
-		web2d.each(this, (key, val) => {
+		each(this, (key, val) => {
 			if (key === "outs") {
 				obj.outs = [];
 				for (let i = 0; i < this.outs().length; i++) {
@@ -505,8 +486,8 @@ class CoreNode {
 
 /**
  * @typedef {Object} NodeOptionEntry
- * @property {string} text
- * @property {boolean} active
+ * @property {KnockoutObservable<string>} text
+ * @property {KnockoutObservable<boolean>} active
  */
 
 /**
@@ -515,9 +496,9 @@ class CoreNode {
  * @extends {CoreNode}
  * @abstract
  */
-class OptionNode extends CoreNode {
-	/** @type {NodeOptionEntry[]} */
-	options = ko.observableArray([]);
+export class OptionNode extends CoreNode {
+	/** @type {KnockoutObservableArray<NodeOptionEntry>} */
+	options = ko.observableArray();
 
 	/**
 	 * @param {OptionNode} createInfo 
@@ -556,7 +537,7 @@ class OptionNode extends CoreNode {
 	
 	/**
 	 * @param {number} index 
-	 * @param {HTMLElement} elm 
+	 * @param {HTMLInputElement} elm 
 	 */
 	toggleActive(index, elm) {
 		// This is nonsense, but KO is trippin, probably because I'm trippin...
@@ -580,7 +561,7 @@ class OptionNode extends CoreNode {
 	}
 
 	/**
-	 * @returns {JSON}
+	 * @returns {Object}
 	 */
 	serialize() {
 		let obj = super.serialize();
@@ -597,7 +578,7 @@ class OptionNode extends CoreNode {
  * @class
  * @extends {OptionNode}
  */
-class DialogNode extends OptionNode {
+export class DialogNode extends OptionNode {
 	/** @type {CharacterIndex} */
 	character = new CharacterIndex();
 
@@ -618,7 +599,7 @@ class DialogNode extends OptionNode {
  * @class
  * @extends {OptionNode}
  */
-class StoryNode extends OptionNode {
+export class StoryNode extends OptionNode {
 	/** @type {BigString} */
 	text = new BigString();
 
@@ -645,7 +626,7 @@ class StoryNode extends OptionNode {
  * @class
  * @extends {CoreNode}
  */
-class PassNode extends CoreNode {
+export class PassNode extends CoreNode {
 	/**
 	 * @param {PassNode} createInfo 
 	 */
@@ -672,9 +653,9 @@ class PassNode extends CoreNode {
  * should only be one of these nodes in the whole game
  * @class
  */
-class StartNode extends PassNode {
+export class StartNode extends PassNode {
 	/**
-	 * @param {StoryNode} createInfo 
+	 * @param {StartNode} createInfo 
 	 */
 	constructor(createInfo) {
 		super(createInfo);
@@ -696,7 +677,7 @@ class StartNode extends PassNode {
  * @class
  * @extends {PassNode}
  */
-class LogNode extends PassNode {
+export class LogNode extends PassNode {
 	/**
 	 * @param {LogNode} createInfo 
 	 */
@@ -735,7 +716,7 @@ class LogNode extends PassNode {
  * @class
  * @extends {PassNode}
  */
-class CommentNode extends PassNode {
+export class CommentNode extends PassNode {
 	/**
 	 * 
 	 * @param {CommentNode} createInfo 
@@ -769,14 +750,14 @@ class CommentNode extends PassNode {
  * @class
  * @extends {PassNode}
  */
-class VariableNode extends PassNode {
+export class VariableNode extends PassNode {
 	/**
 	 * @param {VariableNode} createInfo 
 	 * @param {Application} app 
 	 */
 	constructor(createInfo, app) {
 		super(createInfo);
-		this.key = new VariableString(null, "=");
+		this.key = new VariableString("", "=");
 		this.value = new VariableValueString();
 		this.key.value.subscribe((val) => {
 			this.value.setType(app, val);
@@ -820,7 +801,7 @@ class VariableNode extends PassNode {
  * @class
  * @extends {PassNode}
  */
-class CopyVariableToVariableNode extends PassNode {
+export class CopyVariableToVariableNode extends PassNode {
 	/** @type {VariableString} */
 	from = new VariableString("From:");
 
@@ -866,7 +847,7 @@ class CopyVariableToVariableNode extends PassNode {
  * @class
  * @extends {VariableNode}
  */
-class AddToVariableNode extends VariableNode {
+export class AddToVariableNode extends VariableNode {
 	/**
 	 * @param {AddToVariableNode} createInfo 
 	 * @param {Application} app 
@@ -913,7 +894,7 @@ class AddToVariableNode extends VariableNode {
  * @class
  * @extends {PassNode}
  */
-class AddVariableToVariableNode extends PassNode {
+export class AddVariableToVariableNode extends PassNode {
 	/** @type {VariableString} */
 	alter = new VariableString("Add:");
 
@@ -925,7 +906,7 @@ class AddVariableToVariableNode extends PassNode {
 	 * @param {Application} app
 	 */
 	constructor(createInfo, app) {
-		super(createInfo, app);
+		super(createInfo);
 		super._setup(createInfo);
 	}
 
@@ -973,7 +954,7 @@ class AddVariableToVariableNode extends PassNode {
  * @class
  * @extends {VariableNode}
  */
-class SubVariableFromVariableNode extends PassNode {
+export class SubVariableFromVariableNode extends PassNode {
 	/** @type {VariableString} */
 	alter = new VariableString("Subtract:");
 
@@ -1033,9 +1014,9 @@ class SubVariableFromVariableNode extends PassNode {
  * @class
  * @extends {PassNode}
  */
-class RandomVariableNode extends PassNode {
+export class RandomVariableNode extends PassNode {
 	/** @type {VariableString} */
-	key = new VariableString(null, "=");
+	key = new VariableString("", "=");
 
 	/** @type {VariableValueString} */
 	min = new VariableValueString("Minimum value");
@@ -1048,7 +1029,7 @@ class RandomVariableNode extends PassNode {
 	 * @param {Application} app
 	 */
 	constructor(createInfo, app) {
-		super(createInfo, app);
+		super(createInfo);
 		this.key.value.subscribe((val) => {
 			this.min.setType(app, val);
 			this.max.setType(app, val);
@@ -1085,7 +1066,7 @@ class RandomVariableNode extends PassNode {
 		switch (variable.type) {
 			case "number":
 			case "whole":
-				variable.value = random(this.min.Value, this.max.Value);
+				variable.value = random(parseFloat(this.min.Value), parseFloat(this.max.Value));
 				break;
 			case "text":
 			case "bool":
@@ -1104,7 +1085,7 @@ class RandomVariableNode extends PassNode {
  * @class
  * @extends {RandomVariableNode}
  */
-class AddRandomToVariableNode extends RandomVariableNode {
+export class AddRandomToVariableNode extends RandomVariableNode {
 	/**
 	 * @param {AddRandomToVariableNode} createInfo 
 	 * @param {Application} app 
@@ -1124,7 +1105,7 @@ class AddRandomToVariableNode extends RandomVariableNode {
 		switch (variable.type) {
 			case "number":
 			case "whole":
-				variable.value += random(this.min.Value, this.max.Value);
+				variable.value += random(parseFloat(this.min.Value), parseFloat(this.max.Value));
 				break;
 			case "text":
 			case "bool":
@@ -1144,7 +1125,7 @@ class AddRandomToVariableNode extends RandomVariableNode {
  * @extends {PassNode}
  * @abstract
  */
-class SourceNode extends PassNode {
+export class SourceNode extends PassNode {
 	/** @type {ShortString} */
 	src = new ShortString("Source:");
 
@@ -1161,7 +1142,7 @@ class SourceNode extends PassNode {
  * @class
  * @extends {SourceNode}
  */
-class SoundNode extends SourceNode {
+export class SoundNode extends SourceNode {
 	/**
 	 * @param {SoundNode} createInfo 
 	 */
@@ -1195,7 +1176,7 @@ class SoundNode extends SourceNode {
  * @class
  * @extends {SourceNode}
  */
-class MusicNode extends SourceNode {
+export class MusicNode extends SourceNode {
 	/**
 	 * @param {MusicNode} createInfo 
 	 */
@@ -1240,7 +1221,7 @@ class MusicNode extends SourceNode {
  * @class
  * @extends {PassNode}
  */
-class OptionAvailabilityNode extends PassNode {
+export class OptionAvailabilityNode extends PassNode {
 	/**
 	 * @type {NodeOptionIndex}
 	 */
@@ -1276,12 +1257,12 @@ class OptionAvailabilityNode extends PassNode {
  * @class
  * @extends {SourceNode}
  */
-class JumpNode extends SourceNode {
+export class JumpNode extends SourceNode {
 	/**
 	 * @type {IntValue}
 	 */
 	constructor(createInfo) {
-		super(createInfo, "File or blank for this file...");
+		super(createInfo);
 		this.nodeId = new IntValue();
 		super._setup(createInfo);
 	}
@@ -1318,7 +1299,7 @@ class JumpNode extends SourceNode {
  * @class
  * @extends {PassNode}
  */
-class ReturnNode extends PassNode {
+export class ReturnNode extends PassNode {
 	/**
 	 * @param {ReturnNode} createInfo
 	 * @param {Application} app
@@ -1342,7 +1323,7 @@ class ReturnNode extends PassNode {
  * @class
  * @extends {SourceNode}
  */
-class BackgroundNode extends SourceNode {
+export class BackgroundNode extends SourceNode {
 	/**
 	 * @param {BackgroundNode} createInfo
 	 */
@@ -1376,7 +1357,7 @@ class BackgroundNode extends SourceNode {
  * @class
  * @extends {VariableNode}
  */
-class IfVariableNode extends VariableNode {
+export class IfVariableNode extends VariableNode {
 	/** @type {ConditionString} */
 	condition = new ConditionString();
 
@@ -1387,7 +1368,6 @@ class IfVariableNode extends VariableNode {
 	constructor(createInfo, app) {
 		super(createInfo, app);
 		super._setup(createInfo);
-
 		let target = this.fields[this.fields.length - 1];
 		this.fields[this.fields.length - 1] = this.fields[this.fields.length - 2];
 		this.fields[this.fields.length - 2] = target;
@@ -1401,7 +1381,9 @@ class IfVariableNode extends VariableNode {
 	}
 
 	/**
-	 * @returns {string}
+	 * @param {Application} app
+	 * @returns {Output} The first output
+	 * @override
 	 */
 	execute(app) {
 		let result = false;
@@ -1438,7 +1420,7 @@ class IfVariableNode extends VariableNode {
  * @class
  * @extends {PassNode}
  */
-class CompareVariableNode extends PassNode {
+export class CompareVariableNode extends PassNode {
 	/** @type {VariableString} */
 	a = new VariableString();
 
@@ -1460,7 +1442,6 @@ class CompareVariableNode extends PassNode {
 	/**
 	 * @param {Application} app
 	 * @param {ValueType} scope
-	 * @override
 	 */
 	changedVar(app, scope) { }
 
@@ -1511,7 +1492,7 @@ class CompareVariableNode extends PassNode {
  * @class
  * @extends {PassNode}
  */
-class FunctionCallNode extends PassNode {
+export class FunctionCallNode extends PassNode {
 	/**
 	 * @param {FunctionCallNode} createInfo
 	 * @param {Application} app
@@ -1539,9 +1520,9 @@ class FunctionCallNode extends PassNode {
  * @extends {PassNode}
  * @abstract
  */
-class OutsNode extends PassNode {
+export class OutsNode extends PassNode {
 	constructor(createInfo, app) {
-		super(createInfo, app);
+		super(createInfo);
 	}
 
 	/**
@@ -1564,7 +1545,7 @@ class OutsNode extends PassNode {
  * @class
  * @extends {OutsNode}
  */
-class RandomNode extends OutsNode {
+export class RandomNode extends OutsNode {
 	/**
 	 * @param {RandomNode} createInfo
 	 * @param {Application} app
@@ -1591,16 +1572,15 @@ class RandomNode extends OutsNode {
  * @extends {PassNode}
  * @abstract
  */
-class InventoryNode extends PassNode {
+export class InventoryNode extends PassNode {
 	/** @type {ItemIndex} */
 	inventory = new ItemIndex();
 
 	/**
 	 * @param {InventoryNode} createInfo
-	 * @param {Application} app
 	 */
-	constructor(createInfo, app) {
-		super(createInfo, app);
+	constructor(createInfo) {
+		super(createInfo);
 	}
 }
 
@@ -1609,13 +1589,12 @@ class InventoryNode extends PassNode {
  * @class
  * @extends {InventoryNode}
  */
-class InventoryAddNode extends InventoryNode {
+export class InventoryAddNode extends InventoryNode {
 	/**
 	 * @param {InventoryAddNode} createInfo
-	 * @param {Application} app
 	 */
-	constructor(createInfo, app) {
-		super(createInfo, app);
+	constructor(createInfo) {
+		super(createInfo);
 		super._setup(createInfo);
 	}
 
@@ -1635,13 +1614,12 @@ class InventoryAddNode extends InventoryNode {
  * @class
  * @extends {InventoryNode}
  */
-class InventoryRemoveNode extends InventoryNode {
+export class InventoryRemoveNode extends InventoryNode {
 	/**
 	 * @param {InventoryRemoveNode} createInfo
-	 * @param {Application} app
 	 */
-	constructor(createInfo, app) {
-		super(createInfo, app);
+	constructor(createInfo) {
+		super(createInfo);
 		super._setup(createInfo);
 	}
 
@@ -1661,13 +1639,12 @@ class InventoryRemoveNode extends InventoryNode {
  * @class
  * @extends {InventoryNode}
  */
-class InventoryExistsNode extends InventoryNode {
+export class InventoryExistsNode extends InventoryNode {
 	/**
 	 * @param {InventoryExistsNode} createInfo
-	 * @param {Application} app
 	 */
-	constructor(createInfo, app) {
-		super(createInfo, app);
+	constructor(createInfo) {
+		super(createInfo);
 		super._setup(createInfo);
 	}
 
@@ -1696,13 +1673,12 @@ class InventoryExistsNode extends InventoryNode {
  * @class
  * @extends {InventoryNode}
  */
-class InventoryCountNode extends InventoryNode {
+export class InventoryCountNode extends InventoryNode {
 	/**
 	 * @param {InventoryCountNode} createInfo
-	 * @param {Application} app
 	 */
-	constructor(createInfo, app) {
-		super(createInfo, app);
+	constructor(createInfo) {
+		super(createInfo);
 		this.condition = new ConditionString();
 		this.value = new IntValue();
 		super._setup(createInfo);
@@ -1751,7 +1727,7 @@ class InventoryCountNode extends InventoryNode {
 	}
 }
 
-Node.typeMap = {
+export const NodeTypeMap = {
 	"AddRandomToVariable": AddRandomToVariableNode,
 	"AddToVariable": AddToVariableNode,
 	"AddVariableToVariable": AddVariableToVariableNode,

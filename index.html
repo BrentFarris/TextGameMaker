@@ -4,12 +4,22 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
 		<link rel="stylesheet" type="text/css" href="index.css" />
-		<script type="text/javascript" src="localforage.min.js"></script>
-		<script type="text/javascript" src="web2d.js"></script>
-		<script type="text/javascript" src="knockout.js"></script>
-		<script type="text/javascript" src="node.js"></script>
-		<script type="text/javascript" src="manager.js"></script>
+		<script type="module" src="localforage.min.js"></script>
+		<script type="module" src="knockout.js"></script>
+		<script type="module" src="jszip.min.js"></script>
 		<script type="text/javascript" src="FileSaver.js"></script>
+
+		<script type="module" src="modules/canvas.js"></script>
+		<script type="module" src="modules/color.js"></script>
+		<script type="module" src="modules/event.js"></script>
+		<script type="module" src="modules/game_audio.js"></script>
+		<script type="module" src="modules/input.js"></script>
+		<script type="module" src="modules/std.js"></script>
+		<script type="module" src="modules/storage.js"></script>
+		<script type="module" src="modules/vec2.js"></script>
+		
+		<script type="module" src="node.js"></script>
+		<script type="module" src="manager.js"></script>
 	</head>
 	<body>
 		<div id="container">
@@ -234,6 +244,6 @@
 				<li><input type="file" accept="application/json" data-bind="event: {change:importJson}" /></li>
 			</ul>
 		</div>
-		<script type="text/javascript" src="main.js"></script>
+		<script type="module" src="main.js"></script>
 	</body>
 </html>

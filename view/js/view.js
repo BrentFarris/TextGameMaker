@@ -117,7 +117,7 @@ function app() {
 		this.nodes = {};
 
 		for (let i = 0; i < json.nodes.length; i++) {
-			this.nodes[json.nodes[i].id] = new Node.typeMap[json.nodes[i].type](json.nodes[i], this);
+			this.nodes[json.nodes[i].id] = new NodeTypeMap[json.nodes[i].type](json.nodes[i], this);
 		}
 
 		if (jumpToId > 0) {

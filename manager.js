@@ -1,53 +1,45 @@
-/**
- * MyNewType definition
- * @template T
- * @typedef {Function} Observable
- * @param {T} value
- * @returns T
- */
+import * as ko from "./knockout.js";
+import { Input } from "./modules/input.js";
+import { Optional } from "./modules/std.js";
+import { EditorApplication } from "./main.js";
+import { CoreNode, DialogNode, StoryNode, CommentNode } from "./node.js";
 
-/**
- * MyNewType definition
- * @template T
- * @typedef {Function} ObservableArray
- * @param {T[]} value
- * @returns T[]
- */
+function getEvent(e) { return e || window.event; }
 
 /**
  * The base class for all of the management windows
  * @class
  * @abstract
  */
-class Manager {
-	/** @type {HTMLElement} */
-	elm = null;
+export class Manager {
+	/** @type {Optional<HTMLElement>} */
+	elm = new Optional();
+
+	/** @type {Manager[]} */
+	static managers = [];
+
+	static closeManagers() {
+		for (let i = 0; i < Manager.managers.length; i++)
+			Manager.managers[i].close();
+	}
 
 	/**
-	 * @param {HTMLElement} elm 
+	 * @param {HTMLElement|null} elm 
 	 */
 	constructor(elm) {
-		this.elm = elm;
-		if (!Manager.managers) {
-			Manager.managers = [];
-
-			Manager._closeManagers = function() {
-				for (let i = 0; i < Manager.managers.length; i++) {
-					Manager.managers[i].close();
-				}
-			};
-		}
-
+		this.elm.Value = elm;
 		Manager.managers.push(this);
 	}
 
 	/**
 	 * @param {EditorApplication} app 
+	 * @param {CoreNode} scope 
 	 * @virtual
 	 */
-	show(app) {
-		Manager._closeManagers();
-		this.elm.style.display = "block";
+	show(app, scope) {
+		Manager.closeManagers();
+		if (this.elm.HasValue)
+			this.elm.Value.style.display = "block";
 		app.fileOptionsVisible(false);
 	}
 
@@ -55,7 +47,8 @@ class Manager {
 	 * @virtual
 	 */
 	close() {
-		this.elm.style.display = "none";
+		if (this.elm.HasValue)
+			this.elm.Value.style.display = "none";
 	}
 }
 
@@ -64,12 +57,12 @@ class Manager {
  * @class
  * @extends {Manager}
  */
-class CharacterManager extends Manager {
-	/** @type {Observable<any>} */
+export class CharacterManager extends Manager {
+	/** @type {KnockoutObservable<any>} */
 	name = ko.observable();
 
 	/**
-	 * @param {HTMLElement} elm 
+	 * @param {HTMLElement|null} elm 
 	 */
 	constructor(elm) {
 		super(elm);
@@ -77,22 +70,23 @@ class CharacterManager extends Manager {
 
 	/**
 	 * @param {EditorApplication} app 
+	 * @param {CoreNode} scope 
 	 * @override
 	 */
-	show(app) {
-		super.show(app);
-		this.elm.getElementsByTagName("input")[0].focus();
+	show(app, scope) {
+		super.show(app, scope);
+		this.elm.Value.getElementsByTagName("input")[0].focus();
 	}
 
 	/**
 	 * 
 	 * @param {EditorApplication} app 
-	 * @param {Event} e 
+	 * @param {KeyboardEvent} e 
 	 * @returns 
 	 */
 	create(app, e) {
 		e = getEvent(e);
-		if (e.keyCode === web2d.input.keys.Enter) {
+		if (e.keyCode === Input.keys.Enter) {
 			let name = this.name().trim();
 			if (!name.length) {
 				return;
@@ -116,12 +110,12 @@ class CharacterManager extends Manager {
  * @class
  * @extends {Manager}
  */
-class BeastManager extends Manager {
-	/** @type {Observable<any>} */
+export class BeastManager extends Manager {
+	/** @type {KnockoutObservable<any>} */
 	name = ko.observable();
 
 	/**
-	 * @param {HTMLElement} elm 
+	 * @param {HTMLElement|null} elm 
 	 */
 	constructor(elm) {
 		super(elm);
@@ -129,20 +123,22 @@ class BeastManager extends Manager {
 
 	/**
 	 * @param {EditorApplication} app 
+	 * @param {CoreNode} scope 
+	 * @override
 	 */
-	show(app) {
-		super.show(app);
-		this.elm.getElementsByTagName("input")[0].focus();
+	show(app, scope) {
+		super.show(app, scope);
+		this.elm.Value.getElementsByTagName("input")[0].focus();
 	}
 
 	/**
 	 * @param {EditorApplication} app 
-	 * @param {Event} e 
+	 * @param {KeyboardEvent} e 
 	 * @returns 
 	 */
 	create(app, e) {
 		e = getEvent(e);
-		if (e.keyCode === web2d.input.keys.Enter) {
+		if (e.keyCode === Input.keys.Enter) {
 			let name = this.name().trim();
 			if (!name.length) {
 				return;
@@ -167,12 +163,12 @@ class BeastManager extends Manager {
  * @class
  * @extends {Manager}
  */
-class ItemManager extends Manager {
-	/** @type {Observable<any>} */
+export class ItemManager extends Manager {
+	/** @type {KnockoutObservable<any>} */
 	name = ko.observable();
 
 	/**
-	 * @param {HTMLElement} elm 
+	 * @param {HTMLElement|null} elm 
 	 */
 	constructor(elm) {
 		super(elm);
@@ -180,19 +176,21 @@ class ItemManager extends Manager {
 
 	/**
 	 * @param {EditorApplication} app 
+	 * @param {CoreNode} scope 
+	 * @override
 	 */
-	show(app) {
-		super.show(app);
-		this.elm.getElementsByTagName("input")[0].focus();
+	show(app, scope) {
+		super.show(app, scope);
+		this.elm.Value.getElementsByTagName("input")[0].focus();
 	}
 
 	/**
 	 * @param {EditorApplication} app 
-	 * @param {Event} e 
+	 * @param {KeyboardEvent} e 
 	 */
 	create(app, e) {
 		e = getEvent(e);
-		if (e.keyCode === web2d.input.keys.Enter) {
+		if (e.keyCode === Input.keys.Enter) {
 			let name = this.name().trim();
 			if (!name.length) {
 				return;
@@ -216,15 +214,15 @@ class ItemManager extends Manager {
  * @class
  * @extends {Manager}
  */
-class VariableManager extends Manager {
-	/** @type {Observable<any>} */
+export class VariableManager extends Manager {
+	/** @type {KnockoutObservable<any>} */
 	name = ko.observable();
 
-	/** @type {Observable<string>} */
+	/** @type {KnockoutObservable<string>} */
 	type = ko.observable("");
 
 	/**
-	 * @param {HTMLElement} elm 
+	 * @param {HTMLElement|null} elm 
 	 */
 	constructor(elm) {
 		super(elm);
@@ -232,20 +230,21 @@ class VariableManager extends Manager {
 
 	/**
 	 * @param {EditorApplication} app 
+	 * @param {CoreNode} scope 
+	 * @override
 	 */
-	show(app) {
-		super.show(app);
-		this.elm.getElementsByTagName("input")[0].focus();
+	show(app, scope) {
+		super.show(app, scope);
+		this.elm.Value.getElementsByTagName("input")[0].focus();
 	}
 
 	/**
 	 * @param {EditorApplication} app 
-	 * @param {Event} e 
+	 * @param {KeyboardEvent} e 
 	 */
 	create(app, e) {
 		e = getEvent(e);
-
-		if (e.keyCode === web2d.input.keys.Enter) {
+		if (e.keyCode === Input.keys.Enter) {
 			let name = this.name().trim();
 			let type = this.type().trim();
 			if (!name.length || !type.length) {
@@ -274,38 +273,42 @@ class VariableManager extends Manager {
  * @class
  * @extends {Manager}
  */
-class ViewManager extends Manager {
-	/** @type {Observable<any>} */
+export class ViewManager extends Manager {
+	/** @type {KnockoutObservable<any>} */
 	title = ko.observable(null);
 
-	/** @type {Observable<any>} */
+	/** @type {KnockoutObservable<any>} */
 	value = ko.observable(null);
 
-	/** @type {EditorApplication} */
-	app = null;
-
 	/**
-	 * @param {HTMLElement} elm 
-	 * @param {EditorApplication} app 
+	 * @param {HTMLElement|null} elm 
 	 */
-	constructor(elm, app) {
+	constructor(elm) {
 		super(elm);
-		this.app = app;
 	}
 
 	/**
 	 * @param {EditorApplication} app 
+	 * @param {CoreNode} scope 
+	 * @override
 	 */
-	show(scope) {
-		super.show(this.app);
+	show(app, scope) {
+		super.show(app, scope);
 		if (scope.type === "Story") {
+			let n = /** @type {StoryNode} */ (scope);
 			this.title("Story");
-		} else if (scope.type === "Comment") {
-			this.title("Comment");
-		} else {
-			this.title(this.app.characters()[scope.character.Value].name);
+			this.value(n.text.Value);
 		}
-		this.value(scope.text.Value);
+		else if (scope.type === "Comment") {
+			let n = /** @type {CommentNode} */ (scope);
+			this.title("Comment");
+			this.value(n.text.Value);
+		}
+		else {
+			let n = /** @type {DialogNode} */ (scope);
+			this.title(app.characters()[n.character.Value].name);
+			this.value(n.text.Value);
+		}
 	}
 }
 
@@ -314,9 +317,9 @@ class ViewManager extends Manager {
  * @class
  * @extends {Manager}
  */
-class NodeTemplateManager extends Manager {
+export class NodeTemplateManager extends Manager {
 	/**
-	 * @param {HTMLElement} elm 
+	 * @param {HTMLElement|null} elm 
 	 */
 	constructor(elm) {
 		super(elm);
@@ -324,8 +327,10 @@ class NodeTemplateManager extends Manager {
 
 	/**
 	 * @param {EditorApplication} app 
+	 * @param {CoreNode} scope 
+	 * @override
 	 */
-	show(app) {
-		super.show(app);
+	show(app, scope) {
+		super.show(app, scope);
 	}
 }
