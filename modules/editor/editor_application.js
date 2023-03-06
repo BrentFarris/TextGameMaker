@@ -1,5 +1,5 @@
 import { Manager, CharacterManager, BeastManager, ItemManager,
-	VariableManager, ViewManager, NodeTemplateManager, CharacterEntry,
+	VariableManager, ViewManager, NodeTemplateManager,
 	BeastEntry, TemplateEntry } from "./manager.js";
 import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT } from "../node.js";
 import { ArrayHelpers } from "../std.js";
@@ -11,6 +11,7 @@ import { NodeManager } from "./node_manager.js";
 import { Application } from "../application.js";
 import { Item } from "../item_database.js";
 import { Variable } from "../variable_database.js";
+import { Character } from "../character_database.js";
 
 function getEvent(e) { return e || window.event; }
 
@@ -45,7 +46,7 @@ function getEvent(e) { return e || window.event; }
 
 /**
  * @typedef {Object} MetaJSON
- * @property {CharacterEntry[]} characters
+ * @property {Character[]} characters
  * @property {BeastEntry[]} beasts
  * @property {Item[]} items
  * @property {Variable[]} variables

@@ -1,12 +1,15 @@
 import { each, StringHelpers } from "../std.js";
-import { NodeTypeMap, Output, StartNode, StoryNode } from "../node.js";
+import { CoreNode, NodeTypeMap, OptionNode, Output, StartNode, StoryNode } from "../node.js";
 import { Application } from "../application.js";
 import { Media } from "../media.js";
 
-export class ViewApplication extends Application {
-	/** @type {string[]} */
-	characters = [];
+/**
+ * @typedef LoadedFile
+ * @property {string} name
+ * @property {Object} json
+ */
 
+export class ViewApplication extends Application {
 	nodes = {};
 	node = ko.observable(null);
 
@@ -17,6 +20,7 @@ export class ViewApplication extends Application {
 	fileStack = [];
 	currentFile = null;
 
+	/** @type {LoadedFile[]} */
 	loadedFiles = [];
 
 	/** @type {KnockoutObservable<string>} */
@@ -37,16 +41,30 @@ export class ViewApplication extends Application {
 		this.media = new Media();
 	}
 
-	importFolder(event) {
+	async importFolderMeta(files) {
+		for (let i = 0; i < files.length; i++) {
+			if (files[i].name === "meta.json") {
+				await new Promise((res, rej) => {
+					let reader = new FileReader();
+					reader.onload = (e) => {
+						this.importMeta(
+						JSON.parse(/** @type {string} } */ (e.target.result)));
+						res();
+					};
+					reader.readAsText(files[i]);
+				});
+				break;
+			}
+		}
+	}
+
+	async importFolder(event) {
 		let files = event.target.files;
+		await this.importFolderMeta(files);
 		for (let i = 0; i < files.length; i++) {
 			if (files[i].type === "application/json") {
-				let reader = new FileReader();
-				reader.readAsText(files[i]);
-				if (files[i].name === "meta.json") {
-					reader.onload = (e) => this.importMeta(
-						JSON.parse(/** @type {string} } */ (e.target.result)));
-				} else {
+				if (files[i].name !== "meta.json") {
+					let reader = new FileReader();
 					reader.onload = (e) => {
 						let json = JSON.parse(/** @type {string} } */ (e.target.result));
 						this.loadedFiles.push({
@@ -61,10 +79,10 @@ export class ViewApplication extends Application {
 								foundStart = true;
 							}
 						}
-						if (foundStart) {
+						if (foundStart)
 							this.load(this.loadedFiles[this.loadedFiles.length - 1]);
-						}
 					};
+					reader.readAsText(files[i]);
 				}
 			} else if (files[i].type === "audio/mpeg" || files[i].type === "audio/wav") {
 				let audio = new Audio();
@@ -104,7 +122,7 @@ export class ViewApplication extends Application {
 			}
 		}
 		if (json.characters)
-			this.characters = json.characters;
+			this.characterDatabase.addMany(json.characters);
 	}
 
 	import(json, jumpToId) {
@@ -196,7 +214,6 @@ export class ViewApplication extends Application {
 			return;
 		this.node(to);
 		let newTo = this.node().execute(this);
-
 		if (newTo)
 			this.next(newTo);
 		else
@@ -263,12 +280,36 @@ export class ViewApplication extends Application {
 		return StringHelpers.nl2br(text);
 	}
 
+	/**
+	 * @param {number} nodeId 
+	 * @param {number} optionId 
+	 */
 	activateNodeOption(nodeId, optionId) {
 		this.nodeById(nodeId).options()[optionId].active(true);
 	}
 
+	/**
+	 * @param {number} nodeId 
+	 * @param {number} optionId 
+	 */
 	deactivateNodeOption(nodeId, optionId) {
 		this.nodeById(nodeId).options()[optionId].active(false);
+	}
+
+	/**
+	 * @param {number} id 
+	 * @return {string}
+	 */
+	characterName(id) {
+		return this.characterDatabase.characterName(id);
+	}
+
+	/**
+	 * @param {CoreNode} node 
+	 * @returns {boolean}
+	 */
+	isOptionNode(node) {
+		return node instanceof OptionNode;
 	}
 }
 
@@ -284,6 +325,6 @@ application.addRemoteFunction("yell", () => {
 	alert("This is a remote function call");
 });
 
-function loadFolder(evt) {
-	application.importFolder(evt)
-}
+(function() {
+	document.getElementById("loadFolder").onchange = async evt => application.importFolder(evt);
+})();

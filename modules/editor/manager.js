@@ -2,14 +2,11 @@ import { Optional } from "../std.js";
 import { CoreNode, DialogNode, StoryNode, CommentNode } from "../node.js";
 import { Variable } from "../variable_database.js";
 import { Item } from "../item_database.js";
+import { Character } from "../character_database.js";
 
 export class DatabaseEntry {
 	/** @type {string} */
 	name = "";
-}
-
-export class CharacterEntry extends DatabaseEntry {
-
 }
 
 export class BeastEntry extends DatabaseEntry {
@@ -71,7 +68,7 @@ export class CharacterManager extends Manager {
 	/** @type {KnockoutObservable<string>} */
 	name = ko.observable();
 
-	/** @type {KnockoutObservableArray<CharacterEntry>} */
+	/** @type {KnockoutObservableArray<Character>} */
 	characters = ko.observableArray();
 
 	/**

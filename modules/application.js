@@ -1,3 +1,4 @@
+import { CharacterDatabase } from "./character_database.js";
 import { Inventory, ItemDatabase } from "./item_database.js";
 import { LogDatabase } from "./log_database.js";
 import { Media } from "./media.js";
@@ -7,6 +8,9 @@ import { VariableDatabase } from "./variable_database.js";
  * @abstract
  */
 export class Application {
+	/** @type {CharacterDatabase} */
+	characterDatabase = new CharacterDatabase();
+
 	/** @type {VariableDatabase} */
 	variableDatabase = new VariableDatabase();
 

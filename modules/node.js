@@ -404,10 +404,12 @@ export class CoreNode {
 		this.x = info.x;
 		this.y = info.y;
 		this.tos = info.outs;
-		for (let i = 0; i < info.outs.length; i++)
+		if (info.outs.length == 0)
 			this.outs.push(new Output());
-		if (!info.outs.length)
-			this.outs.push(new Output());
+		else {
+			for (let i = 0; i < info.outs.length; i++)
+				this.outs.push(new Output());
+		}
 	}
 
 	/**
@@ -516,9 +518,8 @@ export class OptionNode extends CoreNode {
 	 */
 	_init(info) {
 		super._init(info);
-		for (let i = 0; i < info.options.length; i++) {
+		for (let i = 0; i < info.options.length; i++)
 			this._addOption(info.options[i].text, info.options[i].active);
-		}
 	}
 
 	/**
@@ -526,9 +527,8 @@ export class OptionNode extends CoreNode {
 	 */
 	addOption() {
 		this._addOption("", true);
-		if (this.options().length > 1) {
+		if (this.options().length > 1)
 			this.outs.push(new Output());
-		}
 	}
 	
 	/**

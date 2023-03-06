@@ -34,19 +34,19 @@
 				<!-- ko if: node() -->
 					<div class="displayBox">
 						<!-- ko if: 'character' in node() -->
-						<h2 data-bind="text: characters[node().character.Value].name"></h2>
+						<h2 data-bind="text: characterName(node().character.Value)"></h2>
 						<!-- /ko -->
 						<!-- ko if: 'text' in node() -->
 						<p data-bind="html: parseText(node().text.value()), style: {fontStyle:textStyle()}"></p>
 						<!-- /ko -->
 					</div>
 					<div class="optionBox">
-						<!-- ko if: node() instanceof OptionNode && node().options().length -->
+						<!-- ko if: isOptionNode(node()) && node().options().length -->
 						<ul data-bind="foreach: node().options">
 							<li><button data-bind="text:text, enable:active, click: $root.next.bind($root, $index())"></button></li>
 						</ul>
 						<!-- /ko -->
-						<!-- ko if: !(node() instanceof OptionNode) || !node().options().length -->
+						<!-- ko if: !isOptionNode(node()) || !node().options().length -->
 						<button data-bind="click:next.bind($root, 0)">Continue</button>
 						<!-- /ko -->
 					</div>
@@ -90,7 +90,7 @@
 				</div>
 			</footer>
 		</div>
+		<div><input id="loadFolder" type="file" webkitdirectory directory multiple="false" accept="application/json"/></div>
 		<script type="module" src="/modules/player/view_application.js"></script>
-		<div><input type="file" webkitdirectory directory multiple="false" accept="application/json" onchange="loadFolder(event)"/></div>
 	</body>
 </html>
