@@ -1,4 +1,4 @@
-import { GameAudio } from "./game_audio.js";
+import { GameAudio } from "./engine/game_audio.js";
 
 /**
  * @typedef {Object} AudioResource

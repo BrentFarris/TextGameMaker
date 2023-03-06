@@ -1,5 +1,5 @@
 import { CoreNode, NodeTypeMap } from "../node.js";
-import { each, Optional } from "../std.js";
+import { each, Optional } from "../engine/std.js";
 
 export class NodeManager {
 	/** @type {KnockoutObservableArray<CoreNode>} */

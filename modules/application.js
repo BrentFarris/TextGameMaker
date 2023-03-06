@@ -1,8 +1,8 @@
-import { CharacterDatabase } from "./character_database.js";
-import { Inventory, ItemDatabase } from "./item_database.js";
-import { LogDatabase } from "./log_database.js";
+import { CharacterDatabase } from "./database/character_database.js";
+import { Inventory, ItemDatabase } from "./database/item_database.js";
+import { LogDatabase } from "./database/log_database.js";
 import { Media } from "./media.js";
-import { VariableDatabase } from "./variable_database.js";
+import { VariableDatabase } from "./database/variable_database.js";
 
 /**
  * @abstract

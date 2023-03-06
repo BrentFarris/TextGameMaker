@@ -9,25 +9,6 @@
 		<script type="text/javascript" src="js/ext/localforage.min.js"></script>
 		<script type="text/javascript" src="js/ext/knockout.js"></script>
 		<script type="text/javascript" src="js/ext/FileSaver.js"></script>
-
-		<script type="module" src="modules/canvas.js"></script>
-		<script type="module" src="modules/color.js"></script>
-		<script type="module" src="modules/event.js"></script>
-		<script type="module" src="modules/game_audio.js"></script>
-		<script type="module" src="modules/http.js"></script>
-		<script type="module" src="modules/input.js"></script>
-		<script type="module" src="modules/item_database.js"></script>
-		<script type="module" src="modules/log_database.js"></script>
-		<script type="module" src="modules/media.js"></script>
-		<script type="module" src="modules/node.js"></script>
-		<script type="module" src="modules/std.js"></script>
-		<script type="module" src="modules/storage.js"></script>
-		<script type="module" src="modules/variable_database.js"></script>
-		<script type="module" src="modules/vec2.js"></script>
-
-		<script type="module" src="modules/editor/editor_canvas.js"></script>
-		<script type="module" src="modules/editor/node_manager.js"></script>
-		<script type="module" src="modules/editor/manager.js"></script>
 	</head>
 	<body>
 		<div id="container">
@@ -38,7 +19,7 @@
 					<div id="contents" class="nodeContents">
 						<div data-bind="foreach: fields">
 							<!-- ko if: $data.TypeName == "CharacterIndex" -->
-							<select data-bind="value: value, foreach: characterManager.characters">
+							<select data-bind="value: value, foreach: $root.characterDatabase.entryView">
 								<option data-bind="value:$index(), text:name"></option>
 							</select>
 							<!-- /ko -->
@@ -84,7 +65,7 @@
 								<input class="inputs value" type="number" data-bind="value: value, attr: {placeholder: placeholder}" />
 								<!-- /ko -->
 								<!-- ko if: $data._type() === "char" -->
-								<select data-bind="value: value, foreach: characterManager.characters">
+								<select data-bind="value: value, foreach: $root.characterDatabase.entryView">
 									<option data-bind="value:$index(), text:name"></option>
 								</select>
 								<!-- /ko -->
@@ -109,7 +90,7 @@
 								<!-- ko if: $data.prefix.length > 0 -->
 								<span data-bind="text:prefix"></span>
 								<!-- /ko -->
-							<input type="checkbox" data-bind="checked: value, click:toggleCheck.bind(null, value, $element)" />
+							<input type="checkbox" data-bind="checked: value, click:$root.toggleCheck.bind(null, value, $element)" />
 							<!-- /ko -->
 							<!-- ko if: $data.TypeName == "ConditionString" -->
 							<select data-bind="value: value, foreach: ['==', '!=', '<=', '>=', '>', '<']">
@@ -117,10 +98,10 @@
 							</select>
 							<!-- /ko -->
 						</div>
-						<!-- ko if: $data.TypeName == "OptionNode" -->
+						<!-- ko if: $root.isOptionNode($data) -->
 						<div data-bind="foreach: options">
 							<div class="nodeOption" data-bind="click:$root.optionClick.bind($root, $parent, $index())">
-								<input type="checkbox" data-bind="checked:active, click:toggleCheck.bind(null, active, $element)"/>
+								<input type="checkbox" data-bind="checked:active, click:$root.toggleCheck.bind(null, active, $element)"/>
 								<input class="inputs value" type="text" data-bind="value:text" />
 								<button data-bind="click:$parent.removeOption.bind($parent, $index())">x</button>
 							</div>
@@ -138,7 +119,7 @@
 						<!-- /ko -->
 					</div>
 					<div class="setTo">
-						<!-- ko if: $data.TypeName == "OptionNode" -->
+						<!-- ko if: $root.isOptionNode($data) -->
 						<button data-bind="click:addOption">+</button>
 						<!-- /ko -->
 						<!-- ko if: $data.TypeName == "OutsNode" -->
@@ -171,7 +152,7 @@
 		</div>
 		<div id="characterManager" class="managerWindow">
 			<input type="text" data-bind="value: characterManager.name, event: {keyup: managerInputExec.bind($root, characterManager)}" />
-			<ul data-bind="foreach: characterManager.characters" class="scrollList">
+			<ul data-bind="foreach: characterDatabase.entryView" class="scrollList">
 				<li><span data-bind="text: name"></span> <button data-bind="click:$root.renameCharacter.bind($root)">Rename</button> <button data-bind="click:$root.deleteCharacter.bind($root)">-</button></li>
 			</ul>
 			<div style="text-align:center;">

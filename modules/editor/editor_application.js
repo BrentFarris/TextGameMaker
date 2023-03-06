@@ -1,17 +1,17 @@
 import { Manager, CharacterManager, BeastManager, ItemManager,
 	VariableManager, ViewManager, NodeTemplateManager,
 	BeastEntry, TemplateEntry } from "./manager.js";
-import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT } from "../node.js";
-import { ArrayHelpers } from "../std.js";
-import { Input } from "../input.js";
-import { Storage } from "../storage.js";
-import { HTTP } from "../http.js";
+import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT, OptionNode } from "../node.js";
+import { ArrayHelpers } from "../engine/std.js";
+import { Input } from "../engine/input.js";
+import { Storage } from "../engine/storage.js";
+import { HTTP } from "../engine/http.js";
 import { EditorCanvas } from "./editor_canvas.js";
 import { NodeManager } from "./node_manager.js";
 import { Application } from "../application.js";
-import { Item } from "../item_database.js";
-import { Variable } from "../variable_database.js";
-import { Character } from "../character_database.js";
+import { Item } from "../database/item_database.js";
+import { Variable } from "../database/variable_database.js";
+import { Character } from "../database/character_database.js";
 
 function getEvent(e) { return e || window.event; }
 
@@ -60,7 +60,7 @@ export class EditorApplication extends Application {
 	static get META_FILE_NAME() { return "meta" };
 
 	/** @type {CharacterManager} */
-	characterManager = new CharacterManager(document.getElementById("characterManager"));
+	characterManager;
 
 	/** @type {BeastManager} */
 	beastManager = new BeastManager(document.getElementById("beastManager"));
@@ -131,6 +131,8 @@ export class EditorApplication extends Application {
 
 	constructor() {
 		super();
+		this.characterManager = new CharacterManager(
+			document.getElementById("characterManager"), this.characterDatabase);
 		this.#canvas = new EditorCanvas(this.nodeManager);
 
 		document.addEventListener("mousemove", this.drag.bind(this));
@@ -214,7 +216,7 @@ export class EditorApplication extends Application {
 				return;
 		}
 		if (json.characters)
-			this.characterManager.characters(json.characters);
+			this.characterDatabase.addMany(json.characters);
 		if (json.beasts)
 			this.beastManager.beasts(json.beasts);
 		if (json.items)
@@ -253,7 +255,7 @@ export class EditorApplication extends Application {
 			if ("characters" in json)
 				this.importMeta(json);
 			else {
-				if (!this.characterManager.characters().length) {
+				if (!this.characterDatabase.Count) {
 					if (confirm("You have not imported any meta information, you should import your meta file first. Would you still like to continue loading the node information?")) {
 						this.import(json);
 					}
@@ -310,7 +312,7 @@ export class EditorApplication extends Application {
 	 */
 	getMetaJson() {
 		return {
-			characters: this.characterManager.characters(),
+			characters: this.characterDatabase.asArray(),
 			beasts: this.beastManager.beasts(),
 			items: this.itemManager.items(),
 			variables: this.variableManager.variables(),
@@ -371,7 +373,7 @@ export class EditorApplication extends Application {
 		this.#canvas.drawFrame();
 		if (confirm("Would you also like completely new meta data?")) {
 			await this.storage.deleteFile(folder.Value, EditorApplication.TEMP_META_FILE_NAME);
-			this.characterManager.characters.removeAll();
+			this.characterDatabase.clear();
 			this.beastManager.beasts.removeAll();
 			this.itemManager.items.removeAll();
 			this.variableManager.variables.removeAll();
@@ -657,15 +659,15 @@ export class EditorApplication extends Application {
 		scope.name = newName;
 		// Splice and valueHasMutated are not calling refresh, so we are going to have to do
 		// a "dirty" refresh by re-assigning the array
-		let contents = this.characterManager.characters();
-		this.characterManager.characters([]);
-		this.characterManager.characters(contents);
+		let contents = this.characterDatabase.asArray()
+		this.characterDatabase.clear();
+		this.characterDatabase.addMany(contents);
 	}
 
 	deleteCharacter(scope) {
 		if (!confirm(`Are you sure you wish to delete the character: ${scope.name}?`))
 			return;
-		this.characterManager.characters.remove(scope);
+		this.characterDatabase.remove(scope);
 		this.metaChanged(true);
 		this.saveTemp();
 	};
@@ -745,16 +747,24 @@ export class EditorApplication extends Application {
 	canvasClick(scope, elm) {
 		this.cancelOutLink();
 	}
+
+	/**
+	 * @param {CoreNode} node 
+	 * @returns {boolean}
+	 */
+	isOptionNode(node) {
+		return node instanceof OptionNode;
+	}
+
+	toggleCheck(value, elm) {
+		// This is nonsense, but KO is trippin, probably because I'm trippin...
+		setTimeout(() => {
+			elm.checked = value();
+		}, 10);
+	}
 }
 
 ko.applyBindings(new EditorApplication(), document.body);
-
-function toggleCheck(value, elm) {
-	// This is nonsense, but KO is trippin, probably because I'm trippin...
-	setTimeout(() => {
-		elm.checked = value();
-	}, 10);
-}
 
 window.onerror = (msg, url, linenumber) => {
 	alert(`Error message: ${msg}\nURL:${url}\nLine Number: ${linenumber}`);

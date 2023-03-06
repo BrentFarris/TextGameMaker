@@ -1,4 +1,4 @@
-import { each, StringHelpers } from "../std.js";
+import { each, StringHelpers } from "../engine/std.js";
 import { CoreNode, NodeTypeMap, OptionNode, Output, StartNode, StoryNode } from "../node.js";
 import { Application } from "../application.js";
 import { Media } from "../media.js";

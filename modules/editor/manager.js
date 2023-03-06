@@ -1,8 +1,8 @@
-import { Optional } from "../std.js";
+import { Optional } from "../engine/std.js";
 import { CoreNode, DialogNode, StoryNode, CommentNode } from "../node.js";
-import { Variable } from "../variable_database.js";
-import { Item } from "../item_database.js";
-import { Character } from "../character_database.js";
+import { Variable } from "../database/variable_database.js";
+import { Item } from "../database/item_database.js";
+import { Character, CharacterDatabase } from "../database/character_database.js";
 
 export class DatabaseEntry {
 	/** @type {string} */
@@ -68,13 +68,13 @@ export class CharacterManager extends Manager {
 	/** @type {KnockoutObservable<string>} */
 	name = ko.observable();
 
-	/** @type {KnockoutObservableArray<Character>} */
-	characters = ko.observableArray();
+	/** @type {CharacterDatabase} */
+	database = new CharacterDatabase();
 
 	/**
 	 * @param {HTMLElement|null} elm 
 	 */
-	constructor(elm) {
+	constructor(elm, characterDatabase) {
 		super(elm);
 	}
 
@@ -95,13 +95,13 @@ export class CharacterManager extends Manager {
 		if (!name.length) {
 			return;
 		}
-		for (let i = 0; i < this.characters().length; i++) {
-			if (this.characters()[i].name.toLowerCase() === name.toLowerCase()) {
+		for (let i = 0; i < this.database.Count; i++) {
+			if (this.database.name(i).toLowerCase() === name.toLowerCase()) {
 				alert("A character with that name already exists");
 				return;
 			}
 		}
-		this.characters.push({ name: name });
+		this.database.add(new Character(name));
 		this.name("");
 	}
 }
@@ -295,7 +295,7 @@ export class ViewManager extends Manager {
 			this.value(n.text.Value);
 		} else {
 			let n = /** @type {DialogNode} */ (scope);
-			this.title(this.#characterManager.characters()[n.character.Value].name);
+			this.title(this.#characterManager.database.name(n.character.Value));
 			this.value(n.text.Value);
 		}
 	}

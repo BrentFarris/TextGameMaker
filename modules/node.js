@@ -1,7 +1,7 @@
-import { GameAudio } from "./game_audio.js";
-import { ArrayHelpers, each, random } from "./std.js";
+import { GameAudio } from "./engine/game_audio.js";
+import { ArrayHelpers, each, random } from "./engine/std.js";
 import { Application } from "./application.js";
-import { Log } from "./log_database.js";
+import { Log } from "./database/log_database.js";
 
 export const NODE_WIDTH = 200;
 export const NODE_HANDLE_HEIGHT = 24;
