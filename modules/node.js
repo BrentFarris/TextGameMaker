@@ -1157,7 +1157,8 @@ export class SoundNode extends SourceNode {
 	 * @override
 	 */
 	execute(app) {
-		let sound = new GameAudio(`audio/${this.src.Value}`);
+		let elm = app.media.audioDatabase.elm(`audio/${this.src.Value}`);
+		let sound = new GameAudio(elm);
 		sound.play();
 		return super.execute(app);
 	}
@@ -1196,7 +1197,8 @@ export class MusicNode extends SourceNode {
 			app.media.bgm = null;
 		}
 		if (this.src.Value) {
-			app.media.bgm = new GameAudio(`audio/${this.src.Value}`);
+			let elm = app.media.audioDatabase.elm(`audio/${this.src.Value}`);
+			app.media.bgm = new GameAudio(elm);
 			app.media.bgm.setLoopCount(0);
 			app.media.bgm.play();
 		}
@@ -1340,7 +1342,8 @@ export class BackgroundNode extends SourceNode {
 	 */
 	execute(app) {
 		app.media.backgroundImageBuffer(app.media.backgroundImage());
-		app.media.backgroundImage(`img/${this.src.Value}`);
+		let url = app.media.imageDatabase.url(`images/${this.src.Value}`);
+		app.media.backgroundImage(url);
 		return super.execute(app);
 	}
 }

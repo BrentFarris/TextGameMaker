@@ -58,9 +58,19 @@ export class ViewApplication extends Application {
 		}
 	}
 
+	async importMedia(files) {
+		for (let i = 0; i < files.length; i++) {
+			if (files[i].type === "audio/mpeg" || files[i].type === "audio/wav")
+				await this.media.audioDatabase.add(files[i], URL.createObjectURL(files[i]));
+			else if (files[i].type === "image/png" || files[i].type === "image/jpeg")
+				await this.media.imageDatabase.add(files[i], URL.createObjectURL(files[i]));
+		}
+	}
+
 	async importFolder(event) {
 		let files = event.target.files;
 		await this.importFolderMeta(files);
+		await this.importMedia(files);
 		for (let i = 0; i < files.length; i++) {
 			if (files[i].type === "application/json") {
 				if (files[i].name !== "meta.json") {
@@ -84,15 +94,6 @@ export class ViewApplication extends Application {
 					};
 					reader.readAsText(files[i]);
 				}
-			} else if (files[i].type === "audio/mpeg" || files[i].type === "audio/wav") {
-				let audio = new Audio();
-				audio.src = URL.createObjectURL(files[i]);
-				audio.load();
-				// TODO:  Keep this guy around in the background
-			} else if (files[i].type === "image/png" || files[i].type === "image/jpeg") {
-				let img = new Image();
-				img.src = URL.createObjectURL(files[i]);
-				// TODO:  Keep this guy around in the background
 			}
 		}
 	}

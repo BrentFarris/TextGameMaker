@@ -7,15 +7,14 @@ export class GameAudio {
 	#loops = 0;
 
 	/**
-	 * @param {string|Audio} src The resource to use for this audio clip
+	 * @param {string|HTMLAudioElement} src The resource to use for this audio clip
 	 */
 	constructor(src) {
 		if (typeof src == "string") {
 			this.clip = new Audio();
 			this.clip.src = src;
-		} else {
+		} else
 			this.clip = src;
-		}
 	}
 
 	/**
@@ -76,13 +75,12 @@ export class GameAudio {
 	 * @param {number} repeats The amount of times this audio clip should loop
 	 */
 	setLoopCount(repeats) {
-		if (repeats == 0) {
+		if (repeats == 0)
 			this.clip.loop = true;
-		} else if (repeats < 0) {
+		else if (repeats < 0) {
 			this.clip.loop = false;
 			this._loops = 0;
-		} else {
+		} else
 			this._loops = repeats;
-		}
 	};
 }
