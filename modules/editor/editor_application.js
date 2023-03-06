@@ -66,7 +66,7 @@ export class EditorApplication extends Application {
 	beastManager = new BeastManager(document.getElementById("beastManager"));
 
 	/** @type {ItemManager} */
-	itemManager = new ItemManager(document.getElementById("itemManager"));
+	itemManager;
 
 	/** @type {VariableManager} */
 	variableManager = new VariableManager(document.getElementById("variableManager"));
@@ -133,6 +133,8 @@ export class EditorApplication extends Application {
 		super();
 		this.characterManager = new CharacterManager(
 			document.getElementById("characterManager"), this.characterDatabase);
+		this.itemManager = new ItemManager(
+			document.getElementById("itemManager"), this.itemDatabase);
 		this.#canvas = new EditorCanvas(this.nodeManager);
 
 		document.addEventListener("mousemove", this.drag.bind(this));

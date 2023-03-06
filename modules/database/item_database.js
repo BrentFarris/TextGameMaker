@@ -1,22 +1,54 @@
-export class Item {
-	/** @type {number} */
-	id = 0;
+import { Database, DatabaseEntry } from "./database.js";
 
+export class ItemData {
 	/** @type {string} */
 	name = "";
 
 	/** @type {number} */
 	quantity = 1;
+
+	/**
+	 * @param {string} name 
+	 * @param {number} [quantity] 
+	 */
+	constructor(name, quantity) {
+		this.name = name;
+		this.quantity = quantity || 1;
+	}
 }
 
-export class ItemDatabase {
-	/** @type {Item[]} */
-	#itemTemplates = [];
+/**
+ * @extends {DatabaseEntry<ItemData>}
+ */
+ export class Item extends DatabaseEntry {
+	/**
+	 * @param {number} id 
+	 * @param {ItemData} itemInfo 
+	 */
+	constructor(id, itemInfo) {
+		super(id, itemInfo);
+	}
+}
 
-	item(index) {
-		let src = this.#itemTemplates[index];
+/**
+ * @extends {Database<Item>}
+ */
+export class ItemDatabase extends Database {
+	/**
+	 * @param {number} id 
+	 * @returns {Item}
+	 */
+	item(id) {
+		let src = this._entry(id);
 		let cpy = JSON.parse(JSON.stringify(src));
 		return cpy;
+	}
+
+	/**
+	 * @param {number} id 
+	 */
+	name(id) {
+		return this._entry(id).data.name;
 	}
 }
 
@@ -31,7 +63,7 @@ export class Inventory {
 		if (!this.exists(item.id))
 			this.#inventory[item.id] = item;
 		else
-			this.#inventory[item.id].quantity += item.quantity;
+			this.#inventory[item.id].data.quantity += item.data.quantity;
 	}
 
 	/**
@@ -54,7 +86,7 @@ export class Inventory {
 	 * @return {number}
 	 */
 	count(id) {
-		return this.#inventory[id].quantity;
+		return this.#inventory[id].data.quantity;
 	}
 
 	/**
@@ -62,9 +94,9 @@ export class Inventory {
 	 * @param {number} count 
 	 */
 	use(id, count) {
-		if (this.#inventory[id].quantity < count)
+		if (this.#inventory[id].data.quantity < count)
 			throw "Used too many of the given item";
 		else
-			this.#inventory[id].quantity -= count;
+			this.#inventory[id].data.quantity -= count;
 	}
 }

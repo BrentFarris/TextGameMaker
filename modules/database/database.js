@@ -101,4 +101,17 @@ export class Database {
 	_entry(id) {
 		return this.#entries[id];
 	}
+
+	/**
+	 * @callback DBEachCallback
+	 * @param {T} arg
+	 */
+
+	/**
+	 * 
+	 * @param {DBEachCallback} expression 
+	 */
+	each(expression) {
+		each(this.#entries, (key, val) => expression(val));
+	}
 }

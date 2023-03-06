@@ -1,7 +1,7 @@
 import { Optional } from "../engine/std.js";
 import { CoreNode, DialogNode, StoryNode, CommentNode } from "../node.js";
 import { Variable } from "../database/variable_database.js";
-import { Item } from "../database/item_database.js";
+import { Item, ItemData, ItemDatabase } from "../database/item_database.js";
 import { Character, CharacterDatabase } from "../database/character_database.js";
 
 export class DatabaseEntry {
@@ -95,14 +95,17 @@ export class CharacterManager extends Manager {
 		if (!name.length) {
 			return;
 		}
-		for (let i = 0; i < this.database.Count; i++) {
-			if (this.database.name(i).toLowerCase() === name.toLowerCase()) {
-				alert("A character with that name already exists");
-				return;
-			}
+		let match = name.toLowerCase();
+		let found = false;
+		this.database.each(item => {
+			found = found || item.data.toLowerCase() === match;
+		});
+		if (found)
+			alert("A character with that name already exists");
+		else {
+			this.database.add(new Character(this.database.NextId, name));
+			this.name("");
 		}
-		this.database.add(new Character(name));
-		this.name("");
 	}
 }
 
@@ -163,14 +166,16 @@ export class ItemManager extends Manager {
 	/** @type {KnockoutObservable<string>} */
 	name = ko.observable();
 
-	/** @type {KnockoutObservableArray<Item>} */
-	items = ko.observableArray();
+	/** @type {ItemDatabase} */
+	database;
 
 	/**
 	 * @param {HTMLElement|null} elm 
+	 * @param {ItemDatabase} itemDatabase
 	 */
-	constructor(elm) {
+	constructor(elm, itemDatabase) {
 		super(elm);
+		this.database = itemDatabase
 	}
 
 	/**
@@ -190,14 +195,17 @@ export class ItemManager extends Manager {
 		if (!name.length) {
 			return;
 		}
-		for (let i = 0; i < this.items().length; i++) {
-			if (this.items()[i].name.toLowerCase() === name.toLowerCase()) {
-				alert("An item with that name already exists");
-				return;
-			}
+		let match = name.toLowerCase();
+		let found = false;
+		this.database.each(item => {
+			found = found || item.data.name.toLowerCase() === match;
+		});
+		if (found)
+			alert("An item with that name already exists");
+		else {
+			this.database.add(new Item(this.database.NextId, new ItemData(name)));
+			this.name("");
 		}
-		this.items.push({ name: name });
-		this.name("");
 	}
 }
 

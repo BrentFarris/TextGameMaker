@@ -29,7 +29,7 @@
 							</select>
 							<!-- /ko -->
 							<!-- ko if: $data.TypeName == "ItemIndex" -->
-							<select data-bind="value: value, foreach: itemManager.items">
+							<select data-bind="value: value, foreach: $root.itemDatabase.entryView">
 								<option data-bind="value:$index(), text:name"></option>
 							</select>
 							<!-- /ko -->
@@ -75,7 +75,7 @@
 								</select>
 								<!-- /ko -->
 								<!-- ko if: $data._type() === "item" -->
-								<select data-bind="value: value, foreach: itemManager.items">
+								<select data-bind="value: value, foreach: $root.itemDatabase.entryView">
 									<option data-bind="value:$index(), text:name"></option>
 								</select>
 								<!-- /ko -->
@@ -170,7 +170,7 @@
 		</div>
 		<div id="itemManager" class="managerWindow">
 			<input type="text" data-bind="value: itemManager.name, event: {keyup: managerInputExec.bind($root, itemManager)}" />
-			<ul data-bind="foreach: itemManager.items" class="scrollList">
+			<ul data-bind="foreach: $root.itemDatabase.entryView" class="scrollList">
 				<li><span data-bind="text: name"></span> <button data-bind="click:$root.renameItem.bind($root)">Rename</button> <button data-bind="click:$root.deleteItem.bind($root)">-</button></li>
 			</ul>
 			<div style="text-align:center;">
