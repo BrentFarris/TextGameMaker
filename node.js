@@ -1,6 +1,10 @@
 import * as ko from "./knockout.js";
 import { ArrayHelpers, each } from "./modules/std.js";
 
+export const NODE_WIDTH = 200;
+export const NODE_HANDLE_HEIGHT = 24;
+export const NODE_LINE_OFFSET = 10;
+
 /**
  * Base class for values that are presented in nodes and read by the viewer
  * @class

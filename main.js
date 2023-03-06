@@ -2,11 +2,13 @@ import * as ko from "./knockout.js";
 import { Manager, CharacterManager, BeastManager, ItemManager, VariableManager, ViewManager, NodeTemplateManager } from "./manager.js";
 import { Canvas } from "./modules/canvas.js";
 import { each } from "./modules/std.js";
-import { CoreNode, NodeTypeMap, ValueType, Output } from "./node.js";
+import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT } from "./node.js";
 import { ArrayHelpers } from "./modules/std.js";
 import { Input } from "./modules/input.js";
 import { Storage } from "./modules/storage.js";
 import { HTTP } from "./modules/http.js";
+import { EditorCanvas } from "./editor/editor_canvas.js";
+import { NodeManager } from "./editor/node_manager.js";
 
 function getEvent(e) { return e || window.event; }
 
@@ -25,7 +27,6 @@ function getEvent(e) { return e || window.event; }
  * @property {number} y2
  * @property {CoreNode|null} node
  * @property {HTMLElement|null} elm
- * 
  */
 
 /**
@@ -33,28 +34,6 @@ function getEvent(e) { return e || window.event; }
  * @property {CoreNode} scope
  * @property {HTMLElement} elm
  */
-
-/**
- * @typedef {Object} NodeTemplate
- * @property {string} name
- * @property {string} template
- */
-
-/**
- * @typedef {Object} FileJSON
- * @property {string} name
- * @property {CoreNode[]} nodes
- */
-
-/**
- * @typedef {Object} MetaJSON
- * @property {string[]} characters
- * @property {string[]} beasts
- * @property {string[]} items
- * @property {string[]} variables
- * @property {NodeTemplate[]} nodeTemplates
- */
-
 /**
  * @typedef {Object} CharacterEntry
  * @property {string} name
@@ -76,10 +55,28 @@ function getEvent(e) { return e || window.event; }
  * @property {string} type
  */
 
+/**
+ * @typedef {Object} NodeTemplate
+ * @property {string} name
+ * @property {string} template
+ */
+
+/**
+ * @typedef {Object} FileJSON
+ * @property {string} name
+ * @property {CoreNode[]} nodes
+ */
+
+/**
+ * @typedef {Object} MetaJSON
+ * @property {CharacterEntry[]} characters
+ * @property {BeastEntry[]} beasts
+ * @property {ItemEntry[]} items
+ * @property {VariableEntry[]} variables
+ * @property {NodeTemplate[]} nodeTemplates
+ */
+
 export class EditorApplication {
-	static get NODE_WIDTH() { return 200 };
-	static get NODE_HANDLE_HEIGHT() { return 24 };
-	static get NODE_LINE_OFFSET() { return 10 };
 	static get PROJECTS_FOLDER() { return "projects" };
 	static get TEMP_FILE_NAME() { return "temp.json" };
 	static get TEMP_META_FILE_NAME() { return "temp-meta.json" };
@@ -98,7 +95,7 @@ export class EditorApplication {
 	variableManager = new VariableManager(document.getElementById("variableManager"));
 
 	/** @type {ViewManager} */
-	viewManager = new ViewManager(document.getElementById("viewNodeManager"), this);
+	viewManager = new ViewManager(document.getElementById("viewNodeManager"));
 
 	/** @type {NodeTemplateManager} */
 	templateManager = new NodeTemplateManager(document.getElementById("templateManager"));
@@ -115,8 +112,8 @@ export class EditorApplication {
 	/** @type {KnockoutObservable<string>} */
 	createNodeType = ko.observable("");
 
-	/** @type {KnockoutObservableArray<CoreNode>} */
-	nodes = ko.observableArray();
+	/** @type {NodeManager} */
+	nodeManager = new NodeManager();
 
 	/** @type {KnockoutObservableArray<CharacterEntry>} */
 	characters = ko.observableArray();
@@ -160,77 +157,28 @@ export class EditorApplication {
 	/** @type {JSON|null} */
 	lastData = null;
 
-	/** @type {Canvas} */
-	#canvas;
-
 	/** @type {DragPos} */
 	#dragPos = { node: null, elm: null, x1: 0, y1: 0, x2: 0, y2: 0 };
-
-	/** @type {boolean} */
-	#canvasAutoStop = true;
 
 	/** @type {number} */
 	#index = 0;
 
 	/** @type {number} */
 	#lastPageY = 0;
-	
-	/** @type {CoreNode|null} */
-	#isolated = null;
 
 	/** @type {number} */
 	#farthestX = 0;
 
+	/** @type {EditorCanvas} */
+	#canvas;
+
 	constructor() {
-		this.#canvas = new Canvas(document.getElementById("canvas"), 1.0, 1.0);
+		this.#canvas = new EditorCanvas(this.nodeManager);
 
 		each(NodeTypeMap, (key, val) => {
 			this.nodeTypes.push(/** @type {string} */ (key));
 		});
 
-		this.#canvas.drawing.register(() => {
-			for (let i = 0; i < this.nodes().length; i++) {
-				if (!this.nodes()[i].outs().length)
-					continue;
-				let outs = this.nodes()[i].outs();
-				for (let j = 0; j < outs.length; j++) {
-					if (!outs[j].to())
-						continue;
-					if (this.#isolated && outs[j].to() !== this.#isolated && this.nodes()[i] !== this.#isolated)
-						continue;
-					let from = this.nodes()[i];
-					let to = /** @type {CoreNode} */ (outs[j].to());
-					let yOffset = ((j + 1) * 22);
-					let startX = from.x + EditorApplication.NODE_WIDTH,
-						startY = (from.y + EditorApplication.NODE_HANDLE_HEIGHT * 0.5) + yOffset,
-						endX = to.x,
-						endY = to.y + EditorApplication.NODE_HANDLE_HEIGHT * 0.5,
-						startOffset = EditorApplication.NODE_LINE_OFFSET,
-						endOffset = EditorApplication.NODE_LINE_OFFSET;
-					let ctx = this.#canvas.context.Value;
-					ctx.beginPath();
-					ctx.lineWidth = 1;
-					ctx.moveTo(startX, startY);
-					ctx.lineTo(startX + startOffset, startY);
-					// The node is not to the right of this node
-					if (to.x < from.x + EditorApplication.NODE_WIDTH) {
-						ctx.lineTo(startX + startOffset, endY - EditorApplication.NODE_HANDLE_HEIGHT);
-						ctx.lineTo(endX - endOffset, endY - EditorApplication.NODE_HANDLE_HEIGHT);
-						ctx.lineTo(endX - endOffset, endY);
-					} else
-						ctx.lineTo(endX - endOffset, endY);
-					ctx.lineTo(endX, endY);
-					ctx.stroke();
-				}
-			}
-			if (this.#canvasAutoStop && this.nodes().length)
-				Canvas.stop(this.#canvas);
-		}, null);
-	
-		this.#canvas.updating.register(() => {
-			this.#canvas.resize(document.body.scrollWidth, document.body.scrollHeight);
-		}, null);
-	
 		// TODO:
 		//document.addEventListener("mousemove", this.drag.bind(this));
 		//document.addEventListener("touchmove", this.drag.bind(this));
@@ -268,30 +216,32 @@ export class EditorApplication {
 					let change = 10;
 					if (key.keyCode === Input.keys.Left)
 						change *= -1;
-					for (let i = 0; i < this.nodes().length; i++) {
-						if (this.nodes()[i].x < Input.mousePosition.x + window.scrollX)
+					for (let i = 0; i < this.nodeManager.Count; i++) {
+						let node = this.nodeManager.at(i);
+						if (node.x < Input.mousePosition.x + window.scrollX)
 							continue;
-						this.nodes()[i].x += change;
-						let n = document.getElementById(`node-${this.nodes()[i].id}`);
+						node.x += change;
+						let n = document.getElementById(`node-${node.id}`);
 						if (n)
-							n.style.left = `${this.nodes()[i].x}px`;
+							n.style.left = `${node.x}px`;
 					}
-					Canvas.start(this.#canvas);
+					this.#canvas.drawFrame();
 				}
 			} else if (key.keyCode === Input.keys.Up || key.keyCode === Input.keys.Down) {
 				if (Input.Ctrl && Input.Alt) {
 					let change = 10;
 					if (key.keyCode === Input.keys.Up)
 						change *= -1;
-					for (let i = 0; i < this.nodes().length; i++) {
-						if (this.nodes()[i].x < Input.mousePosition.x + window.scrollX)
+					for (let i = 0; i < this.nodeManager.Count; i++) {
+						let node = this.nodeManager.at(i);
+						if (node.x < Input.mousePosition.x + window.scrollX)
 							continue;
-						this.nodes()[i].y += change;
-						let n = document.getElementById(`node-${this.nodes()[i].id}`);
+							node.y += change;
+						let n = document.getElementById(`node-${node.id}`);
 						if (n)
-							n.style.top = `${this.nodes()[i].y}px`;
+							n.style.top = `${node.y}px`;
 					}
-					Canvas.start(this.#canvas);
+					this.#canvas.drawFrame();
 				}
 			}
 		}, this);
@@ -322,19 +272,19 @@ export class EditorApplication {
 	import(json) {
 		this.lastData = json;
 		this.name(json.name);
-		if (this.nodes().length) {
+		if (!this.nodeManager.isEmpty()) {
 			if (!confirm("Your current nodes will be deleted on importing of this file. Make sure to export the current nodes or they will be lost. Would you like to continue the import and delete the existing nodes?")) {
 				return;
 			}
-			this.nodes.removeAll();
+			this.nodeManager.clear();
 		}
 		let i = 0;
 		for (i = 0; i < json.nodes.length; i++)
 			this.initializeNode(NodeTypeMap[json.nodes[i].type], json.nodes[i]);
 		// Now that we created the nodes, we need to go through and set the "to" on each
-		for (i = 0; i < this.nodes().length; i++)
-			this.nodes()[i].initializeOuts(this.nodes());
-		Canvas.start(this.#canvas);
+		for (i = 0; i < this.nodeManager.Count; i++)
+			this.nodeManager.at(i).initializeOuts(this.nodeManager.Nodes);
+		this.#canvas.drawFrame();
 	}
 
 	importJson(scope, event) {
@@ -355,17 +305,6 @@ export class EditorApplication {
 		};
         reader.readAsText(input.files[0]);
 		this.fileOptionsVisible(false);
-	}
-
-	nodeById(id) {
-		let node = null;
-		each(this.nodes, (key, val) => {
-			if (val.id === id) {
-				node = val;
-				return false;
-			}
-		});
-		return node;
 	}
 
 	async jumpLoad(scope) {
@@ -400,8 +339,8 @@ export class EditorApplication {
 	 */
 	getJson() {
 		let sanitize = [];
-		for (let i = 0; i < this.nodes().length; i++)
-			sanitize.push(this.nodes()[i].serialize());
+		for (let i = 0; i < this.nodeManager.Count; i++)
+			sanitize.push(this.nodeManager.at(i).serialize());
 		return {
 			name: this.name(),
 			nodes: sanitize
@@ -447,9 +386,9 @@ export class EditorApplication {
 			return;
 		}
 		await this.storage.deleteFile(folder.Value, EditorApplication.TEMP_FILE_NAME);
-		this.nodes.removeAll();
+		this.nodeManager.clear();
 		this.name("");
-		Canvas.start(this.#canvas);
+		this.#canvas.drawFrame();
 		if (confirm("Would you also like completely new meta data?")) {
 			await this.storage.deleteFile(folder.Value, EditorApplication.TEMP_META_FILE_NAME);
 			this.characters.removeAll();
@@ -465,9 +404,9 @@ export class EditorApplication {
 	}
 
 	async saveTemp(anything) {
-		Canvas.start(this.#canvas);
-		this.#canvasAutoStop = true;
-		Canvas.start(this.#canvas);
+		this.#canvas.drawFrame();
+		this.#canvas.setRenderFreezeFrame();
+		this.#canvas.drawFrame();
 		let folder = await this.storage.getFolder(EditorApplication.PROJECTS_FOLDER);
 		if (!folder.HasValue)
 			folder = await this.storage.createFolder(EditorApplication.PROJECTS_FOLDER);
@@ -490,8 +429,8 @@ export class EditorApplication {
 			node.y = window.scrollY + window.innerHeight * 0.5;
 		}
 		if (node.x > this.#farthestX)
-			this.#farthestX = node.x + EditorApplication.NODE_WIDTH;
-		this.nodes.push(node);
+			this.#farthestX = node.x + NODE_WIDTH;
+		this.nodeManager.add(node);
 		return node;
 	}
 
@@ -526,7 +465,7 @@ export class EditorApplication {
 		e = getEvent(e);
 		if (scope.to()) {
 			scope.to(null);
-			Canvas.start(this.#canvas);
+			this.#canvas.drawFrame();
 			this.saveTemp();
 			return;
 		}
@@ -535,21 +474,21 @@ export class EditorApplication {
 
 	breakTo(scope, e) {
 		scope.to = [];
-		Canvas.start(this.#canvas);
+		this.#canvas.drawFrame();
 	}
 
 	deleteNode(scope) {
 		if (!confirm("Are you sure you wish to delete this node?")) 
 			return;
-		for (let i = 0; i < this.nodes().length; i++) {
-			let outs = this.nodes()[i].outs();
+		for (let i = 0; i < this.nodeManager.Count; i++) {
+			let outs = this.nodeManager.at(i).outs();
 			for (let j = 0; j < outs.length; j++) {
 				if (outs[j].to() === scope) {
 					outs[j].to(null);
 				}
 			}
 		}
-		this.nodes.remove(scope);
+		this.nodeManager.remove(scope);
 		this.saveTemp();
 	}
 
@@ -632,9 +571,9 @@ export class EditorApplication {
 		}
 		this.#dragPos.x2 = inputX;
 		this.#dragPos.y2 = inputY;
-		this.#canvasAutoStop = false;
+		this.#canvas.setContinuousRender();
 		this.isolate(scope);
-		Canvas.start(this.#canvas);
+		this.#canvas.drawFrame();
 	}
 
 	drag(e) {
@@ -668,7 +607,7 @@ export class EditorApplication {
 		dpn.x = parseInt(dpe.style.left);
 		dpn.y = parseInt(dpe.style.top);
 		// If the node is outside of the bounds, then auto scroll
-		let moveBox = EditorApplication.NODE_HANDLE_HEIGHT * 3;
+		let moveBox = NODE_HANDLE_HEIGHT * 3;
 		let scrollX = window.innerWidth - dpn.x - moveBox + window.scrollX;
 		if (scrollX < 0) {
 			scrollX *= 0.5;
@@ -705,11 +644,11 @@ export class EditorApplication {
 		dpn.x = parseInt(dpe.style.left);
 		dpn.y = parseInt(dpe.style.top);
 		if (dpn.x > this.#farthestX)
-			this.#farthestX = dpn.x + EditorApplication.NODE_WIDTH;
+			this.#farthestX = dpn.x + NODE_WIDTH;
 		this.#dragPos.elm = null;
 		this.#dragPos.node = null;
-		this.#isolated = null;
-		Canvas.start(this.#canvas);
+		this.nodeManager.deselect();
+		this.#canvas.drawFrame();
 		this.saveTemp();
 	}
 
@@ -809,10 +748,12 @@ export class EditorApplication {
 	}
 
 	isolate(scope) {
-		if (this.#isolated === scope)
-			this.#isolated = null;
-		else
-			this.#isolated = scope;
+		if (this.nodeManager.SelectedNode.HasValue
+			&& this.nodeManager.SelectedNode.Value === scope)
+		{
+			this.nodeManager.deselect();
+		} else
+			this.nodeManager.select(scope);
 	};
 
 	cancelOutLink() {
