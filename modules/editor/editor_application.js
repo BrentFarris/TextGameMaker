@@ -1,6 +1,6 @@
 import { Manager, CharacterManager, BeastManager, ItemManager,
 	VariableManager, ViewManager, NodeTemplateManager, CharacterEntry,
-	BeastEntry, ItemEntry, VariableEntry, TemplateEntry } from "./manager.js";
+	BeastEntry, TemplateEntry } from "./manager.js";
 import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT } from "../node.js";
 import { ArrayHelpers } from "../std.js";
 import { Input } from "../input.js";
@@ -8,6 +8,9 @@ import { Storage } from "../storage.js";
 import { HTTP } from "../http.js";
 import { EditorCanvas } from "./editor_canvas.js";
 import { NodeManager } from "./node_manager.js";
+import { Application } from "../application.js";
+import { Item } from "../item_database.js";
+import { Variable } from "../variable_database.js";
 
 function getEvent(e) { return e || window.event; }
 
@@ -44,12 +47,12 @@ function getEvent(e) { return e || window.event; }
  * @typedef {Object} MetaJSON
  * @property {CharacterEntry[]} characters
  * @property {BeastEntry[]} beasts
- * @property {ItemEntry[]} items
- * @property {VariableEntry[]} variables
+ * @property {Item[]} items
+ * @property {Variable[]} variables
  * @property {TemplateEntry[]} nodeTemplates
  */
 
-export class EditorApplication {
+export class EditorApplication extends Application {
 	static get PROJECTS_FOLDER() { return "projects" };
 	static get TEMP_FILE_NAME() { return "temp.json" };
 	static get TEMP_META_FILE_NAME() { return "temp-meta.json" };
@@ -126,6 +129,7 @@ export class EditorApplication {
 	#canvas;
 
 	constructor() {
+		super();
 		this.#canvas = new EditorCanvas(this.nodeManager);
 
 		document.addEventListener("mousemove", this.drag.bind(this));

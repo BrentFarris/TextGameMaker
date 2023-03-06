@@ -5,14 +5,31 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
 		<link rel="stylesheet" type="text/css" href="css/view.css" />
-		<script type="text/javascript" src="/localforage.min.js"></script>
-		<script type="text/javascript" src="/knockout.js"></script>
-		<script type="module" src="/node.js"></script>
+
+		<script type="text/javascript" src="/js/ext/jszip.min.js"></script>
+		<script type="text/javascript" src="/js/ext/localforage.min.js"></script>
+		<script type="text/javascript" src="/js/ext/knockout.js"></script>
+		
+		<script type="module" src="/modules/canvas.js"></script>
+		<script type="module" src="/modules/color.js"></script>
+		<script type="module" src="/modules/event.js"></script>
+		<script type="module" src="/modules/game_audio.js"></script>
+		<script type="module" src="/modules/http.js"></script>
+		<script type="module" src="/modules/input.js"></script>
+		<script type="module" src="/modules/item_database.js"></script>
+		<script type="module" src="/modules/log_database.js"></script>
+		<script type="module" src="/modules/media.js"></script>
+		<script type="module" src="/modules/node.js"></script>
+		<script type="module" src="/modules/std.js"></script>
+		<script type="module" src="/modules/storage.js"></script>
+		<script type="module" src="/modules/variable_database.js"></script>
+		<script type="module" src="/modules/vec2.js"></script>
+
 	</head>
 	<body>
 		<div id="container">
-			<div class="containerBg" data-bind="style:{backgroundImage:`url(${backgroundImage()})`, opacity:backgroundImageOpacity()}"></div>
-			<div class="containerBgBuffer" data-bind="style:{backgroundImage:`url(${backgroundImageBuffer()})`, opacity:backgroundImageBufferOpacity()}"></div>
+			<div class="containerBg" data-bind="style:{backgroundImage:`url(${media.backgroundImage()})`, opacity:media.backgroundImageOpacity()}"></div>
+			<div class="containerBgBuffer" data-bind="style:{backgroundImage:`url(${media.backgroundImageBuffer()})`, opacity:media.backgroundImageBufferOpacity()}"></div>
 			<div class="containerOverlay">
 				<!-- ko if: node() -->
 					<div class="displayBox">
@@ -49,16 +66,16 @@
 				<div class="slideUpPanel logPanel" data-bind="style: {display:logPanelDisplay()}">
 					<h2>Log</h2>
 					<br />
-					<div data-bind="visible: !openedLog(), foreach: logs">
-						<div class="fakeLink" data-bind="text: title, click: () => {$root.openedLog($data);}"></div>
+					<div data-bind="visible: !logDatabase.openedLog(), foreach: logDatabase.logs">
+						<div class="fakeLink" data-bind="text: title, click: () => {logDatabase.openedLog($data);}"></div>
 					</div>
-					<!-- ko if: openedLog() -->
+					<!-- ko if: logDatabase.openedLog() -->
 					<div>
 						<h3 data-bind="text: openedLog().title"></h3>
 						<br />
 						<p data-bind="text: openedLog().text"></p>
 						<br />
-						<div class="fakeLink" style="text-align:center;" data-bind="click: () => {$root.openedLog(null);}">Back</div>
+						<div class="fakeLink" style="text-align:center;" data-bind="click: () => {logDatabase.openedLog(null);}">Back</div>
 					</div>
 					<!-- /ko -->
 				</div>
@@ -73,7 +90,7 @@
 				</div>
 			</footer>
 		</div>
-		<script type="module" src="/modules/player/application.js"></script>
+		<script type="module" src="/modules/player/view_application.js"></script>
 		<div><input type="file" webkitdirectory directory multiple="false" accept="application/json" onchange="loadFolder(event)"/></div>
 	</body>
 </html>

@@ -1,33 +1,14 @@
 import { each, StringHelpers } from "../std.js";
 import { NodeTypeMap, Output, StartNode, StoryNode } from "../node.js";
+import { Application } from "../application.js";
+import { Media } from "../media.js";
 
-/**
- * @typedef GameVariable
- * @property {string} type
- * @property {any} value
- */
-
-export class Application {
+export class ViewApplication extends Application {
 	/** @type {string[]} */
 	characters = [];
 
-	/** @type {Object<string,GameVariable>} */
-	variables = {};
-	
 	nodes = {};
 	node = ko.observable(null);
-
-	/** @type {KnockoutObservable<string>} */
-	backgroundImage = ko.observable("");
-
-	/** @type {KnockoutObservable<string>} */
-	backgroundImageBuffer = ko.observable("");
-
-	/** @type {KnockoutObservable<number>} */
-	backgroundImageBufferOpacity = ko.observable(0.0);
-
-	/** @type {KnockoutObservable<number>} */
-	backgroundImageOpacity = ko.observable(1.0);
 
 	/** @type {KnockoutObservable<string>} */
 	textStyle = ko.observable("normal");
@@ -35,41 +16,25 @@ export class Application {
 	remoteFunctions = {};
 	fileStack = [];
 	currentFile = null;
-	inventory = [];
 
-	/** @type {KnockoutObservableArray<string>} */
-	logs = ko.observableArray();
-
-	openedLog = ko.observable();
 	loadedFiles = [];
 
 	/** @type {KnockoutObservable<string>} */
 	statsPanelDisplay = ko.observable("none");
 
 	/** @type {KnockoutObservable<string>} */
-	inventoryPanelDisplay = ko.observable("none");
+	logPanelDisplay = ko.observable("none");
 
 	/** @type {KnockoutObservable<string>} */
-	logPanelDisplay = ko.observable("none");
+	inventoryPanelDisplay = ko.observable("none");
 
 	/** @type {KnockoutObservable<string>[]} */
 	#panels = [];
 
 	constructor() {
+		super();
 		this.#panels = [this.statsPanelDisplay, this.inventoryPanelDisplay, this.logPanelDisplay];
-		this.backgroundImage.subscribe(() => {
-			this.backgroundImageBufferOpacity(1.0);
-			this.backgroundImageOpacity(1.0);
-			let changeBgmInterval = setInterval(() => {
-				this.backgroundImageBufferOpacity(this.backgroundImageBufferOpacity() - 0.01);
-	
-				if (this.backgroundImageBufferOpacity() <= 0.0) {
-					this.backgroundImageBufferOpacity(0.0);
-					this.backgroundImageOpacity(1.0);
-					clearInterval(changeBgmInterval);
-				}
-			}, 10);
-		});
+		this.media = new Media();
 	}
 
 	importFolder(event) {
@@ -117,7 +82,7 @@ export class Application {
 	importMeta(json) {
 		if (json.variables) {
 			for (let i = 0; i < json.variables.length; i++) {
-				if (json.variables[i].name in this.variables)
+				if (this.variableDatabase.exists(json.variables[i].name))
 					continue;
 				let type = json.variables[i].type;
 				let value = null;
@@ -135,10 +100,7 @@ export class Application {
 						value = false;
 						break;
 				}
-				this.variables[json.variables[i].name] = {
-					type: type,
-					value: value
-				};
+				this.variableDatabase.add(json.variables[i].name, type, value);
 			}
 		}
 		if (json.characters)
@@ -252,9 +214,10 @@ export class Application {
 		if (!requires || !requires.length)
 			return true;
 		for (let i = 0; i < requires.length; i++) {
-			let variable = this.variables[requires[i].variable];
+			let variable = this.variableDatabase.variable(requires[i].variable);
 			if (variable.type === "bool") {
-				let boolVal = requires[i].value != 0 && requires[i].value.toLowerCase() !== "false";
+				let boolVal = requires[i].value != 0
+					&& requires[i].value.toLowerCase() !== "false";
 				if (variable.value != boolVal)
 					return false;
 				else
@@ -293,15 +256,23 @@ export class Application {
 		if (matches) {
 			for (let i = 0; i < matches.length; i++) {
 				let varName = matches[i].substring(1, matches[i].length - 1);
-				if (varName in this.variables)
-					text = text.replace(matches[i], this.variables[varName].value);
+				if (this.variableDatabase.exists(varName))
+					text = text.replace(matches[i], this.variableDatabase.value(varName));
 			}
 		}
 		return StringHelpers.nl2br(text);
-	};
+	}
+
+	activateNodeOption(nodeId, optionId) {
+		this.nodeById(nodeId).options()[optionId].active(true);
+	}
+
+	deactivateNodeOption(nodeId, optionId) {
+		this.nodeById(nodeId).options()[optionId].active(false);
+	}
 }
 
-let application = new Application();
+let application = new ViewApplication();
 ko.applyBindings(application, document.body);
 
 window.onerror = (msg, url, linenumber) => {

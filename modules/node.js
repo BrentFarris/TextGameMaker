@@ -1,5 +1,7 @@
 import { GameAudio } from "./game_audio.js";
 import { ArrayHelpers, each, random } from "./std.js";
+import { Application } from "./application.js";
+import { Log } from "./log_database.js";
 
 export const NODE_WIDTH = 200;
 export const NODE_HANDLE_HEIGHT = 24;
@@ -242,7 +244,7 @@ export class VariableString extends ValueType {
  */
 export class VariableValueString extends ValueType {
 	/** @type {KnockoutObservable<string>} */
-	_type = ko.observable("");
+	#type = ko.observable("");
 
 	/**
 	 * @param {string} [placeholder] 
@@ -256,19 +258,7 @@ export class VariableValueString extends ValueType {
 	 * @param {string} varName 
 	 */
 	setType(app, varName) {
-		if (typeof app.variables === "function") {
-			let vars = app.variables();
-			for (let i = 0; i < vars.length; i++) {
-				if (vars[i].name !== varName) {
-					continue;
-				}
-				
-				this._type(vars[i].type);
-				break;
-			}
-		} else {
-			this._type(app.variables[varName].type);
-		}
+		this.#type(app.variableDatabase.type(varName));
 		this.Value = this.value();
 	}
 
@@ -283,11 +273,9 @@ export class VariableValueString extends ValueType {
 	 * @param {string} val
 	 */
 	set Value(val) {
-		if (val === null) {
+		if (val === null)
 			return;
-		}
-
-		switch(this._type()) {
+		switch(this.#type()) {
 			case "":
 			case "string":
 				this.value(String(val));
@@ -710,10 +698,7 @@ export class LogNode extends PassNode {
 	 * @override
 	 */
 	execute(app) {
-		app.logs.shift({
-			title: this.title.Value,
-			text: this.text.Value
-		});
+		app.logDatabase.prepend(new Log(this.title.Value, this.text.Value));
 		return super.execute(app);
 	}
 }
@@ -770,10 +755,8 @@ export class VariableNode extends PassNode {
 		this.key.value.subscribe((val) => {
 			this.value.setType(app, val);
 		});
-
-		if (this.TypeName === "Variable") {
+		if (this.TypeName === "Variable")
 			super._setup(createInfo);
-		}
 	}
 
 	/**
@@ -798,7 +781,7 @@ export class VariableNode extends PassNode {
 	 * @override
 	 */
 	execute(app) {
-		let variable = app.variables[this.key.Value];
+		let variable = app.variableDatabase.variable(this.key.Value);
 		variable.value = this.value.Value;
 		return super.execute(app);
 	}
@@ -845,7 +828,8 @@ export class CopyVariableToVariableNode extends PassNode {
 	 * @override
 	 */
 	execute(app) {
-		app.variables[this.to.Value].value = app.variables[this.from.Value].value;
+		app.variableDatabase.setValue(this.to.Value,
+			app.variableDatabase.value(this.from.Value));
 		return super.execute(app);
 	}
 }
@@ -879,7 +863,7 @@ export class AddToVariableNode extends VariableNode {
 	 * @override
 	 */
 	execute(app) {
-		let variable = app.variables[this.key.Value];
+		let variable = app.variableDatabase.variable(this.key.Value);
 		switch (variable.type) {
 			case "number":
 			case "whole":
@@ -938,8 +922,8 @@ export class AddVariableToVariableNode extends PassNode {
 	 * @override
 	 */
 	execute(app) {
-		let leftHand = app.variables[this.source.Value];
-		let rightHand = app.variables[this.alter.Value];
+		let leftHand = app.variableDatabase.variable(this.source.Value);
+		let rightHand = app.variableDatabase.variable(this.alter.Value);
 		switch (leftHand.type) {
 			case "number":
 			case "whole":
@@ -974,7 +958,7 @@ export class SubVariableFromVariableNode extends PassNode {
 	 * @param {Application} app
 	 */
 	constructor(createInfo, app) {
-		super(createInfo, app);
+		super(createInfo);
 		super._setup(createInfo);
 	}
 
@@ -998,8 +982,8 @@ export class SubVariableFromVariableNode extends PassNode {
 	 * @override
 	 */
 	execute(app) {
-		let leftHand = app.variables[this.source.Value];
-		let rightHand = app.variables[this.alter.Value];
+		let leftHand = app.variableDatabase.variable(this.source.Value);
+		let rightHand = app.variableDatabase.variable(this.alter.Value);
 		switch (leftHand.type) {
 			case "number":
 			case "whole":
@@ -1070,7 +1054,7 @@ export class RandomVariableNode extends PassNode {
 	 * @override
 	 */
 	execute(app) {
-		let variable = app.variables[this.key.Value];
+		let variable = app.variableDatabase.variable(this.key.Value);
 		switch (variable.type) {
 			case "number":
 			case "whole":
@@ -1109,7 +1093,7 @@ export class AddRandomToVariableNode extends RandomVariableNode {
 	 * @override
 	 */
 	execute(app) {
-		let variable = app.variables[this.key.Value];
+		let variable = app.variableDatabase.variable(this.key.Value);
 		switch (variable.type) {
 			case "number":
 			case "whole":
@@ -1207,17 +1191,15 @@ export class MusicNode extends SourceNode {
 	 * @override
 	 */
 	execute(app) {
-		if (app.bgm) {
-			app.bgm.stop();
-			app.bgm = null;
+		if (app.media.bgm) {
+			app.media.bgm.stop();
+			app.media.bgm = null;
 		}
-
 		if (this.src.Value) {
-			app.bgm = new GameAudio(`audio/${this.src.Value}`);
-			app.bgm.setLoopCount(0);
-			app.bgm.play();
+			app.media.bgm = new GameAudio(`audio/${this.src.Value}`);
+			app.media.bgm.setLoopCount(0);
+			app.media.bgm.play();
 		}
-		
 		return super.execute(app);
 	}
 }
@@ -1254,7 +1236,10 @@ export class OptionAvailabilityNode extends PassNode {
 	 * @override
 	 */
 	execute(app) {
-		app.nodeById(this.optionIdx.Value.id).options()[this.optionIdx.Value.option].active(this.active.Value);
+		if (this.active.Value)
+			app.activateNodeOption(this.optionIdx.Value.id, this.optionIdx.Value.option);
+		else
+			app.deactivateNodeOption(this.optionIdx.Value.id, this.optionIdx.Value.option);
 		return super.execute(app);
 	}
 }
@@ -1284,7 +1269,7 @@ export class JumpNode extends SourceNode {
 
 	/**
 	 * @param {Application} app
-	 * @returns {Output} The first output
+	 * @returns {Output|null} The first output
 	 * @override
 	 */
 	execute(app) {
@@ -1298,6 +1283,7 @@ export class JumpNode extends SourceNode {
 				app.load(`json/${this.src.Value}.json`, this.id, this.nodeId.Value);
 			}
 		}
+		return null;
 	}
 }
 
@@ -1321,6 +1307,7 @@ export class ReturnNode extends PassNode {
 	 */
 	execute(app) {
 		app.returnToPrevious();
+		return null;
 	}
 }
 
@@ -1352,8 +1339,8 @@ export class BackgroundNode extends SourceNode {
 	 * @override
 	 */
 	execute(app) {
-		app.backgroundImageBuffer(app.backgroundImage());
-		app.backgroundImage(`img/${this.src.Value}`);
+		app.media.backgroundImageBuffer(app.media.backgroundImage());
+		app.media.backgroundImage(`img/${this.src.Value}`);
 		return super.execute(app);
 	}
 }
@@ -1393,24 +1380,25 @@ export class IfVariableNode extends VariableNode {
 	 */
 	execute(app) {
 		let result = false;
+		let val = app.variableDatabase.value(this.key.Value);
 		switch (this.condition.Value) {
 			case "==":
-				result = app.variables[this.key.Value].value === this.value.Value;
+				result = val === this.value.Value;
 				break;
 			case "!=":
-				result = app.variables[this.key.Value].value !== this.value.Value;
+				result = val !== this.value.Value;
 				break;
 			case "<=":
-				result = app.variables[this.key.Value].value <= this.value.Value;
+				result = val <= this.value.Value;
 				break;
 			case ">=":
-				result = app.variables[this.key.Value].value >= this.value.Value;
+				result = val >= this.value.Value;
 				break;
 			case "<":
-				result = app.variables[this.key.Value].value < this.value.Value;
+				result = val < this.value.Value;
 				break;
 			case ">":
-				result = app.variables[this.key.Value].value > this.value.Value;
+				result = val > this.value.Value;
 				break;
 		}
 		if (result) {
@@ -1464,24 +1452,26 @@ export class CompareVariableNode extends PassNode {
 	 */
 	execute(app) {
 		let result = false;
+		let a = app.variableDatabase.value(this.a.Value);
+		let b = app.variableDatabase.value(this.b.Value);
 		switch (this.condition.Value) {
 			case "==":
-				result = app.variables[this.a.Value].value === app.variables[this.b.Value].value;
+				result = a === b;
 				break;
 			case "!=":
-				result = app.variables[this.a.Value].value !== app.variables[this.b.Value].value;
+				result = a !== b;
 				break;
 			case "<=":
-				result = app.variables[this.a.Value].value <= app.variables[this.b.Value].value;
+				result = a <= b;
 				break;
 			case ">=":
-				result = app.variables[this.a.Value].value >= app.variables[this.b.Value].value;
+				result = a >= b;
 				break;
 			case "<":
-				result = app.variables[this.a.Value].value < app.variables[this.b.Value].value;
+				result = a < b;
 				break;
 			case ">":
-				result = app.variables[this.a.Value].value > app.variables[this.b.Value].value;
+				result = a > b;
 				break;
 		}
 		if (result) {
@@ -1503,7 +1493,7 @@ export class FunctionCallNode extends PassNode {
 	 * @param {Application} app
 	 */
 	constructor(createInfo, app) {
-		super(createInfo, app);
+		super(createInfo);
 		this.functionName = new ShortString();
 		super._setup(createInfo);
 	}
@@ -1609,7 +1599,8 @@ export class InventoryAddNode extends InventoryNode {
 	 * @override
 	 */
 	execute(app) {
-		app.inventory.push(this.inventory.Value);
+		let item = app.itemDatabase.item(this.inventory.Value)
+		app.inventory.add(item);
 		return super.execute(app);
 	}
 }
@@ -1634,7 +1625,7 @@ export class InventoryRemoveNode extends InventoryNode {
 	 * @override
 	 */
 	execute(app) {
-		app.inventory.remove(this.inventory.Value);
+		app.inventory.removeMatching(this.inventory.Value);
 		return super.execute(app);
 	}
 }
@@ -1665,11 +1656,10 @@ export class InventoryExistsNode extends InventoryNode {
 	 * @returns {Output} The first output if the item is in the inventory, the second output otherwise
 	 */
 	execute(app) {
-		if (app.inventory.indexOf(this.inventory.Value) !== -1) {
+		if (app.inventory.exists(this.inventory.Value))
 			return this.outs()[0];
-		} else {
+		else
 			return this.outs()[1];
-		}
 	}
 }
 
@@ -1703,7 +1693,9 @@ export class InventoryCountNode extends InventoryNode {
 	 */
 	execute(app) {
 		let result = false;
-		let count = app.inventory.count(this.inventory.Value);
+		let count = 0;
+		if (app.inventory.exists(this.inventory.Value))
+			count = app.inventory.count(this.inventory.Value);
 		switch (this.condition.Value) {
 			case "==":
 				result = count === this.value.Value;
@@ -1724,11 +1716,10 @@ export class InventoryCountNode extends InventoryNode {
 				result = count > this.value.Value;
 				break;
 		}
-		if (result) {
+		if (result)
 			return this.outs()[0];
-		} else {
+		else
 			return this.outs()[1];
-		}
 	}
 }
 
