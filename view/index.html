@@ -21,14 +21,17 @@
 						<!-- ko if: node() -->
 						<div class="displayBox">
 							<div class="history" data-bind="foreach: history">
-								<!-- ko if: 'character' in $data -->
-								<p class="characterName" data-bind="text: $root.characterName($data.character.Value)"></p>
+								<!-- ko if: 'character' in node -->
+								<p class="characterName" data-bind="text: $root.characterName(node.character.Value)"></p>
 								<!-- /ko -->
-								<!-- ko if: 'text' in $data -->
-								<p data-bind="html: $root.parseText($data.text.value()), style: {fontStyle:$root.textStyle()}"></p>
+								<!-- ko if: 'text' in node -->
+								<p data-bind="html: $root.parseText(node.text.value()), style: {fontStyle:$root.textStyle()}"></p>
 								<!-- /ko -->
-								<br />
+								<!-- ko if: choice -->
+								<p class="historyChoice" data-bind="text: `(${choice})`"></p>
+								<!-- /ko -->
 							</div>
+							<br />
 							<div id="primaryText">
 								<!-- ko if: 'character' in node() -->
 								<p class="characterNameActive" data-bind="text: characterName(node().character.Value)"></p>

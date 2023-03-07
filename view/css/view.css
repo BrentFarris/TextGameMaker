@@ -43,6 +43,14 @@ body {
 	top: 0;
 }
 
+.history p {
+	margin-bottom: 5px;
+}
+
+.historyChoice {
+	color: darkcyan;
+}
+
 .characterName {
 	font-size: small;
 }

@@ -10,11 +10,17 @@ import { Variable } from "../database/variable_database.js";
  * @property {Object} json
  */
 
+/**
+ * @typedef {Object} NodeHistory
+ * @property {OptionNode} node
+ * @property {string} choice
+ */
+
 export class ViewApplication extends Application {
 	nodes = {};
 	node = ko.observable(null);
 
-	/** @type {KnockoutObservableArray<OptionNode>} */
+	/** @type {KnockoutObservableArray<NodeHistory>} */
 	history = ko.observableArray();
 
 	/** @type {KnockoutObservable<string>} */
@@ -283,8 +289,13 @@ export class ViewApplication extends Application {
 			to = this.node().outs()[source].to();
 		if (!to)
 			return;
-		if (this.node() instanceof OptionNode)
-			this.history.push(this.node());
+		if (this.node() instanceof OptionNode) {
+			let on = /** @type {OptionNode} */ (this.node());
+			let choice = null;
+			if (on.options().length > 0)
+				choice = on.options()[source].text();
+			this.history.push({node:on,choice:choice});
+		}
 		this.node(to);
 		let newTo = this.node().execute(this);
 		if (newTo)
