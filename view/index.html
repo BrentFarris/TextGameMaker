@@ -68,16 +68,16 @@
 						<div class="slideUpPanel logPanel" data-bind="style: {display:logPanelDisplay()}">
 							<h2>Log</h2>
 							<br />
-							<div data-bind="visible: !logDatabase.openedLog(), foreach: logDatabase.logs">
-								<div class="fakeLink" data-bind="text: title, click: () => {logDatabase.openedLog($data);}"></div>
+							<div data-bind="visible: !logDatabase.openedLog(), foreach: logDatabase.entryView">
+								<div class="fakeLink" data-bind="text: title, click: () => {$root.logDatabase.openedLog($data);}"></div>
 							</div>
 							<!-- ko if: logDatabase.openedLog() -->
 							<div>
-								<h3 data-bind="text: openedLog().title"></h3>
+								<h3 data-bind="text: logDatabase.openedLog().title"></h3>
 								<br />
-								<p data-bind="text: openedLog().text"></p>
+								<p data-bind="text: logDatabase.openedLog().text"></p>
 								<br />
-								<div class="fakeLink" style="text-align:center;" data-bind="click: () => {logDatabase.openedLog(null);}">Back</div>
+								<div class="fakeLink" style="text-align:center;" data-bind="click: () => {$root.logDatabase.openedLog(null);}">Back</div>
 							</div>
 							<!-- /ko -->
 						</div>

@@ -698,7 +698,7 @@ export class LogNode extends PassNode {
 	 * @override
 	 */
 	execute(app) {
-		app.logDatabase.prepend(new Log(this.title.Value, this.text.Value));
+		app.logDatabase.add(new Log(app.logDatabase.NextId, this.title.Value, this.text.Value));
 		return super.execute(app);
 	}
 }
