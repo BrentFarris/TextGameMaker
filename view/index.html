@@ -22,7 +22,7 @@
 						<div class="displayBox">
 							<div class="history" data-bind="foreach: history">
 								<!-- ko if: 'character' in $data -->
-								<h4 data-bind="text: $root.characterName($data.character.Value)"></h4>
+								<p class="characterName" data-bind="text: $root.characterName($data.character.Value)"></p>
 								<!-- /ko -->
 								<!-- ko if: 'text' in $data -->
 								<p data-bind="html: $root.parseText($data.text.value()), style: {fontStyle:$root.textStyle()}"></p>
@@ -31,7 +31,7 @@
 							</div>
 							<div id="primaryText">
 								<!-- ko if: 'character' in node() -->
-								<h4 data-bind="text: characterName(node().character.Value)"></h4>
+								<p class="characterNameActive" data-bind="text: characterName(node().character.Value)"></p>
 								<!-- /ko -->
 								<!-- ko if: 'text' in node() -->
 								<p data-bind="html: parseText(node().text.value()), style: {fontStyle:textStyle()}"></p>
