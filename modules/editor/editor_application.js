@@ -12,6 +12,7 @@ import { Application } from "../application.js";
 import { Item } from "../database/item_database.js";
 import { Variable } from "../database/variable_database.js";
 import { Character } from "../database/character_database.js";
+import { StringHelpers } from "../engine/std.js"
 
 function getEvent(e) { return e || window.event; }
 
@@ -765,11 +766,16 @@ export class EditorApplication extends Application {
 			elm.checked = value();
 		}, 10);
 	}
+
+	nl2br(str) {
+		return StringHelpers.nl2br(str);
+	}
 }
 
-ko.applyBindings(new EditorApplication(), document.body);
-
-window.onerror = (msg, url, linenumber) => {
-	alert(`Error message: ${msg}\nURL:${url}\nLine Number: ${linenumber}`);
-	return false;
-};
+(function() {
+	ko.applyBindings(new EditorApplication(), document.body);
+	window.onerror = (msg, url, linenumber) => {
+		alert(`Error message: ${msg}\nURL:${url}\nLine Number: ${linenumber}`);
+		return false;
+	};
+})();

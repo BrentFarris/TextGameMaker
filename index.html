@@ -52,6 +52,7 @@
 							<br />
 							<!-- /ko -->
 							<!-- ko if: TypeName == "BigString" -->
+							<br />
 							<textarea class="inputs dialog" data-bind="value: value, attr: {placeholder: placeholder}" onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'></textarea>
 							<!-- /ko -->
 							<!-- ko if: TypeName == "ShortString" -->
@@ -203,9 +204,9 @@
 			</div>
 		</div>
 		<div id="viewNodeManager" class="managerWindow">
-			<!-- ko if: viewManager.value() -->
+			<!-- ko if: viewManager.targetText -->
 			<h2 data-bind="text: viewManager.title()"></h2>
-			<p data-bind="text: viewManager.value()"></p>
+			<p data-bind="html: $root.nl2br(viewManager.targetText.value())"></p>
 			<!-- /ko -->
 			<div style="text-align:center;">
 				<button data-bind="click:viewManager.close.bind(viewManager)">Close</button>
