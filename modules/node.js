@@ -244,7 +244,7 @@ export class VariableString extends ValueType {
  */
 export class VariableValueString extends ValueType {
 	/** @type {KnockoutObservable<string>} */
-	#type = ko.observable("");
+	type = ko.observable("");
 
 	/**
 	 * @param {string} [placeholder] 
@@ -258,7 +258,7 @@ export class VariableValueString extends ValueType {
 	 * @param {string} varName 
 	 */
 	setType(app, varName) {
-		this.#type(app.variableDatabase.type(varName));
+		this.type(app.variableDatabase.type(varName));
 		this.Value = this.value();
 	}
 
@@ -275,7 +275,7 @@ export class VariableValueString extends ValueType {
 	set Value(val) {
 		if (val === null)
 			return;
-		switch(this.#type()) {
+		switch(this.type()) {
 			case "":
 			case "string":
 				this.value(String(val));

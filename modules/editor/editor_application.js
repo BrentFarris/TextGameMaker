@@ -69,7 +69,7 @@ export class EditorApplication extends Application {
 	itemManager;
 
 	/** @type {VariableManager} */
-	variableManager = new VariableManager(document.getElementById("variableManager"));
+	variableManager;
 
 	/** @type {ViewManager} */
 	viewManager = new ViewManager(document.getElementById("viewNodeManager"));
@@ -135,6 +135,8 @@ export class EditorApplication extends Application {
 			document.getElementById("characterManager"), this.characterDatabase);
 		this.itemManager = new ItemManager(
 			document.getElementById("itemManager"), this.itemDatabase);
+		this.variableManager = new VariableManager(
+			document.getElementById("variableManager"), this.variableDatabase);
 		this.#canvas = new EditorCanvas(this.nodeManager);
 
 		document.addEventListener("mousemove", this.drag.bind(this));
@@ -222,9 +224,9 @@ export class EditorApplication extends Application {
 		if (json.beasts)
 			this.beastManager.beasts(json.beasts);
 		if (json.items)
-			this.itemManager.items(json.items);
+			this.itemDatabase.addMany(json.items);
 		if (json.variables)
-			this.variableManager.variables(json.variables);
+			this.variableDatabase.addMany(json.variables);
 		if (json.nodeTemplates)
 			this.templateManager.nodeTemplates(json.nodeTemplates);
 		alert("The metadata has been imported");
@@ -316,8 +318,8 @@ export class EditorApplication extends Application {
 		return {
 			characters: this.characterDatabase.asArray(),
 			beasts: this.beastManager.beasts(),
-			items: this.itemManager.items(),
-			variables: this.variableManager.variables(),
+			items: this.itemDatabase.asArray(),
+			variables: this.variableDatabase.asArray(),
 			nodeTemplates: this.templateManager.nodeTemplates()
 		};
 	}
@@ -377,8 +379,8 @@ export class EditorApplication extends Application {
 			await this.storage.deleteFile(folder.Value, EditorApplication.TEMP_META_FILE_NAME);
 			this.characterDatabase.clear();
 			this.beastManager.beasts.removeAll();
-			this.itemManager.items.removeAll();
-			this.variableManager.variables.removeAll();
+			this.itemDatabase.clear();
+			this.variableDatabase.clear();
 			this.templateManager.nodeTemplates.removeAll();
 			this.metaChanged(false);
 			this.name("start");
@@ -707,15 +709,15 @@ export class EditorApplication extends Application {
 		scope.name = newName;
 		// Splice and valueHasMutated are not calling refresh, so we are going to have to do
 		// a "dirty" refresh by re-assigning the array
-		let contents = this.itemManager.items();
-		this.itemManager.items([]);
-		this.itemManager.items(contents);
+		let contents = this.itemDatabase.asArray()
+		this.itemDatabase.clear();
+		this.itemDatabase.addMany(contents);
 	}
 
 	deleteItem(scope) {
 		if (!confirm(`Are you sure you wish to delete the beast: ${scope.name}?`))
 			return;
-		this.itemManager.items.remove(scope);
+		this.itemDatabase.remove(scope);
 		this.metaChanged(true);
 		this.saveTemp();
 	}
@@ -723,7 +725,7 @@ export class EditorApplication extends Application {
 	deleteVariable(scope) {
 		if (!confirm(`Are you sure you wish to delete the variable: ${scope.name}?`))
 			return;
-		this.variableManager.variables.remove(scope);
+		this.variableDatabase.remove(scope);
 		this.saveTemp();
 	}
 

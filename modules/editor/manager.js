@@ -1,6 +1,6 @@
 import { Optional } from "../engine/std.js";
 import { CoreNode, DialogNode, StoryNode, CommentNode } from "../node.js";
-import { Variable } from "../database/variable_database.js";
+import { Variable, VariableData, VariableDatabase } from "../database/variable_database.js";
 import { Item, ItemData, ItemDatabase } from "../database/item_database.js";
 import { Character, CharacterDatabase } from "../database/character_database.js";
 
@@ -221,14 +221,16 @@ export class VariableManager extends Manager {
 	/** @type {KnockoutObservable<string>} */
 	type = ko.observable("");
 
-	/** @type {KnockoutObservableArray<Variable>} */
-	variables = ko.observableArray();
+	/** @type {VariableDatabase} */
+	database;
 
 	/**
 	 * @param {HTMLElement|null} elm 
+	 * @param {VariableDatabase} variableDatabase 
 	 */
-	constructor(elm) {
+	constructor(elm, variableDatabase) {
 		super(elm);
+		this.database = variableDatabase;
 	}
 
 	/**
@@ -249,18 +251,13 @@ export class VariableManager extends Manager {
 		if (!name.length || !type.length) {
 			return;
 		}
-		for (let i = 0; i < this.variables().length; i++) {
-			if (this.variables()[i].name.toLowerCase() === name.toLowerCase()) {
-				alert("A variable with that name already exists");
-				return;
-			}
+		if (this.database.exists(name))
+			alert("A variable with that name already exists");
+		else {
+			this.database.add(new Variable(this.database.NextId, new VariableData(name, type, null)));
+			this.name("");
+			this.type("");
 		}
-		this.variables.push({
-			name: name,
-			type: type
-		});
-		this.name("");
-		this.type("");
 	};
 }
 

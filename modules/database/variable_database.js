@@ -1,4 +1,7 @@
-export class Variable {
+import { Optional } from "../engine/std.js";
+import { Database, DatabaseEntry } from "./database.js";
+
+export class VariableData {
 	/** @type {string} */
 	name = "";
 
@@ -21,35 +24,34 @@ export class Variable {
 }
 
 /**
- * @typedef GameVariable
- * @property {string} type
- * @property {any} value
+ * @extends {DatabaseEntry<VariableData>}
  */
-
-export class VariableDatabase {
-	/** @type {Object<string,GameVariable>} */
-	#variables = {};
-
-	/** @type {KnockoutObservableArray<Variable>} */
-	#viewVariables = ko.observableArray();
-
+export class Variable extends DatabaseEntry {
 	/**
-	 * @param {string} name 
-	 * @param {string} type 
-	 * @param {any} value 
+	 * @param {number} id 
+	 * @param {VariableData} varInfo 
 	 */
-	add(name, type, value) {
-		let v = new Variable(name, type, value);
-		this.#variables[name] = v;
-		this.#viewVariables.push(v)
+	 constructor(id, varInfo) {
+		super(id, varInfo);
 	}
+}
 
+/**
+ * @extends {Database<Variable>}
+ */
+export class VariableDatabase extends Database {
 	/**
 	 * @param {string} name 
-	 * @return {GameVariable}
+	 * @return {VariableData}
 	 */
 	variable(name) {
-		return this.#variables[name];
+		/** @type {Optional<VariableData>} */
+		let found = new Optional();
+		this.each(v => {
+			if (!found.HasValue && v.data.name == name)
+				found.Value = v.data;
+		});
+		return found.Value;
 	}
 
 	/**
@@ -57,7 +59,8 @@ export class VariableDatabase {
 	 * @return {string}
 	 */
 	type(name) {
-		return this.#variables[name].type;
+		debugger;
+		return this.variable(name).type;
 	}
 
 	/**
@@ -65,7 +68,7 @@ export class VariableDatabase {
 	 * @return {any}
 	 */
 	value(name) {
-		return this.#variables[name].value;
+		return this.variable(name).value;
 	}
 
 	/**
@@ -73,7 +76,7 @@ export class VariableDatabase {
 	 * @param {any} value
 	 */
 	setValue(name, value) {
-		this.#variables[name].value = value;
+		this.variable(name).value = value;
 	}
 
 	/**
@@ -81,6 +84,8 @@ export class VariableDatabase {
 	 * @return {boolean}
 	 */
 	exists(name) {
-		return name in this.#variables;
+		let found = false;
+		this.each(v => found = found || v.data.name === name);
+		return found;
 	}
 }
