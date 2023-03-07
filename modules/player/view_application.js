@@ -1,4 +1,4 @@
-import { each, Optional, StringHelpers } from "../engine/std.js";
+import { each, getURLParam, Optional, StringHelpers } from "../engine/std.js";
 import { CoreNode, NodeTypeMap, OptionNode, Output, StartNode, StoryNode } from "../node.js";
 import { Application } from "../application.js";
 import { Media } from "../media.js";
@@ -397,6 +397,15 @@ export class ViewApplication extends Application {
 	isOptionNode(node) {
 		return node instanceof OptionNode;
 	}
+
+	/**
+	 * @param {string} sampleName
+	 */
+	async loadSampleGame(sampleName) {
+		let res = await fetch(`/games/${sampleName}.zip`);
+		let blob = await res.blob();
+		await this.importZip(blob);
+	}
 }
 
 let application = new ViewApplication();
@@ -417,4 +426,8 @@ application.addRemoteFunction("yell", () => {
 		application.importFolder(evt);
 		lf.style.display = "none";
 	};
+
+	let sample = getURLParam("sample");
+	if (sample.HasValue)
+		application.loadSampleGame(sample.Value);
 })();
