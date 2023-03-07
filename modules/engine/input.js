@@ -91,9 +91,9 @@ export class Input {
 		/** @type {number} */
 		Escape: 27,
 		/** @type {number} */
-		Delete: 8,
+		Delete: 46,
 		/** @type {number} */
-		Backspace: 46,
+		Backspace: 8,
 		/** @type {number} */
 		Shift: 16,
 		/** @type {number} */
@@ -469,5 +469,24 @@ export class Input {
 	 */
 	static isMouseUp() {
 		return !Input.mouseIsDown;
+	}
+
+	static {
+		document.onmousemove = Input.#inputMousePosition.bind(Input);
+		document.onmousedown = Input.#inputMouseDown.bind(Input);
+		document.onmouseup = Input.#inputMouseUp.bind(Input);
+		document.onkeydown = Input.#inputKeyDown.bind(Input);
+		document.onkeyup = Input.#inputKeyUp.bind(Input);
+		document.onwheel = Input.#wheelScroll.bind(Input);
+
+		// TODO:  Support game controllers
+		window.addEventListener("gamepadconnected", function (e) {
+			console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+				e.gamepad.index, e.gamepad.id, e.gamepad.buttons.length, e.gamepad.axes.length);
+		});
+
+		window.addEventListener("gamepaddisconnected", function (e) {
+			console.log("Gamepad disconnected from index %d: %s", e.gamepad.index, e.gamepad.id);
+		});
 	}
 }
