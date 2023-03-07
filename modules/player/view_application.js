@@ -98,7 +98,8 @@ export class ViewApplication extends Application {
 						res(null);
 				});
 			});
-			count--;
+			if (--count == 0)
+				return res(null);
 		});
 	}
 
