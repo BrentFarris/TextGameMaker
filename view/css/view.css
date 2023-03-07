@@ -1,4 +1,4 @@
-* { margin:0; padding:0; }
+* {margin:0;padding:0;}
 
 html, body {
 	/* Uncomment this to enable scrolling and zooming
@@ -19,16 +19,19 @@ body {
 	font-size: 20px;
 }
 
-#container {
+.loadFolder {
 	position: absolute;
-	width: 297px;
-	height: 528px;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	border: 1px solid black;
-	box-shadow: 5px 10px;
-	background-color: black;
+	top: 0;
+	left: 0;
+}
+
+#container {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	background-color: darkslategray;
 }
 
 .containerBg, .containerBgBuffer {
@@ -42,13 +45,19 @@ body {
 }
 
 .containerOverlay {
-	width: calc(100% - 40px);
-	height: calc(100% - 40px - 55px);
+	height: 100%;
 	background-color: rgba(0, 0, 0, 0.75);
-	margin: 10px;
-	padding: 10px;
 	color: white;
 	overflow: hidden;
+	display: grid;
+	grid-template-columns: 1fr 1fr 0.75fr;
+	min-height: 0;
+	min-width: 0;
+}
+
+.displayLeft, .displayRight, .displayCenter {
+	overflow: hidden;
+	min-width: 0;
 }
 
 .containerOverlay button {
@@ -60,29 +69,44 @@ ul {
 	list-style: none;
 }
 
-footer {
-	position: fixed;
+.displayLeft {
+	border-right: 1px solid gray;
+}
+
+.nodeContent {
+	height: calc(100% - 20px);
+	padding: 10px 20px;
+	overflow: auto;
+}
+
+.displayRight {
+	position: relative;
+	border-left: 1px solid gray;
+}
+
+.rightButtons {
+	position: absolute;
 	bottom: 0;
 	width: 100%;
 	height: 55px;
-	background-color: black;
+	background-color: darkslategray;
 	z-index:999;
 }
 
-footer .healthBar {
+.displayRight .healthBar {
 	position: relative;
 	width: 100%;
 	height: 5px;
 	background-color: darkred;
 }
 
-footer .buttonInputs {
+.displayRight .buttonInputs {
 	display: flex;
 	width: 100%;
 	height: 50px;
 }
 
-footer .buttonInputs button {
+.displayRight .buttonInputs button {
 	position: relative;
 	text-align: center;
 	width: 25%;
@@ -90,13 +114,10 @@ footer .buttonInputs button {
 }
 
 .slideUpPanel {
-	position: fixed;
+	position: relative;
 	display: none;
 	top: 0;
 	left: 0;
-	height: calc(100% - 20px);
-	width: calc(100% - 20px);
-	background-color: rgba(0, 0, 0, 0.9);
 	color: white;
 	padding: 10px;
 	overflow: auto;
@@ -107,9 +128,18 @@ footer .buttonInputs button {
 	color: white;
 }
 
+.history {
+	margin-bottom: 10px;
+	font-size: 0.8em;
+	color:rgba(255, 255, 255, 0.65);
+}
+
+.displayBox {
+	height: calc(75% - 5px);
+}
+
 .displayBox, .optionBox {
 	width: 100%;
-	height: 50%;
 	overflow: auto;
 }
 
@@ -119,6 +149,8 @@ footer .buttonInputs button {
 	flex-direction: column;
 	top: 50%;
 	vertical-align: bottom;
+	height: calc(25% - 10px);
+	margin-top: 10px;
 }
 
 .optionBox ul {

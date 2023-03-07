@@ -1,82 +1,99 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>View</title>
+		<title>Text Game Maker | Player</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
 		<link rel="stylesheet" type="text/css" href="css/view.css" />
-
 		<script type="text/javascript" src="/js/ext/jszip.min.js"></script>
 		<script type="text/javascript" src="/js/ext/localforage.min.js"></script>
 		<script type="text/javascript" src="/js/ext/knockout.js"></script>
-		
-
 	</head>
 	<body>
 		<div id="container">
 			<div class="containerBg" data-bind="style:{backgroundImage:`url(${media.backgroundImage()})`, opacity:media.backgroundImageOpacity()}"></div>
 			<div class="containerBgBuffer" data-bind="style:{backgroundImage:`url(${media.backgroundImageBuffer()})`, opacity:media.backgroundImageBufferOpacity()}"></div>
 			<div class="containerOverlay">
-				<!-- ko if: node() -->
-					<div class="displayBox">
-						<!-- ko if: 'character' in node() -->
-						<h2 data-bind="text: characterName(node().character.Value)"></h2>
-						<!-- /ko -->
-						<!-- ko if: 'text' in node() -->
-						<p data-bind="html: parseText(node().text.value()), style: {fontStyle:textStyle()}"></p>
-						<!-- /ko -->
-					</div>
-					<div class="optionBox">
-						<!-- ko if: isOptionNode(node()) && node().options().length -->
-						<ul data-bind="foreach: node().options">
-							<li><button data-bind="text:text, enable:active, click: $root.next.bind($root, $index())"></button></li>
-						</ul>
-						<!-- /ko -->
-						<!-- ko if: !isOptionNode(node()) || !node().options().length -->
-						<button data-bind="click:next.bind($root, 0)">Continue</button>
-						<!-- /ko -->
-					</div>
-				<!-- /ko -->
-				<div class="slideUpPanel statsPanel" data-bind="style: {display:statsPanelDisplay()}">
-					<h2>Stats</h2>
-					<table>
-						<tr>
-							<td>Health</td>
-							<td>100</td>
-						</tr>
-					</table>
-				</div>
-				<div class="slideUpPanel inventoryPanel" data-bind="style: {display:inventoryPanelDisplay()}">
-					<h2>Inventory</h2>
-				</div>
-				<div class="slideUpPanel logPanel" data-bind="style: {display:logPanelDisplay()}">
-					<h2>Log</h2>
-					<br />
-					<div data-bind="visible: !logDatabase.openedLog(), foreach: logDatabase.logs">
-						<div class="fakeLink" data-bind="text: title, click: () => {logDatabase.openedLog($data);}"></div>
-					</div>
-					<!-- ko if: logDatabase.openedLog() -->
-					<div>
-						<h3 data-bind="text: openedLog().title"></h3>
-						<br />
-						<p data-bind="text: openedLog().text"></p>
-						<br />
-						<div class="fakeLink" style="text-align:center;" data-bind="click: () => {logDatabase.openedLog(null);}">Back</div>
-					</div>
+				<div class="displayLeft"></div>
+				<div class="displayCenter">
+					<div class="nodeContent">
+						<!-- ko if: node() -->
+						<div class="displayBox">
+							<div class="history" data-bind="foreach: history">
+								<!-- ko if: 'character' in $data -->
+								<h4 data-bind="text: $root.characterName($data.character.Value)"></h4>
+								<!-- /ko -->
+								<!-- ko if: 'text' in $data -->
+								<p data-bind="html: $root.parseText($data.text.value()), style: {fontStyle:$root.textStyle()}"></p>
+								<!-- /ko -->
+								<br />
+							</div>
+							<div id="primaryText">
+								<!-- ko if: 'character' in node() -->
+								<h4 data-bind="text: characterName(node().character.Value)"></h4>
+								<!-- /ko -->
+								<!-- ko if: 'text' in node() -->
+								<p data-bind="html: parseText(node().text.value()), style: {fontStyle:textStyle()}"></p>
+								<!-- /ko -->
+							</div>
+						</div>
+						<div class="optionBox">
+							<!-- ko if: isOptionNode(node()) && node().options().length -->
+							<ul data-bind="foreach: node().options">
+								<li><button data-bind="text:text, enable:active, click: $root.next.bind($root, $index())"></button></li>
+							</ul>
+							<!-- /ko -->
+							<!-- ko if: !isOptionNode(node()) || !node().options().length -->
+							<button data-bind="click:next.bind($root, 0)">Continue</button>
+							<!-- /ko -->
+						</div>
 					<!-- /ko -->
+					</div>
+				</div>
+				<div class="displayRight">
+					<div>
+						<div class="slideUpPanel statsPanel" data-bind="style: {display:statsPanelDisplay()}">
+							<h2>Stats</h2>
+							<table>
+								<tr>
+									<td>Health</td>
+									<td>100</td>
+								</tr>
+							</table>
+						</div>
+						<div class="slideUpPanel inventoryPanel" data-bind="style: {display:inventoryPanelDisplay()}">
+							<h2>Inventory</h2>
+						</div>
+						<div class="slideUpPanel logPanel" data-bind="style: {display:logPanelDisplay()}">
+							<h2>Log</h2>
+							<br />
+							<div data-bind="visible: !logDatabase.openedLog(), foreach: logDatabase.logs">
+								<div class="fakeLink" data-bind="text: title, click: () => {logDatabase.openedLog($data);}"></div>
+							</div>
+							<!-- ko if: logDatabase.openedLog() -->
+							<div>
+								<h3 data-bind="text: openedLog().title"></h3>
+								<br />
+								<p data-bind="text: openedLog().text"></p>
+								<br />
+								<div class="fakeLink" style="text-align:center;" data-bind="click: () => {logDatabase.openedLog(null);}">Back</div>
+							</div>
+							<!-- /ko -->
+						</div>
+					</div>
+					<div class="rightButtons">
+						<div class="healthBar"></div>
+						<div class="buttonInputs">
+							<button data-bind="click:togglePanel.bind($root, statsPanelDisplay)">Stats</button>
+							<button data-bind="click:togglePanel.bind($root, inventoryPanelDisplay)">Inventory</button>
+							<button data-bind="click:togglePanel.bind($root, logPanelDisplay)">Log</button>
+							<button>Settings</button>
+						</div>
+					</div>
 				</div>
 			</div>
-			<footer>
-				<div class="healthBar"></div>
-				<div class="buttonInputs">
-					<button data-bind="click:togglePanel.bind($root, statsPanelDisplay)">Stats</button>
-					<button data-bind="click:togglePanel.bind($root, inventoryPanelDisplay)">Inventory</button>
-					<button data-bind="click:togglePanel.bind($root, logPanelDisplay)">Log</button>
-					<button>Settings</button>
-				</div>
-			</footer>
 		</div>
-		<div><input id="loadFolder" type="file" webkitdirectory directory multiple="false" accept="application/json"/></div>
+		<div class="loadFolder"><input id="loadFolder" type="file" webkitdirectory directory multiple="false" accept="application/json"/></div>
 		<script type="module" src="/modules/player/view_application.js"></script>
 	</body>
 </html>

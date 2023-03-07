@@ -14,6 +14,9 @@ export class ViewApplication extends Application {
 	nodes = {};
 	node = ko.observable(null);
 
+	/** @type {KnockoutObservableArray<OptionNode>} */
+	history = ko.observableArray();
+
 	/** @type {KnockoutObservable<string>} */
 	textStyle = ko.observable("normal");
 	
@@ -222,6 +225,8 @@ export class ViewApplication extends Application {
 			to = this.node().outs()[source].to();
 		if (!to)
 			return;
+		if (this.node() instanceof OptionNode)
+			this.history.push(this.node());
 		this.node(to);
 		let newTo = this.node().execute(this);
 		if (newTo)
@@ -235,6 +240,7 @@ export class ViewApplication extends Application {
 			this.textStyle("italic");
 		else
 			this.textStyle("normal");
+		document.getElementById("primaryText")?.scrollIntoView();
 	}
 
 	checkRequires(requires) {
@@ -336,5 +342,9 @@ application.addRemoteFunction("yell", () => {
 });
 
 (function() {
-	document.getElementById("loadFolder").onchange = async evt => application.importFolder(evt);
+	let lf = /** @type {HTMLInputElement} */ (document.getElementById("loadFolder"));
+	lf.onchange = async evt => {
+		application.importFolder(evt);
+		lf.style.display = "none";
+	};
 })();
