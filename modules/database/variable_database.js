@@ -33,10 +33,18 @@ export class Variable extends DatabaseEntry {
  */
 export class VariableDatabase extends Database {
 	/**
+	 * @param {number} id 
+	 * @return {Variable}
+	 */
+	variable(id) {
+		return this._entry(id);
+	}
+
+	/**
 	 * @param {string} name 
 	 * @return {Variable}
 	 */
-	variable(name) {
+	variableByName(name) {
 		/** @type {Optional<Variable>} */
 		let found = new Optional();
 		this.each(v => {
@@ -47,27 +55,27 @@ export class VariableDatabase extends Database {
 	}
 
 	/**
-	 * @param {string} name 
+	 * @param {number} id 
 	 * @return {string}
 	 */
-	type(name) {
-		return this.variable(name).type;
+	type(id) {
+		return this.variable(id).type;
 	}
 
 	/**
-	 * @param {string} name 
+	 * @param {number} id 
 	 * @return {any}
 	 */
-	value(name) {
-		return this.variable(name).value;
+	value(id) {
+		return this.variable(id).value;
 	}
 
 	/**
-	 * @param {string} name 
+	 * @param {number} id 
 	 * @param {any} value
 	 */
-	setValue(name, value) {
-		this.variable(name).value = value;
+	setValue(id, value) {
+		this.variable(id).value = value;
 	}
 
 	/**

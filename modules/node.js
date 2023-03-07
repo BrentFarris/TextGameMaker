@@ -14,7 +14,7 @@ export const NODE_LINE_OFFSET = 10;
  * @abstract
  */
 export class ValueType {
-	/** @type {KnockoutObservable<any>} */
+	/** @type {KnockoutObservable<T>} */
 	value = ko.observable(null);
 
 	/** @type {string} */
@@ -120,7 +120,7 @@ export class IntValue extends ValueType {
 /**
  * Base class for manager indexing
  * @class
- * @extends ValueType
+ * @extends {ValueType<number>}
  * @abstract
  */
 export class IndexValue extends ValueType {
@@ -164,7 +164,7 @@ export class ShortString extends ValueType {
 /**
  * Shows number input in editor
  * @class
- * @extends IndexValue
+ * @extends {IndexValue}
  */
 export class CharacterIndex extends IndexValue {
 	constructor() {
@@ -176,7 +176,7 @@ export class CharacterIndex extends IndexValue {
 /**
  * Shows number input in editor
  * @class
- * @extends IndexValue
+ * @extends {IndexValue}
  */
 export class BeastIndex extends IndexValue {
 	constructor() {
@@ -188,7 +188,7 @@ export class BeastIndex extends IndexValue {
 /**
  * Shows number input in editor
  * @class
- * @extends IndexValue
+ * @extends {IndexValue}
  */
 export class ItemIndex extends IndexValue {
 	constructor() {
@@ -224,15 +224,16 @@ export class NodeOptionIndex extends ValueType {
 /**
  * Shows a variable selection box in the editor
  * @class
+ * @extends {IndexValue}
  */
-export class VariableString extends ValueType {
+export class VariableIndex extends IndexValue {
 	/**
 	 * @param {string} [prefix] 
 	 * @param {string} [postfix] 
 	 */
 	constructor(prefix, postfix) {
 		super();
-		this.Value = "";
+		this.Value = 0;
 		this.prefix = prefix || "";
 		this.postfix = postfix || "";
 	}
@@ -243,8 +244,8 @@ export class VariableString extends ValueType {
  * @class
  */
 export class VariableValueString extends ValueType {
-	/** @type {string} */
-	type = "";
+	/** @type {KnockoutObservable<string>} */
+	type = ko.observable("");
 
 	/**
 	 * @param {string} [placeholder] 
@@ -255,10 +256,10 @@ export class VariableValueString extends ValueType {
 
 	/**
 	 * @param {Application} app 
-	 * @param {string} varName 
+	 * @param {number} id 
 	 */
-	setType(app, varName) {
-		this.type = app.variableDatabase.type(varName);
+	setType(app, id) {
+		this.type(app.variableDatabase.type(id));
 		this.Value = this.value();
 	}
 
@@ -750,7 +751,7 @@ export class VariableNode extends PassNode {
 	 */
 	constructor(createInfo, app) {
 		super(createInfo);
-		this.key = new VariableString("", "=");
+		this.key = new VariableIndex("", "=");
 		this.value = new VariableValueString();
 		this.key.value.subscribe((val) => {
 			this.value.setType(app, val);
@@ -793,11 +794,11 @@ export class VariableNode extends PassNode {
  * @extends {PassNode}
  */
 export class CopyVariableToVariableNode extends PassNode {
-	/** @type {VariableString} */
-	from = new VariableString("From:");
+	/** @type {VariableIndex} */
+	from = new VariableIndex("From:");
 
-	/** @type {VariableString} */
-	to = new VariableString("To:");
+	/** @type {VariableIndex} */
+	to = new VariableIndex("To:");
 
 	/**
 	 * @param {CopyVariableToVariableNode} createInfo 
@@ -887,11 +888,11 @@ export class AddToVariableNode extends VariableNode {
  * @extends {PassNode}
  */
 export class AddVariableToVariableNode extends PassNode {
-	/** @type {VariableString} */
-	alter = new VariableString("Add:");
+	/** @type {VariableIndex} */
+	alter = new VariableIndex("Add:");
 
-	/** @type {VariableString} */
-	source = new VariableString("To:");
+	/** @type {VariableIndex} */
+	source = new VariableIndex("To:");
 
 	/**
 	 * @param {AddVariableToVariableNode} createInfo
@@ -947,11 +948,11 @@ export class AddVariableToVariableNode extends PassNode {
  * @extends {PassNode}
  */
 export class SubVariableFromVariableNode extends PassNode {
-	/** @type {VariableString} */
-	alter = new VariableString("Subtract:");
+	/** @type {VariableIndex} */
+	alter = new VariableIndex("Subtract:");
 
-	/** @type {VariableString} */
-	source = new VariableString("From:");
+	/** @type {VariableIndex} */
+	source = new VariableIndex("From:");
 
 	/**
 	 * @param {SubVariableFromVariableNode} createInfo
@@ -1007,8 +1008,8 @@ export class SubVariableFromVariableNode extends PassNode {
  * @extends {PassNode}
  */
 export class RandomVariableNode extends PassNode {
-	/** @type {VariableString} */
-	key = new VariableString("", "=");
+	/** @type {VariableIndex} */
+	key = new VariableIndex("", "=");
 
 	/** @type {VariableValueString} */
 	min = new VariableValueString("Minimum value");
@@ -1419,14 +1420,14 @@ export class IfVariableNode extends VariableNode {
  * @extends {PassNode}
  */
 export class CompareVariableNode extends PassNode {
-	/** @type {VariableString} */
-	a = new VariableString();
+	/** @type {VariableIndex} */
+	a = new VariableIndex();
 
 	/** @type {ConditionString} */
 	condition = new ConditionString();
 
-	/** @type {VariableString} */
-	b = new VariableString();
+	/** @type {VariableIndex} */
+	b = new VariableIndex();
 
 	/**
 	 * @param {CompareVariableNode} createInfo

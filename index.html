@@ -39,12 +39,12 @@
 							<!-- ko if: $data.TypeName == "NodeOptionIndex" -->
 							<button data-bind="text:value()!==null?` Node (${value().id}) | Option (${value().option}) `:' Click to pick option ', click:$root.selectNodeOption.bind($root, $data, $element)"></button>
 							<!-- /ko -->
-							<!-- ko if: $data.TypeName == "VariableString" -->
+							<!-- ko if: $data.TypeName == "VariableIndex" -->
 								<!-- ko if: $data.prefix.length > 0 -->
 								<span data-bind="text: $data.prefix"></span>
 								<!-- /ko -->
 							<select data-bind="value: value, foreach: $root.variableDatabase.entryView, event: {change:$parent.changedVar.bind($parent, $root)}">
-								<option data-bind="value:name, text:name"></option>
+								<option data-bind="value:id, text:name"></option>
 							</select>
 								<!-- ko if: $data.postfix.length > 0 -->
 								<span data-bind="text: $data.postfix"></span>
@@ -58,28 +58,28 @@
 							<input class="inputs value" type="text" data-bind="value: value, attr: {placeholder: placeholder}" />
 							<!-- /ko -->
 							<!-- ko if: TypeName == "VariableValueString" -->
-								<!-- ko if: type === "string" || type === "number" -->
+								<!-- ko if: type() === "string" || type() === "number" -->
 								<input class="inputs value" type="" data-bind="value: value, attr: {placeholder: placeholder}" />
 								<!-- /ko -->
-								<!-- ko if: type === "whole" -->
+								<!-- ko if: type() === "whole" -->
 								<input class="inputs value" type="number" data-bind="value: value, attr: {placeholder: placeholder}" />
 								<!-- /ko -->
-								<!-- ko if: type === "char" -->
+								<!-- ko if: type() === "char" -->
 								<select data-bind="value: value, foreach: $root.characterDatabase.entryView">
 									<option data-bind="value:$index(), text:name"></option>
 								</select>
 								<!-- /ko -->
-								<!-- ko if: type === "beast" -->
+								<!-- ko if: type() === "beast" -->
 								<select data-bind="value: value, foreach: beastManager.beasts">
 									<option data-bind="value:$index(), text:name"></option>
 								</select>
 								<!-- /ko -->
-								<!-- ko if: type === "item" -->
+								<!-- ko if: type() === "item" -->
 								<select data-bind="value: value, foreach: $root.itemDatabase.entryView">
 									<option data-bind="value:$index(), text:name"></option>
 								</select>
 								<!-- /ko -->
-								<!-- ko if: type === "bool" -->
+								<!-- ko if: type() === "bool" -->
 								<select data-bind="value: value">
 									<option data-bind="value:0, text:'True'"></option>
 									<option data-bind="value:1, text:'False'"></option>
