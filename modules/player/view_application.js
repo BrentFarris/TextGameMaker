@@ -428,6 +428,8 @@ application.addRemoteFunction("yell", () => {
 	};
 
 	let sample = getURLParam("sample");
-	if (sample.HasValue)
+	if (sample.HasValue) {
 		application.loadSampleGame(sample.Value);
+		lf.style.display = "none";
+	}
 })();
