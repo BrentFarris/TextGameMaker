@@ -64,7 +64,6 @@ export class ViewApplication extends Application {
 
 	async importMedia(files) {
 		for (let i = 0; i < files.length; i++) {
-			console.log(files[i].type);
 			if (files[i].type === "audio/mpeg" || files[i].type === "audio/wav"
 				|| files[i].type === "video/ogg" || files[i].type === "audio/x-wav")
 			{
@@ -104,7 +103,7 @@ export class ViewApplication extends Application {
 			let new_zip = new JSZip();
 			let zip = await new_zip.loadAsync(content);
 			await this.importZippedMedia(zip);
-			let text = zip.file("meta.json").async("string");
+			let text = await zip.file("meta.json").async("string");
 			this.importMeta(JSON.parse(text));
 			zip.folder().forEach(async (relativePath, file) => {
 				if (StringHelpers.endsWith(file.name, ".json") && file.name !== "meta.json") {
@@ -132,7 +131,7 @@ export class ViewApplication extends Application {
 		if (files.length === 0)
 			return;
 		if (files[0].type === "application/zip" || files[0].type === "application/x-zip-compressed")
-			this.importZip(files[0]);
+			await this.importZip(files[0]);
 		else {
 			await this.importFolderMeta(files);
 			await this.importMedia(files);

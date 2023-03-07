@@ -42,7 +42,6 @@ export class AudioDatabase {
 	 * @returns {HTMLAudioElement}
 	 */
 	elm(path) {
-		console.log("Requesting image:" + path);
 		return this.#resources[path].elm;
 	}
 
@@ -71,7 +70,6 @@ export class ImageDatabase {
 			path = file.webkitRelativePath.substring(file.webkitRelativePath.indexOf('/') + 1);
 		else
 			path = file.name;
-		console.log("Adding image:" + path);
 		return new Promise((res, rej) => {
 			let img = new Image();
 			img.onload = () => {
