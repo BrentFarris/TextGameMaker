@@ -73,9 +73,11 @@ export class CharacterManager extends Manager {
 
 	/**
 	 * @param {HTMLElement|null} elm 
+	 * @param {CharacterDatabase} characterDatabase
 	 */
 	constructor(elm, characterDatabase) {
 		super(elm);
+		this.database = characterDatabase;
 	}
 
 	/**
@@ -278,6 +280,7 @@ export class ViewManager extends Manager {
 
 	/**
 	 * @param {HTMLElement|null} elm 
+	 * @param {CharacterManager} characterManager
 	 */
 	constructor(elm, characterManager) {
 		super(elm);
@@ -290,11 +293,11 @@ export class ViewManager extends Manager {
 	 */
 	show(scope) {
 		super.show(scope);
-		if (scope.type === "Story") {
+		if (scope instanceof StoryNode) {
 			let n = /** @type {StoryNode} */ (scope);
 			this.title("Story");
 			this.value(n.text.Value);
-		} else if (scope.type === "Comment") {
+		} else if (scope instanceof CommentNode) {
 			let n = /** @type {CommentNode} */ (scope);
 			this.title("Comment");
 			this.value(n.text.Value);
