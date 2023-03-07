@@ -1,7 +1,7 @@
 import { Optional } from "../engine/std.js";
 import { CoreNode, DialogNode, StoryNode, CommentNode } from "../node.js";
-import { Variable, VariableData, VariableDatabase } from "../database/variable_database.js";
-import { Item, ItemData, ItemDatabase } from "../database/item_database.js";
+import { Variable, VariableDatabase } from "../database/variable_database.js";
+import { Item, ItemDatabase } from "../database/item_database.js";
 import { Character, CharacterDatabase } from "../database/character_database.js";
 
 export class DatabaseEntry {
@@ -98,7 +98,7 @@ export class CharacterManager extends Manager {
 		let match = name.toLowerCase();
 		let found = false;
 		this.database.each(item => {
-			found = found || item.data.toLowerCase() === match;
+			found = found || item.name.toLowerCase() === match;
 		});
 		if (found)
 			alert("A character with that name already exists");
@@ -198,12 +198,12 @@ export class ItemManager extends Manager {
 		let match = name.toLowerCase();
 		let found = false;
 		this.database.each(item => {
-			found = found || item.data.name.toLowerCase() === match;
+			found = found || item.name.toLowerCase() === match;
 		});
 		if (found)
 			alert("An item with that name already exists");
 		else {
-			this.database.add(new Item(this.database.NextId, new ItemData(name)));
+			this.database.add(new Item(this.database.NextId, name));
 			this.name("");
 		}
 	}
@@ -254,7 +254,7 @@ export class VariableManager extends Manager {
 		if (this.database.exists(name))
 			alert("A variable with that name already exists");
 		else {
-			this.database.add(new Variable(this.database.NextId, new VariableData(name, type, null)));
+			this.database.add(new Variable(this.database.NextId, name, type, null));
 			this.name("");
 			this.type("");
 		}

@@ -1,7 +1,10 @@
 import { Optional } from "../engine/std.js";
 import { Database, DatabaseEntry } from "./database.js";
 
-export class VariableData {
+/**
+ * @extends {DatabaseEntry}
+ */
+export class Variable extends DatabaseEntry {
 	/** @type {string} */
 	name = "";
 
@@ -12,27 +15,16 @@ export class VariableData {
 	value;
 
 	/**
+	 * @param {number} id 
 	 * @param {string} name 
 	 * @param {string} type 
 	 * @param {any} value 
 	 */
-	constructor(name, type, value) {
+	 constructor(id, name, type, value) {
+		super(id);
 		this.name = name;
 		this.type = type;
 		this.value = value;
-	}
-}
-
-/**
- * @extends {DatabaseEntry<VariableData>}
- */
-export class Variable extends DatabaseEntry {
-	/**
-	 * @param {number} id 
-	 * @param {VariableData} varInfo 
-	 */
-	 constructor(id, varInfo) {
-		super(id, varInfo);
 	}
 }
 
@@ -42,14 +34,14 @@ export class Variable extends DatabaseEntry {
 export class VariableDatabase extends Database {
 	/**
 	 * @param {string} name 
-	 * @return {VariableData}
+	 * @return {Variable}
 	 */
 	variable(name) {
-		/** @type {Optional<VariableData>} */
+		/** @type {Optional<Variable>} */
 		let found = new Optional();
 		this.each(v => {
-			if (!found.HasValue && v.data.name == name)
-				found.Value = v.data;
+			if (!found.HasValue && v.name == name)
+				found.Value = v;
 		});
 		return found.Value;
 	}
@@ -59,7 +51,6 @@ export class VariableDatabase extends Database {
 	 * @return {string}
 	 */
 	type(name) {
-		debugger;
 		return this.variable(name).type;
 	}
 
@@ -85,7 +76,7 @@ export class VariableDatabase extends Database {
 	 */
 	exists(name) {
 		let found = false;
-		this.each(v => found = found || v.data.name === name);
+		this.each(v => found = found || v.name === name);
 		return found;
 	}
 }

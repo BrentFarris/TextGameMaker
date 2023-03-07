@@ -72,7 +72,7 @@ export class EditorApplication extends Application {
 	variableManager;
 
 	/** @type {ViewManager} */
-	viewManager = new ViewManager(document.getElementById("viewNodeManager"));
+	viewManager;
 
 	/** @type {NodeTemplateManager} */
 	templateManager = new NodeTemplateManager(document.getElementById("templateManager"));
@@ -137,6 +137,8 @@ export class EditorApplication extends Application {
 			document.getElementById("itemManager"), this.itemDatabase);
 		this.variableManager = new VariableManager(
 			document.getElementById("variableManager"), this.variableDatabase);
+		this.viewManager = new ViewManager(
+			document.getElementById("viewNodeManager"), this.characterManager);
 		this.#canvas = new EditorCanvas(this.nodeManager);
 
 		document.addEventListener("mousemove", this.drag.bind(this));
@@ -172,7 +174,7 @@ export class EditorApplication extends Application {
 		Input.keyDown.register((key) => {
 			if (key.keyCode == Input.keys.Escape) {
 				this.cancelOutLink();
-			} else if (key.keyCode == Input.keys.Backspace) {
+			} else if (key.keyCode == Input.keys.Backspace || key.keyCode == Input.keys.Delete) {
 				if (this.hoveringNode)
 					this.deleteNode(this.hoveringNode.scope);
 			} else if (key.keyCode === Input.keys.Left || key.keyCode === Input.keys.Right) {

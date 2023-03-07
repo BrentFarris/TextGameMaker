@@ -1,7 +1,8 @@
-import { each, StringHelpers } from "../engine/std.js";
+import { each, Optional, StringHelpers } from "../engine/std.js";
 import { CoreNode, NodeTypeMap, OptionNode, Output, StartNode, StoryNode } from "../node.js";
 import { Application } from "../application.js";
 import { Media } from "../media.js";
+import { Variable } from "../database/variable_database.js";
 
 /**
  * @typedef LoadedFile
@@ -49,7 +50,7 @@ export class ViewApplication extends Application {
 					reader.onload = (e) => {
 						this.importMeta(
 						JSON.parse(/** @type {string} } */ (e.target.result)));
-						res();
+						res(null);
 					};
 					reader.readAsText(files[i]);
 				});
@@ -79,7 +80,7 @@ export class ViewApplication extends Application {
 				if (files[i].name !== "meta.json") {
 					let reader = new FileReader();
 					reader.onload = (e) => {
-						let json = JSON.parse(/** @type {string} } */ (e.target.result));
+						let json = JSON.parse(/** @type {string} } */ (e.target?.result));
 						this.loadedFiles.push({
 							name: files[i].name,
 							json: json
@@ -87,10 +88,8 @@ export class ViewApplication extends Application {
 						// Go through the nodes and find the start node
 						let foundStart = false;
 						for (let j = 0; j < json.nodes.length && !foundStart; j++) {
-							if (json.nodes[j].type.toLowerCase() === "start") {
-								this.loadedFiles[this.loadedFiles.length - 1].startId = json.nodes[j].id;
+							if (json.nodes[j].type.toLowerCase() === "start")
 								foundStart = true;
-							}
 						}
 						if (foundStart)
 							this.load(this.loadedFiles[this.loadedFiles.length - 1]);
@@ -122,7 +121,7 @@ export class ViewApplication extends Application {
 						value = false;
 						break;
 				}
-				this.variableDatabase.add(json.variables[i].name, type, value);
+				this.variableDatabase.add(new Variable(json.variables[i].id, json.variables[i].name, type, value));
 			}
 		}
 		if (json.characters)
@@ -155,15 +154,22 @@ export class ViewApplication extends Application {
 		this.updateText();
 	}
 
+	/**
+	 * @param {number} id 
+	 * @returns {OptionNode}
+	 */
 	nodeById(id) {
-		let node = null;
+		/** @type {Optional<OptionNode>} */
+		let node = new Optional();
 		each(this.nodes, (key, val) => {
 			if (val.id === id) {
-				node = val;
+				node.Value = val;
 				return false;
 			}
 		});
-		return node;
+		if (!node.HasValue || !(node.Value instanceof OptionNode))
+			throw new Error(`Node with id ${id} not found`);
+		return node.Value;
 	}
 
 	jumpTo(toId) {
@@ -305,7 +311,7 @@ export class ViewApplication extends Application {
 	 * @return {string}
 	 */
 	characterName(id) {
-		return this.characterDatabase.characterName(id);
+		return this.characterDatabase.name(id);
 	}
 
 	/**

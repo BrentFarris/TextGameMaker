@@ -243,8 +243,8 @@ export class VariableString extends ValueType {
  * @class
  */
 export class VariableValueString extends ValueType {
-	/** @type {KnockoutObservable<string>} */
-	type = ko.observable("");
+	/** @type {string} */
+	type = "";
 
 	/**
 	 * @param {string} [placeholder] 
@@ -258,7 +258,7 @@ export class VariableValueString extends ValueType {
 	 * @param {string} varName 
 	 */
 	setType(app, varName) {
-		this.type(app.variableDatabase.type(varName));
+		this.type = app.variableDatabase.type(varName);
 		this.Value = this.value();
 	}
 
@@ -275,7 +275,7 @@ export class VariableValueString extends ValueType {
 	set Value(val) {
 		if (val === null)
 			return;
-		switch(this.type()) {
+		switch(this.type) {
 			case "":
 			case "string":
 				this.value(String(val));
@@ -1271,7 +1271,7 @@ export class JumpNode extends SourceNode {
 
 	/**
 	 * @param {Application} app
-	 * @returns {Output|null} The first output
+	 * @returns {Output} The first output
 	 * @override
 	 */
 	execute(app) {
@@ -1285,7 +1285,7 @@ export class JumpNode extends SourceNode {
 				app.load(`json/${this.src.Value}.json`, this.id, this.nodeId.Value);
 			}
 		}
-		return null;
+		return super.execute(app);
 	}
 }
 
@@ -1305,11 +1305,12 @@ export class ReturnNode extends PassNode {
 
 	/**
 	 * @param {Application} app 
+	 * @return {Output}
 	 * @override
 	 */
 	execute(app) {
 		app.returnToPrevious();
-		return null;
+		return super.execute(app);
 	}
 }
 

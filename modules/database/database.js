@@ -3,22 +3,16 @@ import { each } from "../engine/std.js";
 /**
  * @class
  * @abstract
- * @template T
  */
 export class DatabaseEntry {
 	/** @type {number} */
 	id = 0;
 
-	/** @type {T} */
-	data;
-
 	/**
 	 * @param {number} id 
-	 * @param {T} data 
 	 */
-	constructor(id, data) {
+	constructor(id) {
 		this.id = id;
-		this.data = data;
 	}
 }
 

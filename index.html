@@ -44,7 +44,7 @@
 								<span data-bind="text: $data.prefix"></span>
 								<!-- /ko -->
 							<select data-bind="value: value, foreach: $root.variableDatabase.entryView, event: {change:$parent.changedVar.bind($parent, $root)}">
-								<option data-bind="value:data.name, text:data.name"></option>
+								<option data-bind="value:name, text:name"></option>
 							</select>
 								<!-- ko if: $data.postfix.length > 0 -->
 								<span data-bind="text: $data.postfix"></span>
@@ -58,7 +58,7 @@
 							<input class="inputs value" type="text" data-bind="value: value, attr: {placeholder: placeholder}" />
 							<!-- /ko -->
 							<!-- ko if: TypeName == "VariableValueString" -->
-								<!-- ko if: type === "string" ||  type === "bool" ||  type === "number" -->
+								<!-- ko if: type === "string" || type === "number" -->
 								<input class="inputs value" type="" data-bind="value: value, attr: {placeholder: placeholder}" />
 								<!-- /ko -->
 								<!-- ko if: type === "whole" -->
@@ -196,7 +196,7 @@
 			</select>
 			<input type="text" data-bind="value: variableManager.name, event: {keyup: managerInputExec.bind($root, variableManager)}" />
 			<ul data-bind="foreach: $root.variableDatabase.entryView" class="scrollList">
-				<li>[<span data-bind="text: data.type"></span>] <span data-bind="text: data.name"></span> <span class="fakeLink" data-bind="click:$root.deleteVariable.bind($root)">Delete</span></li>
+				<li>[<span data-bind="text: type"></span>] <span data-bind="text: name"></span> <span class="fakeLink" data-bind="click:$root.deleteVariable.bind($root)">Delete</span></li>
 			</ul>
 			<div style="text-align:center;">
 				<button data-bind="click:variableManager.close.bind(variableManager)">Close</button>
