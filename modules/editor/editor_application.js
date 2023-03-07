@@ -174,9 +174,6 @@ export class EditorApplication extends Application {
 		Input.keyDown.register((key) => {
 			if (key.keyCode == Input.keys.Escape) {
 				this.cancelOutLink();
-			} else if (key.keyCode == Input.keys.Backspace || key.keyCode == Input.keys.Delete) {
-				if (this.hoveringNode)
-					this.deleteNode(this.hoveringNode.scope);
 			} else if (key.keyCode === Input.keys.Left || key.keyCode === Input.keys.Right) {
 				if (Input.Ctrl && Input.Alt) {
 					let change = 10;

@@ -20,7 +20,7 @@
 						<div data-bind="foreach: fields">
 							<!-- ko if: $data.TypeName == "CharacterIndex" -->
 							<select data-bind="value: value, foreach: $root.characterDatabase.entryView">
-								<option data-bind="value:$index(), text:name"></option>
+								<option data-bind="value:id, text:name"></option>
 							</select>
 							<!-- /ko -->
 							<!-- ko if: $data.TypeName == "BeastIndex" -->
@@ -30,7 +30,7 @@
 							<!-- /ko -->
 							<!-- ko if: $data.TypeName == "ItemIndex" -->
 							<select data-bind="value: value, foreach: $root.itemDatabase.entryView">
-								<option data-bind="value:$index(), text:name"></option>
+								<option data-bind="value:id, text:name"></option>
 							</select>
 							<!-- /ko -->
 							<!-- ko if: $data.TypeName == "NodeIndex" -->

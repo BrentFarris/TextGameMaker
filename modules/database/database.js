@@ -42,7 +42,7 @@ export class Database {
 	 */
 	get NextId() {
 		let id = 0;
-		each(this.#entries, (key, val) => Math.max(id, val.id));
+		each(this.#entries, (key, val) => id = Math.max(id, val.id));
 		return id + 1;
 	}
 
