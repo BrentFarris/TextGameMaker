@@ -62,6 +62,21 @@ export async function eachAsync(arrobj, callback) {
 	}
 }
 
+/**
+ * Get's a parameter from the page's query string
+ * @method
+ * @param {string} name The name of the query value to get
+ * @return {Optional<string>}
+ */
+export function getURLParam(name) {
+	name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+	let regex = new RegExp("[\\?&]" + name + "=([^&#]*)"), results = regex.exec(location.search);
+	let res = new Optional();
+	if (results !== null)
+		res.Value = decodeURIComponent(results[1].replace(/\+/g, " "));
+	return res;
+}
+
 export class StringHelpers {
 	/**
 	 * Replaces all occurrences found in the string
