@@ -74,30 +74,89 @@ export class ViewApplication extends Application {
 		}
 	}
 
+	async importZippedMedia(zip) {
+		return new Promise((res, rej) => {
+			let count = 1;
+			zip.folder("audio").forEach((relativePath, file) => {
+				count++;
+				file.async("blob").then((blob) => {
+					this.media.audioDatabase.add(file, URL.createObjectURL(blob));
+					if (--count === 0)
+						res(null);
+				});
+			});
+			zip.folder("images").forEach((relativePath, file) => {
+				count++;
+				file.async("blob").then((blob) => {
+					this.media.imageDatabase.add(file, URL.createObjectURL(blob));
+					if (--count === 0)
+						res(null);
+				});
+			});
+			count--;
+		});
+	}
+
+	async importZip(file) {
+		let reader = new FileReader();
+		reader.onload = async (e) => {
+			let content = e.target?.result;
+			let new_zip = new JSZip();
+			let zip = await new_zip.loadAsync(content);
+			await this.importZippedMedia(zip);
+			let text = zip.file("meta.json").async("string");
+			this.importMeta(JSON.parse(text));
+			zip.folder().forEach(async (relativePath, file) => {
+				if (StringHelpers.endsWith(file.name, ".json") && file.name !== "meta.json") {
+					let storyText = await file.async("string")
+					this.loadedFiles.push({
+						name: file.name,
+						json: JSON.parse(storyText)
+					});
+					// Go through the nodes and find the start node
+					let foundStart = false;
+					for (let j = 0; j < this.loadedFiles[this.loadedFiles.length - 1].json.nodes.length && !foundStart; j++) {
+						if (this.loadedFiles[this.loadedFiles.length - 1].json.nodes[j].type.toLowerCase() === "start")
+							foundStart = true;
+					}
+					if (foundStart)
+						this.load(this.loadedFiles[this.loadedFiles.length - 1]);
+				}
+			});
+		};
+		reader.readAsArrayBuffer(file);
+	}
+
 	async importFolder(event) {
 		let files = event.target.files;
-		await this.importFolderMeta(files);
-		await this.importMedia(files);
-		for (let i = 0; i < files.length; i++) {
-			if (files[i].type === "application/json") {
-				if (files[i].name !== "meta.json") {
-					let reader = new FileReader();
-					reader.onload = (e) => {
-						let json = JSON.parse(/** @type {string} } */ (e.target?.result));
-						this.loadedFiles.push({
-							name: files[i].name,
-							json: json
-						});
-						// Go through the nodes and find the start node
-						let foundStart = false;
-						for (let j = 0; j < json.nodes.length && !foundStart; j++) {
-							if (json.nodes[j].type.toLowerCase() === "start")
-								foundStart = true;
-						}
-						if (foundStart)
-							this.load(this.loadedFiles[this.loadedFiles.length - 1]);
-					};
-					reader.readAsText(files[i]);
+		if (files.length === 0)
+			return;
+		if (files[0].type === "application/zip" || files[0].type === "application/x-zip-compressed")
+			this.importZip(files[0]);
+		else {
+			await this.importFolderMeta(files);
+			await this.importMedia(files);
+			for (let i = 0; i < files.length; i++) {
+				if (files[i].type === "application/json") {
+					if (files[i].name !== "meta.json") {
+						let reader = new FileReader();
+						reader.onload = (e) => {
+							let json = JSON.parse(/** @type {string} } */ (e.target?.result));
+							this.loadedFiles.push({
+								name: files[i].name,
+								json: json
+							});
+							// Go through the nodes and find the start node
+							let foundStart = false;
+							for (let j = 0; j < json.nodes.length && !foundStart; j++) {
+								if (json.nodes[j].type.toLowerCase() === "start")
+									foundStart = true;
+							}
+							if (foundStart)
+								this.load(this.loadedFiles[this.loadedFiles.length - 1]);
+						};
+						reader.readAsText(files[i]);
+					}
 				}
 			}
 		}

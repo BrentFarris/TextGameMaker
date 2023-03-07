@@ -17,17 +17,23 @@ export class AudioDatabase {
 	#resources = {};
 
 	/**
-	 * @param {File} file 
+	 * @param {File|string} file 
 	 * @param {string} src 
 	 */
 	async add(file, src) {
-		let path = file.webkitRelativePath.substring(file.webkitRelativePath.indexOf('/') + 1);
+		let path = "";
+		if (typeof file === "string")
+			path = file;
+		else if (file.webkitRelativePath)
+			path = file.webkitRelativePath.substring(file.webkitRelativePath.indexOf('/') + 1);
+		else
+			path = file.name;
 		return new Promise((res, rej) => {
 			let audio = new Audio();
 			audio.src = src;
 			audio.load();
 			this.#resources[path] = { elm: audio, url: src };
-			res();
+			res(null);
 		});
 	}
 
@@ -36,6 +42,7 @@ export class AudioDatabase {
 	 * @returns {HTMLAudioElement}
 	 */
 	elm(path) {
+		console.log("Requesting image:" + path);
 		return this.#resources[path].elm;
 	}
 
@@ -53,16 +60,23 @@ export class ImageDatabase {
 	#resources = {};
 
 	/**
-	 * @param {File} file 
+	 * @param {File|string} file 
 	 * @param {string} src 
 	 */
 	async add(file, src) {
-		let path = file.webkitRelativePath.substring(file.webkitRelativePath.indexOf('/') + 1);
+		let path = "";
+		if (typeof file === "string")
+			path = file;
+		else if (file.webkitRelativePath)
+			path = file.webkitRelativePath.substring(file.webkitRelativePath.indexOf('/') + 1);
+		else
+			path = file.name;
+		console.log("Adding image:" + path);
 		return new Promise((res, rej) => {
 			let img = new Image();
 			img.onload = () => {
 				this.#resources[path] = { elm: img, url: src };
-				res();
+				res(null);
 			};
 			img.src = src;
 		});
