@@ -106,6 +106,19 @@ export class ProjectFolder {
 		this.nameView(name);
 	}
 
+	/** @return {string} */
+	get Path() {
+		let parts = [this.Name];
+		let parent = this.parent;
+		// Doing parent.parent because we don't want the root folder
+		while (parent.parent != null) {
+			parts.push(parent.Name);
+			parent = parent.parent;
+		}
+		parts.reverse();
+		return parts.join("/");
+	}
+
 	/** @return {ProjectFile[]} */
 	get Files() { return this.fileView(); }
 
@@ -207,6 +220,13 @@ export class ProjectFolder {
 	}
 
 	/**
+	 * @param {ProjectFolder} folder 
+	 */
+	deleteFolder(folder) {
+		this.folderView.remove(folder);
+	}
+
+	/**
 	 * 
 	 */
 	clear() {
@@ -244,6 +264,23 @@ export class Project {
 	 */
 	constructor(name) {
 		this.Name = name;
+	}
+
+	/**
+	 * @param {string} path 
+	 * @return {Optional<ProjectFile>}
+	 */
+	findFile(path) {
+		let parts = path.split("/");
+		/** @type {Optional<ProjectFile>} */
+		let target = new Optional();
+		/** @type {Optional<ProjectFolder>} */
+		let folder = new Optional(this.root);
+		for (let i = 0; i < parts.length - 1 && folder.HasValue; ++i)
+			folder = folder.Value.folder(parts[i]);
+		if (folder.HasValue)
+			target = folder.Value.file(path[path.length - 1]);
+		return target;
 	}
 
 	/**

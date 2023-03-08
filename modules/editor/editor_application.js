@@ -1,11 +1,10 @@
 import { Manager, CharacterManager, BeastManager, ItemManager,
 	VariableManager, ViewManager, NodeTemplateManager,
 	BeastEntry, TemplateEntry } from "./manager.js";
-import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT, OptionNode, MusicNode, SoundNode, BackgroundNode } from "../node.js";
+import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT, OptionNode, MusicNode, SoundNode, BackgroundNode, JumpNode } from "../node.js";
 import { ArrayHelpers, each } from "../engine/std.js";
 import { Input } from "../engine/input.js";
 import { LocalStorage } from "../engine/local_storage.js";
-import { HTTP } from "../engine/http.js";
 import { EditorCanvas } from "./editor_canvas.js";
 import { NodeManager } from "./node_manager.js";
 import { Application } from "../application.js";
@@ -119,7 +118,7 @@ export class EditorApplication extends Application {
 	settingTo = null;
 	
 	// TODO:  This and lastData should be typedefs
-	/** @type {JSON[]} */
+	/** @type {ProjectFile[]} */
 	jumpStack = [];
 	
 	/** @type {JSON|null} */
@@ -305,32 +304,31 @@ export class EditorApplication extends Application {
 		this.fileOptionsVisible(false);
 	}
 
+	/**
+	 * @param {JumpNode} scope 
+	 */
 	async jumpLoad(scope) {
-		let tempData = await fetch("view/json/" + scope.src.Value);
-		let data = await tempData.json();
-		if (data) {
+		let file = this.project.findFile(scope.src.Value);
+		if (file.HasValue) {
+			this.jumpStack.push(this.project.openFile);
+			this.openFile(file.Value);
 			let hasReturn = false;
-			console.log(data.nodes);
-			for (let i = 0; i < data.nodes.length; i++) {
-				if (data.nodes[i].type === "Return") {
-					hasReturn = true;
-					break;
-				}
-			}
+			for (let i = 0; i < file.Value.fileData.nodes.length && !hasReturn; i++)
+				hasReturn = file.Value.fileData.nodes[i].type === "Return";
 			if (!hasReturn)
 				ArrayHelpers.clear(this.jumpStack);
-			else if (this.lastData)
-				this.jumpStack.push(this.lastData);
-			this.import(data);
 			window.scrollTo(0, 0);
 			this.#lastPageY = 0;
 		}
 	}
 
-	async returnLoad(scope) {
+	/**
+	 * 
+	 */
+	async returnLoad() {
 		if (!this.jumpStack.length)
 			return;
-		this.import(this.jumpStack.pop());
+		this.openFile(this.jumpStack.pop());
 	}
 
 	/**
@@ -453,16 +451,6 @@ export class EditorApplication extends Application {
 		}
 		this.project.root.createFolder(name);
 		this.fileOptionsVisible(false);
-	}
-
-	async deleteFile() {
-		if (!confirm("Are you sure you want to delete this file?"))
-			return;
-		this.project.deleteOpenFile(this.getJson());
-		this.import(this.project.openFile.fileData);
-		this.fileOptionsVisible(false);
-		this.name(this.project.openFile.Name);
-		await this.project.serialize(this);
 	}
 
 	/**
@@ -687,7 +675,6 @@ export class EditorApplication extends Application {
 	};
 
 	renameCharacter(scope) {
-		console.log(scope);
 		let newName = prompt("What would you like to rename this character to?", scope.name);
 		if (!newName || !newName.length) {
 			alert("Invalid name specified");
@@ -709,7 +696,6 @@ export class EditorApplication extends Application {
 	};
 
 	renameBeast(scope) {
-		console.log(scope);
 		let newName = prompt("What would you like to rename this beast to?", scope.name);
 		if (!newName || !newName.length) {
 			alert("Invalid name specified");
@@ -731,7 +717,6 @@ export class EditorApplication extends Application {
 	}
 
 	renameItem(scope) {
-		console.log(scope);
 		let newName = prompt("What would you like to rename this beast to?", scope.name);
 		if (!newName || !newName.length) {
 			alert("Invalid name specified");
@@ -818,6 +803,9 @@ export class EditorApplication extends Application {
 					alert(/** @type {Error} */ (err).message);
 				}
 			}
+		} else if (Input.Alt) {
+			if (confirm(`Would you like to delete the folder '${folder.Path}' and all it's contents?`))
+				folder.parent.deleteFolder(folder);
 		} else
 			folder.collapsed(!folder.collapsed());
 		return true;
@@ -826,16 +814,34 @@ export class EditorApplication extends Application {
 	/**
 	 * @param {ProjectFile} file 
 	 */
-	async projectFileClicked(file) {
-		if (file.Name === "meta.json" || this.project.openFile == file)
-			return;
-		if (!file.Name.endsWith(".json"))
-			return;
-		if (this.project.openFile)
-			await this.#saveFileInternal();
+	openFile(file) {
 		this.project.openFile = file;
 		this.name(file.Name);
 		this.import(file.fileData);
+	}
+
+	/**
+	 * @param {ProjectFile} file 
+	 */
+	async projectFileClicked(file) {
+		if (Input.Alt) {
+			if (confirm(`Would you like to delete the file '${file.Path}'?`)) {
+				if (file == this.project.openFile) {
+					this.project.deleteOpenFile(this.getJson());
+					this.import(this.project.openFile.fileData);
+					this.name(this.project.openFile.Name);
+				} else
+					file.parent.deleteFile(file);
+			}
+		} else {
+			if (file.Name === "meta.json" || this.project.openFile == file)
+				return;
+			if (!file.Name.endsWith(".json"))
+				return;
+			if (this.project.openFile)
+				await this.#saveFileInternal();
+			this.openFile(file);
+		}
 	}
 
 	/**
@@ -911,7 +917,6 @@ export class EditorApplication extends Application {
 	 */
 	projectFolderDragStart(folder) {
 		this.dragFolder = folder;
-		console.log("Dragging: ", folder.Name);
 		return true;
 	}
 
@@ -920,7 +925,6 @@ export class EditorApplication extends Application {
 	 */
 	projectFileDragStart(file) {
 		this.dragFile = file;
-		console.log("Dragging: ", file.Name);
 		return true;
 	}
 
@@ -967,6 +971,10 @@ export class EditorApplication extends Application {
 						break;
 					}
 				}
+			} else if (this.dragFile.Name.endsWith(".json")) {
+				/** @type {JumpNode} */
+				let n = this.initializeNode(JumpNode);
+				n.src.Value = this.dragFile.Path;
 			}
 		}
 		this.dragFile = null;
