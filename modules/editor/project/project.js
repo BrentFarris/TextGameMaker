@@ -265,6 +265,19 @@ export class Project {
 	}
 
 	/**
+	 * @param {string} name 
+	 * @param {Application} app 
+	 */
+	async open(name, app) {
+		let folder = await app.storage.getFolder(name);
+		if (folder.HasValue) {
+			this.Name = name;
+			this.root.clear();
+			await this.deserialize(app);
+		}
+	}
+
+	/**
 	 * @param {string} newName 
 	 * @param {Application} app
 	 */
@@ -490,16 +503,7 @@ export class Project {
 	 * @return {Promise<boolean>}
 	 */
 	async deserialize(app) {
-		// TODO:  This will need to be done differently when we support multiple projects
-		let found = null;
-		let fs = await app.storage.getFileSystem();
-		for (let key in fs.children) {
-			found = key;
-			break;
-		}
-		if (!found)
-			return false;
-		let tempFolder = await app.storage.getFolder(found);
+		let tempFolder = await app.storage.getFolder(this.Name);
 		if (!tempFolder.HasValue)
 			return false;
 		let folder = tempFolder.Value;

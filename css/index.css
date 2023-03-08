@@ -65,9 +65,8 @@ body {
 	min-width: 24px;
 }
 
-.managerWindow {
+.managerWindow, .projectList {
 	position: fixed;
-	display: none;
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
@@ -75,6 +74,10 @@ body {
 	border: 1px solid black;
 	padding: 10px;
 	box-shadow: 5px 10px;
+}
+
+.managerWindow {
+	display: none;
 }
 
 .pageName {
@@ -224,5 +227,13 @@ textarea {
 }
 
 .projectWindow span:hover {
+	background-color: lightgoldenrodyellow;
+}
+
+.projectListEntry {
+	cursor: pointer;
+}
+
+.projectListEntry:hover {
 	background-color: lightgoldenrodyellow;
 }
