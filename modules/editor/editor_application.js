@@ -612,38 +612,6 @@ export class EditorApplication extends Application {
 			y = 0;
 		target.style.top = x + "px";
 	    target.style.left = y + "px";
-		//let dpn = /** @type {CoreNode} */ (this.#dragPos.node);
-		//let dpe = /** @type {HTMLElement} */ (this.#dragPos.elm.parentElement);
-		//dpn.x = parseInt(dpe.style.left);
-		//dpn.y = parseInt(dpe.style.top);
-		//// If the node is outside of the bounds, then auto scroll
-		//let moveBox = NODE_HANDLE_HEIGHT * 3;
-		//let scrollX = window.innerWidth - dpn.x - moveBox + window.scrollX;
-		//if (scrollX < 0) {
-		//	scrollX *= 0.5;
-		//	window.scrollTo(window.scrollX - scrollX, window.scrollY);
-		//	this.#dragPos.x1 += scrollX;
-		//	this.#dragPos.x2 += scrollX;
-		//} else if (scrollX + moveBox > window.innerWidth) {
-		//	scrollX -= window.innerWidth - moveBox;
-		//	scrollX *= 0.5;
-		//	window.scrollTo(window.scrollX - scrollX, window.scrollY);
-		//	this.#dragPos.x1 += scrollX;
-		//	this.#dragPos.x2 += scrollX;
-		//}
-		//let scrollY = window.innerHeight - dpn.y - moveBox + window.scrollY;
-		//if (scrollY < 0) {
-		//	scrollY *= 0.5;
-		//	window.scrollTo(window.scrollX, window.scrollY - scrollY);
-		//	this.#dragPos.y1 += scrollY;
-		//	this.#dragPos.y2 += scrollY;
-		//} else if (scrollY + moveBox > window.innerHeight) {
-		//	scrollY -= window.innerHeight - moveBox;
-		//	scrollY *= 0.5;
-		//	window.scrollTo(window.scrollX, window.scrollY - scrollY);
-		//	this.#dragPos.y1 += scrollY;
-		//	this.#dragPos.y2 += scrollY;
-		//}
 	}
 
 	dragEnd(e) {
