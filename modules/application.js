@@ -26,6 +26,9 @@ export class Application {
 	/** @type {Inventory} */
 	inventory = new Inventory();
 
+	/** @type {Storage} */
+	storage = new Storage();
+
 	/**
 	 * @virtual
 	 */

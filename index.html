@@ -240,6 +240,22 @@
 				<li><input type="file" accept="application/json" data-bind="event: {change:importJson}" /></li>
 			</ul>
 		</div>
+		<script id="folderTemplate" type="text/html">
+			<ul>
+				<div data-bind="click: $root.projectFolderClicked.bind($root, $data), clickBubble: false, event: { drop: $root.projectFolderDrop.bind($root, $data), dragover: $root.projectFolderDragOver.bind($root, $data), dragstart: $root.projectFolderDragStart.bind($root, $data) }">
+					<span class="folderName" data-bind="text: collapsed()?'▸ ':'▾ '"></span>
+					<span class="folderName" draggable="true" data-bind="text: nameView"></span>
+				</div>
+				<li data-bind="visible: !collapsed()">
+				<!-- ko template: { name: 'folderTemplate', foreach: folderView } -->
+				<!-- /ko -->        
+				</li>
+				<span data-bind="foreach: fileView, visible: !collapsed()">
+					<li class="fileName" draggable="true" data-bind="text: nameView, event: { dragstart: $root.projectFileDragStart.bind($root, $data) }"></li>
+				</span>
+			</ul>
+		</script> 
+		<div class="projectWindow" data-bind="template: { name: 'folderTemplate', data: project.root }"></div>
 		<script type="module" src="modules/editor/editor_application.js"></script>
 	</body>
 </html>

@@ -155,6 +155,19 @@ textarea {
 	list-style: none;
 }
 
+.projectWindow ul {
+	list-style: none;
+	margin-left: 10px;
+}
+
+.projectWindow li {
+	margin-left: 12px;
+}
+
+.folderName, .fileName {
+	cursor: pointer;
+}
+
 .actionMenu {
 	position: fixed;
 	bottom: 0;
@@ -185,4 +198,14 @@ textarea {
 	min-height: 100px;
 	max-height: 200px;
 	min-width: 175px;
+}
+
+.projectWindow {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 200px;
+	background-color: yellow;
+	border-right: 1px solid black;
 }

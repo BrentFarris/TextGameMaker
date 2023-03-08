@@ -1,4 +1,5 @@
 import { GameAudio } from "./engine/game_audio.js";
+import { each } from "./engine/std.js";
 
 /**
  * @typedef {Object} AudioResource
@@ -52,6 +53,19 @@ export class AudioDatabase {
 	url(path) {
 		return this.#resources[path].url;
 	}
+
+	/**
+	 * @param {JSZip} zipFolder 
+	 */
+	async serialize(zipFolder) {
+		each(this.#resources, async (key, val) => {
+			let name = /** @type {string} */ (key);
+			let audio = /** @type {AudioResource} */ (val);
+			let res = await fetch(audio.url);
+			let blob = await res.blob();
+			zipFolder.file(name, blob);
+		});
+	}
 }
 
 export class ImageDatabase {
@@ -94,6 +108,19 @@ export class ImageDatabase {
 	 */
 	url(path) {
 		return this.#resources[path].url;
+	}
+
+	/**
+	 * @param {JSZip} zipFolder 
+	 */
+	 async serialize(zipFolder) {
+		each(this.#resources, async (key, val) => {
+			let name = /** @type {string} */ (key);
+			let img = /** @type {ImageResource} */ (val);
+			let res = await fetch(img.url);
+			let blob = await res.blob();
+			zipFolder.file(name, blob);
+		});
 	}
 }
 

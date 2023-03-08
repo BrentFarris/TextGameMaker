@@ -13,6 +13,7 @@ import { Item } from "../database/item_database.js";
 import { Variable } from "../database/variable_database.js";
 import { Character } from "../database/character_database.js";
 import { StringHelpers } from "../engine/std.js"
+import { Project, ProjectFile, ProjectFolder } from "./project/project.js";
 
 function getEvent(e) { return e || window.event; }
 
@@ -58,7 +59,10 @@ export class EditorApplication extends Application {
 	static get PROJECTS_FOLDER() { return "projects" };
 	static get TEMP_FILE_NAME() { return "temp.json" };
 	static get TEMP_META_FILE_NAME() { return "temp-meta.json" };
-	static get META_FILE_NAME() { return "meta" };
+	static get META_FILE_NAME() { return "meta.json" };
+
+	/** @type {Project} */
+	project = new Project();
 
 	/** @type {CharacterManager} */
 	characterManager;
@@ -347,11 +351,23 @@ export class EditorApplication extends Application {
 	}
 
 	exportJson() {
-		let info = this.getJson();
-		var json = JSON.stringify(info);
-		var blob = new Blob([json], {type: "application/json"});
-		saveAs(blob, `${this.name()}.json`);
-		this.fileOptionsVisible(false);
+		/** @type {ProjectFile} */
+		let metaFile = this.project.root.file(EditorApplication.META_FILE_NAME).Value;
+		metaFile.setContent(this.getMetaJson());
+		/** @type {ProjectFile} */
+		let current;
+		if (this.project.root.fileExists("start.json"))
+			current = this.project.root.file("start.json").Value;
+		else
+			current = this.project.root.createFile("start.json");
+		current.setContent(this.getJson());
+		this.project.export(this);
+
+		//let info = this.getJson();
+		//var json = JSON.stringify(info);
+		//var blob = new Blob([json], {type: "application/json"});
+		//saveAs(blob, `${this.name()}.json`);
+		//this.fileOptionsVisible(false);
 	}
 
 	exportMetaJson() {
@@ -366,6 +382,8 @@ export class EditorApplication extends Application {
 	async newTemp() {
 		if (!confirm("Are you sure that you would like to start a new file?"))
 			return;
+		this.project = new Project();
+		this.project.root.createFile(EditorApplication.META_FILE_NAME);
 		let folder = await this.storage.getFolder(EditorApplication.PROJECTS_FOLDER);
 		if (!folder.HasValue) {
 			window.location.reload();
@@ -769,6 +787,53 @@ export class EditorApplication extends Application {
 
 	nl2br(str) {
 		return StringHelpers.nl2br(str);
+	}
+
+	/**
+	 * @param {ProjectFolder} folder 
+	 */
+	projectFolderClicked(folder) {
+		console.log(folder.Name);
+		folder.collapsed(!folder.collapsed());
+		return true;
+	}
+
+	/**
+	 * @param {ProjectFolder} folder 
+	 */
+	projectFolderDrop(folder) {
+		if (this.dragFolder)
+			this.dragFolder.moveTo(folder);
+		else if (this.dragFile)
+			this.dragFile.moveTo(folder);
+		console.log("Dropping to: ", folder.Name);
+		this.dragFolder = null;
+		this.dragFile = null;
+	}
+
+	/**
+	 * @param {ProjectFolder} folder 
+	 */
+	projectFolderDragOver(folder) {
+		console.log("Hovering over: ", folder.Name);
+	}
+
+	/**
+	 * @param {ProjectFolder} folder 
+	 */
+	projectFolderDragStart(folder) {
+		this.dragFolder = folder;
+		console.log("Dragging: ", folder.Name);
+		return true;
+	}
+
+	/**
+	 * @param {ProjectFile} file 
+	 */
+	projectFileDragStart(file) {
+		this.dragFile = file;
+		console.log("Dragging: ", file.Name);
+		return true;
 	}
 }
 

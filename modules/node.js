@@ -58,7 +58,7 @@ export class ValueType {
 /**
  * Shows checkbox in editor
  * @class
- * @extends ValueType
+ * @extends ValueType<boolean>
  */
 export class BoolValue extends ValueType {
 	/**
@@ -242,6 +242,7 @@ export class VariableIndex extends IndexValue {
 /**
  * Shows input text box to set the value of a variable
  * @class
+ * @extends ValueType<string>
  */
 export class VariableValueString extends ValueType {
 	/** @type {KnockoutObservable<string>} */
@@ -276,7 +277,7 @@ export class VariableValueString extends ValueType {
 	set Value(val) {
 		if (val === null)
 			return;
-		switch(this.type) {
+		switch(this.type()) {
 			case "":
 			case "string":
 				this.value(String(val));
@@ -288,13 +289,12 @@ export class VariableValueString extends ValueType {
 				this.value(parseFloat(val));
 				break;
 			case "bool":
-				if (typeof val === "boolean") {
+				if (typeof val === "boolean")
 					this.value(val);
-				} else if ((typeof val == "number" && val == 0) || val.toLowerCase() === "false") {
+				else if ((typeof val == "number" && val == 0) || val.toLowerCase() === "false")
 					this.value(false);
-				} else {
+				else
 					this.value(true);
-				}
 				break;
 			case "char":
 			case "beast":
