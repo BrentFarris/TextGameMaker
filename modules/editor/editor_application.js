@@ -99,6 +99,12 @@ export class EditorApplication extends Application {
 
 	/** @type {KnockoutObservable<string>} */
 	name = ko.observable("TITLE");
+
+	/** @type {KnockoutObservable<boolean>} */
+	projectListVisible = ko.observable(false);
+
+	/** @type {KnockoutObservableArray<string>} */
+	projectList = ko.observableArray();
 	
 	/** @type {CoreNode|null} */
 	pendingSelectNode = null;
@@ -160,6 +166,7 @@ export class EditorApplication extends Application {
 				this.itemManager.close();
 				this.templateManager.close();
 				this.viewManager.close();
+				this.projectListVisible(false);
 			}
 		}, this);
 		
@@ -228,6 +235,14 @@ export class EditorApplication extends Application {
 			}
 			this.name(this.project.openFile.Name);
 		})();
+	}
+
+	async #updateProjectList() {
+		this.projectList.removeAll();
+		let fs = await this.storage.getFileSystem();
+		each(fs.children, (key, val) => {
+			this.projectList.push(key);
+		});
 	}
 
 	importMeta(json) {
@@ -956,6 +971,23 @@ export class EditorApplication extends Application {
 		}
 		this.dragFile = null;
 		this.dragFolder = null;
+	}
+
+	/**
+	 * 
+	 */
+	async showProjectList() {
+		await this.#updateProjectList();
+		this.projectListVisible(true);
+		this.fileOptionsVisible(false);
+	}
+
+	/**
+	 * @param {string} projectName 
+	 */
+	async selectProject(projectName) {
+		await this.project.open(projectName, this);
+		this.projectListVisible(false);
 	}
 }
 

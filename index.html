@@ -221,6 +221,9 @@
 				<button data-bind="click:templateManager.close.bind(templateManager)">Close</button>
 			</div>
 		</div>
+		<div class="projectList" data-bind="visible: projectListVisible, foreach: projectList">
+			<div class="projectListEntry" data-bind="text: $data, click: $root.selectProject.bind($root, $data)"></div>
+		</div>
 		<div class="pageName">
 			<h2 data-bind="visible:name().length, text:name, click:setPageName">TITLE</h2>
 		</div>
@@ -231,6 +234,7 @@
 				<li><button data-bind="click:newFolder">New Folder</button></li>
 				<li><button data-bind="click:deleteFile">Delete File</button></li>
 				<li><button data-bind="click:newProject">New Project</button></li>
+				<li><button data-bind="click:showProjectList">Open Project</button></li>
 				<li><button data-bind="click:exportJson">Export</button></li>
 				<li><button data-bind="click:showManager.bind($root, characterManager)">Character Manager</button></li>
 				<li><button data-bind="click:showManager.bind($root, beastManager)">Bestiary </button></li>
