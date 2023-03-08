@@ -211,9 +211,9 @@ textarea {
 	overflow: hidden;
 }
 
-.projectWindow:hover {
-	width: 200px;
-	overflow: auto;
+.projectWindow:hover, .openProjectWindow {
+	width: 200px !important;
+	overflow: auto !important;
 }
 
 .projectWindow span:hover {

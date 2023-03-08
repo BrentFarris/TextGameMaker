@@ -88,6 +88,9 @@ export class EditorApplication extends Application {
 	/** @type {KnockoutObservable<boolean>} */
 	metaChanged = ko.observable(false);
 
+	/** @type {KnockoutObservable<boolean>} */
+	keepProjectWindowOpen = ko.observable(false);
+
 	/** @type {KnockoutObservable<string>} */
 	createNodeType = ko.observable("");
 
@@ -160,10 +163,15 @@ export class EditorApplication extends Application {
 			}
 		}, this);
 	
-		Input.keyDown.register((key) => {
-			if (key.keyCode == Input.keys.Escape) {
+		Input.keyDown.register(async (key) => {
+			if (key.ctrlKey && key.key === 's') {
+				key.preventDefault();
+				await this.saveFile();
+			} else if (key.keyCode == Input.keys.Escape) {
 				this.cancelOutLink();
-			} else if (key.keyCode === Input.keys.Left || key.keyCode === Input.keys.Right) {
+			} else if (key.keyCode == Input.keys.P)
+				this.keepProjectWindowOpen(!this.keepProjectWindowOpen());
+			else if (key.keyCode === Input.keys.Left || key.keyCode === Input.keys.Right) {
 				if (Input.Ctrl && Input.Alt) {
 					let change = 10;
 					if (key.keyCode === Input.keys.Left)
@@ -786,6 +794,7 @@ export class EditorApplication extends Application {
 	 * @param {HTMLDivElement} elm
 	 */
 	async projectFolderDrop(folder, elm) {
+		debugger;
 		let moved = false;
 		if (this.dragFolder)
 			moved = this.dragFolder.moveTo(folder);
@@ -840,11 +849,4 @@ export class EditorApplication extends Application {
 		alert(`Error message: ${msg}\nURL:${url}\nLine Number: ${linenumber}`);
 		return false;
 	};
-
-	document.onkeydown = async e => {
-		if (e.ctrlKey && e.key === 's') {
-			e.preventDefault();
-			await app.saveFile();
-		}
-	}
 })();

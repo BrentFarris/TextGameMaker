@@ -251,7 +251,7 @@
 				</div>
 				<li data-bind="visible: !collapsed()">
 				<!-- ko template: { name: 'folderTemplate', foreach: folderView } -->
-				<!-- /ko -->        
+				<!-- /ko -->
 				</li>
 				<span data-bind="foreach: fileView, visible: !collapsed()">
 					<li class="fileName" draggable="true" data-bind="click: $root.projectFileClicked.bind($root, $data), clickBubble: false, event: { dragstart: $root.projectFileDragStart.bind($root, $data) }">
@@ -260,7 +260,7 @@
 				</span>
 			</ul>
 		</script> 
-		<div class="projectWindow" data-bind="template: { name: 'folderTemplate', data: project.root }"></div>
+		<div class="projectWindow" data-bind="template: { name: 'folderTemplate', data: project.root }, css: keepProjectWindowOpen()?'openProjectWindow':''"></div>
 		<script type="module" src="modules/editor/editor_application.js"></script>
 	</body>
 </html>
