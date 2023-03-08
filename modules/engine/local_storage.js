@@ -41,9 +41,9 @@ export class StorageFolder {
 		if (!parentFolder && !name) {
 			this.path = "/";
 			this.name = name;
-		} else if (!parentFolder || !name) {
+		} else if (!parentFolder || !name)
 			throw "A parent folder and name is required";
-		} else {
+		else {
 			this.path = parentFolder.path + name + "/";
 			this.name = name;
 		}
@@ -63,7 +63,7 @@ export class StorageFolder {
 	}
 }
 
-export class Storage {
+export class LocalStorage {
 	/** @type {Optional<StorageFolder>} */
 	fs = new Optional();
 
@@ -128,7 +128,7 @@ export class Storage {
 
 	/**
 	 * @param {string} path The path the the folder to create
-	 * @returns {Promise<Optional<StorageFolder>>} The folder that was created otherwise false
+	 * @returns {Promise<Optional<StorageFolder>>} The folder that was created
 	 * @async
 	 */
 	async createFolder(path) {
@@ -151,6 +151,15 @@ export class Storage {
 		}
 		await this.updateFileSystem();
 		return new Optional(folder);
+	}
+
+	/**
+	 * @param {StorageFolder} parentFolder 
+	 * @param {string} name 
+	 * @returns {Promise<Optional<StorageFolder>>} The folder that was created
+	 */
+	async createSubFolder(parentFolder, name) {
+		return this.createFolder(parentFolder.path + name);
 	}
 
 	/**
@@ -194,7 +203,7 @@ export class Storage {
 			throw "Folder does not exist";
 		let f = folder.Value;
 		let parent = await this.getFolder(this.getParentPath(f.path));
-		for (let i = 0; i < f.files.length; i++)
+		for (let i = f.files.length - 1; i >= 0; --i)
 			await this.deleteFile(f, f.files[i]);
 		each(f.children, async (key, val) => {
 			await this.deleteFolder(val);
