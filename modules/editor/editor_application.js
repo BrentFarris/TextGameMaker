@@ -280,7 +280,8 @@ export class EditorApplication extends Application {
 	}
 
 	async jumpLoad(scope) {
-		let data = await HTTP.get("view/json/" + scope.src.Value);
+		let tempData = await fetch("view/json/" + scope.src.Value);
+		let data = await tempData.json();
 		if (data) {
 			let hasReturn = false;
 			console.log(data.nodes);
