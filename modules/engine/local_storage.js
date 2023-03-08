@@ -1,4 +1,4 @@
-import { each, eachAsync, ArrayHelpers, Optional } from "./std.js";
+import { eachAsync, ArrayHelpers, Optional } from "./std.js";
 
 /**
  * @param {ArrayBuffer} buffer The array buffer to be turned into a string
@@ -68,12 +68,13 @@ export class LocalStorage {
 	fs = new Optional();
 
 	/**
+	 * @param {boolean} [forceString]
 	 * @returns {Promise<StorageFolder>} The base file system
 	 * @async
 	 */
-	async getFileSystem() {
+	async getFileSystem(forceString) {
 		if (!this.fs.HasValue) {
-			let json = await this.get("/", true);
+			let json = await this.get("/", forceString);
 			if (json !== null) {
 				if (typeof json === "string")
 					throw "Invalid JSON specified for file system";
@@ -205,7 +206,7 @@ export class LocalStorage {
 		let parent = await this.getFolder(this.getParentPath(f.path));
 		for (let i = f.files.length - 1; i >= 0; --i)
 			await this.deleteFile(f, f.files[i]);
-		each(f.children, async (key, val) => {
+		eachAsync(f.children, async (key, val) => {
 			await this.deleteFolder(val);
 		});
 		if (parent.HasValue)
@@ -216,22 +217,26 @@ export class LocalStorage {
 	/**
 	 * @param {StorageFolder} folder The folder that the file is found within
 	 * @param {string} fileName The name of the file to read
+	 * @param {boolean} [forceString] 
 	 * @returns {Promise<null|ArrayBuffer|object|string>} The file data that was read
 	 * @async
 	 */
-	async readFile(folder, fileName) {
+	async readFile(folder, fileName, forceString) {
 		let storageData = await this.get(folder.path + fileName);
-		if (typeof storageData !== "string")
+		if (forceString && typeof storageData !== "string")
 			throw "Invalid file data";
-		let type = storageData[0];
-		storageData = storageData.substring(1);
 		let data = null;
-		if (type === "a")
-			data = str2ab(storageData);
-		else if (type === "t")
+		if (forceString) {
+			let type = storageData[0];
+			storageData = storageData.substring(1);
+			if (type === "a")
+				data = str2ab(storageData);
+			else if (type === "t")
+				data = storageData;
+			else if (type === "j")
+				data = JSON.parse(storageData);
+		} else
 			data = storageData;
-		else if (type === "j")
-			data = JSON.parse(storageData);
 		return data;
 	}
 
@@ -239,16 +244,23 @@ export class LocalStorage {
 	 * @param {StorageFolder} folder The folder that the file is found within
 	 * @param {string} fileName The name of the file that is to be written to
 	 * @param {ArrayBuffer|string|Object} data The data that is to be written to the file
+	 * @param {boolean} [forceString] 
 	 * @async
 	 */
-	async writeFile(folder, fileName, data) {
-		let storageData = "";
-		if (data instanceof ArrayBuffer)
-			storageData = "a" + ab2str(data);
-		else if (typeof data === "string")
-			storageData = "t" + data;
-		else
-			storageData = "j" + JSON.stringify(data);
+	async writeFile(folder, fileName, data, forceString) {
+		let storageData;
+		if (forceString) {
+			//let blob = await this.media.audioDatabase.blob(path);
+			// convert the blob to an array buffer
+			//let arrayBuffer = await new Response(blob).arrayBuffer();
+			if (data instanceof ArrayBuffer)
+				storageData = "a" + ab2str(data);
+			else if (typeof data === "string")
+				storageData = "t" + data;
+			else
+				storageData = "j" + JSON.stringify(data);
+		} else
+			storageData = data;
 		await this.set(folder.path + fileName, storageData);
 		if (folder.files.indexOf(fileName) < 0) {
 			folder.files.push(fileName);
@@ -369,9 +381,10 @@ export class LocalStorage {
 	 * Assigns a key/value in the local storage
 	 * @param {string} key The key that is to be used for this entry
 	 * @param {object|string} data The data for this entry
+	 * @param {boolean} [forceString] 
 	 */
-	set(key, data) {
-		if (typeof data !== "string")
+	set(key, data, forceString) {
+		if (forceString && typeof data !== "string")
 			data = JSON.stringify(data);
 		return localforage.setItem(key, data);
 		//localStorage.setItem(key, data);
