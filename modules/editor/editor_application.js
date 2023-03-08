@@ -212,7 +212,7 @@ export class EditorApplication extends Application {
 			else {
 				let mf = this.project.root.file(Project.META_FILE_NAME);
 				this.importMeta(mf.Value.fileData);
-				this.project.setupBaseFolders(this.getJson());
+				this.project.pickRandomFile(this.getJson());
 				this.import(this.project.openFile.fileData);
 			}
 			this.name(this.project.openFile.Name);

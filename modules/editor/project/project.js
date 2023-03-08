@@ -184,8 +184,6 @@ export class ProjectFolder {
 
 export class Project {
 	static get META_FILE_NAME() { return "meta.json" };
-	static get AUDIO_FOLDER_NAME() { return "audio" };
-	static get IMAGES_FOLDER_NAME() { return "images" };
 
 	/** @type {KnockoutObservable<string>} */
 	nameView = ko.observable("Text Adventure");
@@ -274,8 +272,6 @@ export class Project {
 	 */
 	async initialize(app, defaultData) {
 		this.root.createFile(Project.META_FILE_NAME);
-		this.root.createFolder(Project.AUDIO_FOLDER_NAME);
-		this.root.createFolder(Project.IMAGES_FOLDER_NAME);
 		const defaultName = "Untitled.json";
 		if (this.root.fileExists(defaultName))
 			this.openFile = this.root.file(defaultName).Value;
@@ -289,11 +285,7 @@ export class Project {
 	/**
 	 * @param {object} defaultData
 	 */
-	async setupBaseFolders(defaultData) {
-		if (!this.root.folderExists(Project.AUDIO_FOLDER_NAME))
-			this.root.createFolder(Project.AUDIO_FOLDER_NAME);
-		if (!this.root.folderExists(Project.IMAGES_FOLDER_NAME))
-			this.root.createFolder(Project.IMAGES_FOLDER_NAME);
+	async pickRandomFile(defaultData) {
 		if (this.root.fileExists("Untitled.json"))
 			this.openFile = this.root.file("Untitled.json").Value;
 		else {
