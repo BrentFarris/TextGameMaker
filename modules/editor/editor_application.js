@@ -1,8 +1,8 @@
 import { Manager, CharacterManager, BeastManager, ItemManager,
 	VariableManager, ViewManager, NodeTemplateManager,
 	BeastEntry, TemplateEntry } from "./manager.js";
-import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT, OptionNode } from "../node.js";
-import { ArrayHelpers } from "../engine/std.js";
+import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT, OptionNode, MusicNode, SoundNode, BackgroundNode } from "../node.js";
+import { ArrayHelpers, each } from "../engine/std.js";
 import { Input } from "../engine/input.js";
 import { LocalStorage } from "../engine/local_storage.js";
 import { HTTP } from "../engine/http.js";
@@ -207,12 +207,23 @@ export class EditorApplication extends Application {
 		}, this);
 
 		(async () => {
+			// Locate the first available project
+			let fs = await this.storage.getFileSystem();
+			let foundProject = null;
+			each(fs.children, (key, val) => {
+				foundProject = /** @type {string} */ (key);
+				return false;
+			});
+			if (foundProject)
+				this.project.Name = foundProject;
+			else
+				await this.project.setupNew(this);
 			if (!await this.project.deserialize(this))
 				await this.project.initialize(this, this.getJson());
 			else {
 				let mf = this.project.root.file(Project.META_FILE_NAME);
 				this.importMeta(mf.Value.fileData);
-				this.project.setupBaseFolders(this.getJson());
+				this.project.pickRandomFile(this.getJson());
 				this.import(this.project.openFile.fileData);
 			}
 			this.name(this.project.openFile.Name);
@@ -280,7 +291,8 @@ export class EditorApplication extends Application {
 	}
 
 	async jumpLoad(scope) {
-		let data = await HTTP.get("view/json/" + scope.src.Value);
+		let tempData = await fetch("view/json/" + scope.src.Value);
+		let data = await tempData.json();
 		if (data) {
 			let hasReturn = false;
 			console.log(data.nodes);
@@ -382,7 +394,7 @@ export class EditorApplication extends Application {
 		//this.importMeta(await HTTP.get("view/json/meta.json"));
 		this.fileOptionsVisible(false);
 		// TODO:  Make sure this doesn't clash with any other projects
-		this.project = new Project("Untitled Project");
+		await this.project.setupNew(this);
 		await this.project.initialize(this, this.getJson());
 		this.name(this.project.openFile.Name);
 	}
@@ -438,6 +450,12 @@ export class EditorApplication extends Application {
 		await this.project.serialize(this);
 	}
 
+	/**
+	 * @template T
+	 * @param {object} type 
+	 * @param {object} existing 
+	 * @returns {T}
+	 */
 	initializeNode(type, existing) {
 		let node = null;
 		if (existing) {
@@ -770,9 +788,23 @@ export class EditorApplication extends Application {
 	/**
 	 * @param {ProjectFolder} folder 
 	 */
-	projectFolderClicked(folder) {
-		console.log(folder.Name);
-		folder.collapsed(!folder.collapsed());
+	async projectFolderClicked(folder) {
+		if (Input.Ctrl) {
+			let name = prompt("What would you like to rename your folder to?", folder.Name);
+			if (name?.trim().length > 0 && name.indexOf("/") == -1) {
+				try {
+					if (folder == this.project.root)
+						await this.project.rename(name, this);
+					else {
+						folder.Name = name;
+						await this.project.serialize(this);
+					}
+				} catch (err) {
+					alert(/** @type {Error} */ (err).message);
+				}
+			}
+		} else
+			folder.collapsed(!folder.collapsed());
 		return true;
 	}
 
@@ -804,16 +836,30 @@ export class EditorApplication extends Application {
 					alert(`File already exists: ${files[i].name}`);
 					continue;
 				}
-				if (files[i].type === "audio/mpeg" || files[i].type === "audio/wav"
-					|| files[i].type === "video/ogg" || files[i].type === "audio/x-wav")
-				{
-					let path = await this.media.audioDatabase.add(files[i], URL.createObjectURL(files[i]));
-					let f = folder.createFile(files[i].name);
-					f.setContent(await this.media.audioDatabase.blob(path));
-				} else if (files[i].type === "image/png" || files[i].type === "image/jpeg") {
-					let path = await this.media.imageDatabase.add(files[i], URL.createObjectURL(files[i]));
-					let f = folder.createFile(files[i].name);
-					f.setContent(await this.media.imageDatabase.blob(path));
+				switch (files[i].type) {
+					case "audio/mpeg":
+					case "audio/wav":
+					case "video/ogg":
+					case "audio/x-wav":
+					{
+						let path = await this.media.audioDatabase.add(
+							files[i], URL.createObjectURL(files[i]));
+						let f = folder.createFile(files[i].name);
+						f.setContent(await this.media.audioDatabase.blob(path));
+						break;
+					}
+					case "image/png":
+					case "image/jpeg":
+					case "image/jpg":
+					case "image/gif":
+					case "image/svg+xml":
+					{
+						let path = await this.media.imageDatabase.add(
+							files[i], URL.createObjectURL(files[i]));
+						let f = folder.createFile(files[i].name);
+						f.setContent(await this.media.imageDatabase.blob(path));
+						break;
+					}
 				}
 			}
 		}
@@ -861,6 +907,55 @@ export class EditorApplication extends Application {
 		this.dragFile = file;
 		console.log("Dragging: ", file.Name);
 		return true;
+	}
+
+	canvasDragOver(self, evt) {
+
+	}
+
+	canvasDragLeave(self, evt) {
+
+	}
+
+	/**
+	 * @param {DragEvent} evt 
+	 */
+	canvasDrop(self, evt) {
+		if (this.dragFile) {
+			if (this.dragFile.fileData instanceof File) {
+				switch (this.dragFile.fileData.type) {
+					case "audio/mpeg":
+					case "video/ogg":
+					{
+						/** @type {MusicNode} */
+						let n = this.initializeNode(MusicNode);
+						n.src.Value = this.dragFile.Path;
+						break;
+					}
+					case "audio/wav":
+					case "audio/x-wav":
+					{
+						/** @type {SoundNode} */
+						let n = this.initializeNode(SoundNode);
+						n.src.Value = this.dragFile.Path;
+						break;
+					}
+					case "image/png":
+					case "image/jpeg":
+					case "image/jpg":
+					case "image/gif":
+					case "image/svg+xml":
+					{
+						/** @type {BackgroundNode} */
+						let n = this.initializeNode(BackgroundNode);
+						n.src.Value = this.dragFile.Path;
+						break;
+					}
+				}
+			}
+		}
+		this.dragFile = null;
+		this.dragFolder = null;
 	}
 }
 

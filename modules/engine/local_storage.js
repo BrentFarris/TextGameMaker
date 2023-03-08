@@ -42,7 +42,7 @@ export class StorageFolder {
 			this.path = "/";
 			this.name = name;
 		} else if (!parentFolder || !name)
-			throw "A parent folder and name is required";
+			throw new Error("A parent folder and name is required");
 		else {
 			this.path = parentFolder.path + name + "/";
 			this.name = name;
@@ -77,7 +77,7 @@ export class LocalStorage {
 			let json = await this.get("/", forceString);
 			if (json !== null) {
 				if (typeof json === "string")
-					throw "Invalid JSON specified for file system";
+					throw new Error("Invalid JSON specified for file system");
 				this.fs = new Optional(StorageFolder.fromJSON(json));
 			}
 			if (!this.fs.HasValue) {
@@ -201,7 +201,7 @@ export class LocalStorage {
 		else
 			folder.Value = source;
 		if (!folder.HasValue)
-			throw "Folder does not exist";
+			throw new Error("Folder does not exist");
 		let f = folder.Value;
 		let parent = await this.getFolder(this.getParentPath(f.path));
 		for (let i = f.files.length - 1; i >= 0; --i)
@@ -224,7 +224,7 @@ export class LocalStorage {
 	async readFile(folder, fileName, forceString) {
 		let storageData = await this.get(folder.path + fileName);
 		if (forceString && typeof storageData !== "string")
-			throw "Invalid file data";
+			throw new Error("Invalid file data");
 		let data = null;
 		if (forceString) {
 			let type = storageData[0];
@@ -298,7 +298,7 @@ export class LocalStorage {
 			await this.deleteFile(folder, fileName);
 			return true;
 		}
-		throw "Specified file could not be found";
+		throw new Error("Specified file could not be found");
 	}
 
 	/**
@@ -320,7 +320,7 @@ export class LocalStorage {
 	 */
 	async export(folder, expression) {
 		if (!folder)
-			throw "Invalid folder supplied";
+			throw new Error("Invalid folder supplied");
 		let readChildren = async (parent) => {
 			let pathName = this.getPath(parent.path);
 			await eachAsync(parent.files, async (idx, fileName) => {
@@ -351,7 +351,7 @@ export class LocalStorage {
 			&& file.type !== "application/x-zip-compressed"
 			&& file.type !== "application/octet-stream")
 		{
-			throw "The specified file is not a zip file";
+			throw new Error("The specified file is not a zip file");
 		}
 		let zip = await JSZip.loadAsync(file);
 		await eachAsync(zip.files, async (idx, zipFile) => {

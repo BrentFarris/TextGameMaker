@@ -200,6 +200,13 @@ textarea {
 	min-width: 175px;
 }
 
+.projectWindow::before {
+	content: "(P to toggle open)";
+	font-style: italic;
+	font-size: 0.7em;
+	color: #555;
+}
+
 .projectWindow {
 	position: fixed;
 	top: 0;

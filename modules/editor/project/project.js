@@ -27,6 +27,19 @@ export class ProjectFile {
 	/** @param {string} name */
 	set Name(name) { this.nameView(name); }
 
+	/** @return {string} */
+	get Path() {
+		let parts = [this.Name];
+		let parent = this.parent;
+		// Doing parent.parent because we don't want the root folder
+		while (parent.parent != null) {
+			parts.push(parent.Name);
+			parent = parent.parent;
+		}
+		parts.reverse();
+		return parts.join("/");
+	}
+
 	/** @param {object} fileData */
 	setContent(fileData) {
 		this.fileData = fileData;
@@ -78,8 +91,20 @@ export class ProjectFolder {
 	/** @return {string} */
 	get Name() { return this.nameView(); }
 
-	/** @param {string} name */
-	set Name(name) { this.nameView(name); }
+	/**
+	 * @param {string} name
+	 * @throws {Error}
+	 */
+	set Name(name) {
+		if (!name || name.trim().length == 0)
+			throw new Error("New name is empty, this is not allowed");
+		else if (name.indexOf("/") != -1)
+			throw new Error("The name can not contain a '/' character");
+		if ((/[^a-zA-Z0-9_\-\s\.]/).test(name)) {
+			throw new Error("Name contains invalid symbols, please name it a name that would be accepted by your local computer if it were a file.");
+		}
+		this.nameView(name);
+	}
 
 	/** @return {ProjectFile[]} */
 	get Files() { return this.fileView(); }
@@ -180,12 +205,18 @@ export class ProjectFolder {
 	deleteFile(file) {
 		this.fileView.remove(file);
 	}
+
+	/**
+	 * 
+	 */
+	clear() {
+		this.fileView.removeAll();
+		this.folderView.removeAll();
+	}
 }
 
 export class Project {
 	static get META_FILE_NAME() { return "meta.json" };
-	static get AUDIO_FOLDER_NAME() { return "audio" };
-	static get IMAGES_FOLDER_NAME() { return "images" };
 
 	/** @type {KnockoutObservable<string>} */
 	nameView = ko.observable("Text Adventure");
@@ -203,7 +234,10 @@ export class Project {
 	get Name() { return this.nameView(); }
 
 	/** @param {string} name */
-	set Name(name) { this.nameView(name); }
+	set Name(name) {
+		this.root.Name = name;
+		this.nameView(this.root.Name);
+	}
 
 	/**
 	 * @param {string} name
@@ -213,14 +247,49 @@ export class Project {
 	}
 
 	/**
+	 * @param {Application} app
+	 */
+	async setupNew(app) {
+		const untitledName = "Untitled Project";
+		let found = true;
+		let name = untitledName;
+		let i = 0;
+		do {
+			let folder = await app.storage.getFolder(name);
+			found = folder.HasValue;
+			if (found)
+				name = `${untitledName} ${++i}`;
+		} while(found);
+		this.Name = name;
+		this.root.clear();
+	}
+
+	/**
+	 * @param {string} newName 
+	 * @param {Application} app
+	 */
+	async rename(newName, app) {
+		let oldName = this.Name;
+		let newFolder = await app.storage.getFolder(newName);
+		if (newFolder.HasValue)
+			throw new Error("A project with that name already exists");
+		this.Name = newName;
+		let oldFolder = await app.storage.getFolder(oldName);
+		if (oldFolder.HasValue)
+			await app.storage.deleteFolder(oldFolder.Value);
+		await this.serialize(app);
+	}
+
+	/**
 	 * @return string
 	 */
 	#tempName() {
-		let name = "Untitled";
+		const untitled = "Untitled";
+		let name = `${untitled}.json`;
 		let i = 0;
-		while (this.root.fileExists(`${name} (${i}).json`))
-			++i;
-		return `${name} (${i}).json`;
+		while (this.root.fileExists(name))
+			name = `${untitled} (${++i}).json`
+		return name;
 	}
 
 	/**
@@ -274,8 +343,6 @@ export class Project {
 	 */
 	async initialize(app, defaultData) {
 		this.root.createFile(Project.META_FILE_NAME);
-		this.root.createFolder(Project.AUDIO_FOLDER_NAME);
-		this.root.createFolder(Project.IMAGES_FOLDER_NAME);
 		const defaultName = "Untitled.json";
 		if (this.root.fileExists(defaultName))
 			this.openFile = this.root.file(defaultName).Value;
@@ -289,11 +356,7 @@ export class Project {
 	/**
 	 * @param {object} defaultData
 	 */
-	async setupBaseFolders(defaultData) {
-		if (!this.root.folderExists(Project.AUDIO_FOLDER_NAME))
-			this.root.createFolder(Project.AUDIO_FOLDER_NAME);
-		if (!this.root.folderExists(Project.IMAGES_FOLDER_NAME))
-			this.root.createFolder(Project.IMAGES_FOLDER_NAME);
+	async pickRandomFile(defaultData) {
 		if (this.root.fileExists("Untitled.json"))
 			this.openFile = this.root.file("Untitled.json").Value;
 		else {
