@@ -142,15 +142,6 @@ export class StringHelpers {
 		var breakTag = isXHTML || typeof isXHTML === "undefined" ? "<br />" : "<br>";
 		return (str + "").replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, "$1" + breakTag + "$2");
 	}
-
-	/**
-	 * @param {string} str 
-	 * @param {string} search 
-	 * @returns {boolean}
-	 */
-	static endsWith(str, search) {
-		return str.substr(str.length - search.length) === search;
-	}
 }
 
 /** Array overrides */
