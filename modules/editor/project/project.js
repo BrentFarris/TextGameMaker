@@ -201,7 +201,7 @@ export class Project {
 	get Name() { return this.nameView(); }
 
 	/** @param {string} name */
-	set Name(name) { this.nameView(name); }
+	set Name(name) { this.nameView(name); this.root.Name = name; }
 
 	/**
 	 * @param {string} name
