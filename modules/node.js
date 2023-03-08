@@ -1604,7 +1604,7 @@ export class InventoryAddNode extends InventoryNode {
 	 * @override
 	 */
 	execute(app) {
-		let item = app.itemDatabase.item(this.inventory.Value)
+		let item = app.itemDatabase.item(this.inventory.Value);
 		app.inventory.add(item);
 		return super.execute(app);
 	}
