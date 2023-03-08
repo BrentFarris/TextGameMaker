@@ -2,7 +2,7 @@ import { Manager, CharacterManager, BeastManager, ItemManager,
 	VariableManager, ViewManager, NodeTemplateManager,
 	BeastEntry, TemplateEntry } from "./manager.js";
 import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT, OptionNode, MusicNode, SoundNode, BackgroundNode } from "../node.js";
-import { ArrayHelpers } from "../engine/std.js";
+import { ArrayHelpers, each } from "../engine/std.js";
 import { Input } from "../engine/input.js";
 import { LocalStorage } from "../engine/local_storage.js";
 import { HTTP } from "../engine/http.js";
@@ -207,6 +207,17 @@ export class EditorApplication extends Application {
 		}, this);
 
 		(async () => {
+			// Locate the first available project
+			let fs = await this.storage.getFileSystem();
+			let foundProject = null;
+			each(fs.children, (key, val) => {
+				foundProject = /** @type {string} */ (key);
+				return false;
+			});
+			if (foundProject)
+				this.project.Name = foundProject;
+			else
+				await this.project.setupNew(this);
 			if (!await this.project.deserialize(this))
 				await this.project.initialize(this, this.getJson());
 			else {
@@ -383,7 +394,7 @@ export class EditorApplication extends Application {
 		//this.importMeta(await HTTP.get("view/json/meta.json"));
 		this.fileOptionsVisible(false);
 		// TODO:  Make sure this doesn't clash with any other projects
-		this.project = new Project("Untitled Project");
+		await this.project.setupNew(this);
 		await this.project.initialize(this, this.getJson());
 		this.name(this.project.openFile.Name);
 	}
@@ -777,9 +788,23 @@ export class EditorApplication extends Application {
 	/**
 	 * @param {ProjectFolder} folder 
 	 */
-	projectFolderClicked(folder) {
-		console.log(folder.Name);
-		folder.collapsed(!folder.collapsed());
+	async projectFolderClicked(folder) {
+		if (Input.Ctrl) {
+			let name = prompt("What would you like to rename your folder to?", folder.Name);
+			if (name?.trim().length > 0 && name.indexOf("/") == -1) {
+				try {
+					if (folder == this.project.root)
+						await this.project.rename(name, this);
+					else {
+						folder.Name = name;
+						await this.project.serialize(this);
+					}
+				} catch (err) {
+					alert(/** @type {Error} */ (err).message);
+				}
+			}
+		} else
+			folder.collapsed(!folder.collapsed());
 		return true;
 	}
 
