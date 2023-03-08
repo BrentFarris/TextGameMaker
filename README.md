@@ -1,21 +1,16 @@
 # TextGameMaker
-A simple web program to make advanced text based games
+A simple web program to make advanced text based games that run in the web
 
 ## Features
 - Node based editor
-- Story
-- Dialog
-- Characters
-- Beasts/Enemies
+- Story and dialog nodes
+- Create characters, enemies
 - Inventory & Items
-- Variables
-- Sound Effects
-- Background music
-- Background images
+- Variables for dynamic advanced gameplay
+- Music, sound effects, and image support
 - Branching paths
-- Multi-page editing
-- Custom JavaScript function calling
-- Node jumps
+- Complete project management on one page
+- Extend gameplay with JavaScript functions
 - Some other stuff I can't remember...
 
 ## Editor demo
@@ -24,5 +19,12 @@ the editor is [publicly available to test online](https://textgamemaker.com/). I
 ## Viewer demo
 I have created a [demo viewer webpage](https://textgamemaker.com/view/) so that you can see what it looks like to have the game running. The demo viewer currently uses a default test adventure that I made. Please be advised, I'm more of a programmer than I am a storywriter, I leave the storywriting to my wife.
 
+## How to run this repo locally
+1. Download the repository
+2. Open the root folder in VSCode
+3. Download and install the [Live Server extension](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer)
+4. Click on the "Go Live" button in the bottom bar
+5. You're good to go (note that you can put `/view` in the address bar to go to the viewer)
+
 ## History
-this is an old project that I've worked on quite a few years ago. I think about five. I decided to resurrect it and make it public so that it is available for others to play around with. My wife is really into textbased adventures, so I decided to make something that she could use that would be a little bit more advanced than most of the text based game makers out there. There are a few things that are incomplete here. However, for the most part it runs and is functional.
+This is an old project that I've worked on quite a few years ago. I think about five. I decided to resurrect it and make it public so that it is available for others to play around with. My wife is really into textbased adventures, so I decided to make something that she could use that would be a little bit more advanced than most of the text based game makers out there. There are a few things that are incomplete here. However, for the most part it runs and is functional.
