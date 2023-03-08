@@ -1,4 +1,5 @@
 import { GameAudio } from "./engine/game_audio.js";
+import { eachAsync } from "./engine/std.js";
 
 /**
  * @typedef {Object} AudioResource
@@ -19,6 +20,7 @@ export class AudioDatabase {
 	/**
 	 * @param {File|string} file 
 	 * @param {string} src 
+	 * @return {Promise<string>}
 	 */
 	async add(file, src) {
 		let path = "";
@@ -33,7 +35,7 @@ export class AudioDatabase {
 			audio.src = src;
 			audio.load();
 			this.#resources[path] = { elm: audio, url: src };
-			res(null);
+			res(path);
 		});
 	}
 
@@ -52,6 +54,29 @@ export class AudioDatabase {
 	url(path) {
 		return this.#resources[path].url;
 	}
+
+	/**
+	 * @param {string} path 
+	 * @returns {Promise<Blob>}
+	 */
+	async blob(path) {
+		let res = await fetch(this.url(path));
+		let blob = await res.blob();
+		return blob;
+	}
+
+	/**
+	 * @param {JSZip} zipFolder 
+	 */
+	async serialize(zipFolder) {
+		eachAsync(this.#resources, async (key, val) => {
+			let name = /** @type {string} */ (key);
+			let audio = /** @type {AudioResource} */ (val);
+			let res = await fetch(audio.url);
+			let blob = await res.blob();
+			zipFolder.file(name, blob, { binary: true });
+		});
+	}
 }
 
 export class ImageDatabase {
@@ -61,6 +86,7 @@ export class ImageDatabase {
 	/**
 	 * @param {File|string} file 
 	 * @param {string} src 
+	 * @return {Promise<string>}
 	 */
 	async add(file, src) {
 		let path = "";
@@ -74,7 +100,7 @@ export class ImageDatabase {
 			let img = new Image();
 			img.onload = () => {
 				this.#resources[path] = { elm: img, url: src };
-				res(null);
+				res(path);
 			};
 			img.src = src;
 		});
@@ -94,6 +120,29 @@ export class ImageDatabase {
 	 */
 	url(path) {
 		return this.#resources[path].url;
+	}
+
+	/**
+	 * @param {string} path 
+	 * @returns {Promise<Blob>}
+	 */
+	async blob(path) {
+		let res = await fetch(this.url(path));
+		let blob = await res.blob();
+		return blob;
+	}
+
+	/**
+	 * @param {JSZip} zipFolder 
+	 */
+	 async serialize(zipFolder) {
+		eachAsync(this.#resources, async (key, val) => {
+			let name = /** @type {string} */ (key);
+			let img = /** @type {ImageResource} */ (val);
+			let res = await fetch(img.url);
+			let blob = await res.blob();
+			zipFolder.file(name, blob, { binary: true });
+		});
 	}
 }
 

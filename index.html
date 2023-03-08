@@ -52,6 +52,7 @@
 							<br />
 							<!-- /ko -->
 							<!-- ko if: TypeName == "BigString" -->
+							<br />
 							<textarea class="inputs dialog" data-bind="value: value, attr: {placeholder: placeholder}" onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'></textarea>
 							<!-- /ko -->
 							<!-- ko if: TypeName == "ShortString" -->
@@ -203,9 +204,9 @@
 			</div>
 		</div>
 		<div id="viewNodeManager" class="managerWindow">
-			<!-- ko if: viewManager.value() -->
+			<!-- ko if: viewManager.targetText -->
 			<h2 data-bind="text: viewManager.title()"></h2>
-			<p data-bind="text: viewManager.value()"></p>
+			<p data-bind="html: $root.nl2br(viewManager.targetText.value())"></p>
 			<!-- /ko -->
 			<div style="text-align:center;">
 				<button data-bind="click:viewManager.close.bind(viewManager)">Close</button>
@@ -221,15 +222,16 @@
 			</div>
 		</div>
 		<div class="pageName">
-			<h2 data-bind="visible:name().length, text:name()">TITLE</h2>
-			<button data-bind="visible:!name().length, click:setPageName">Set Name</button>
+			<h2 data-bind="visible:name().length, text:name, click:setPageName">TITLE</h2>
 		</div>
 		<div class="fileOptions" data-bind="visible:fileOptionsVisible()">
 			<ul>
-				<li><button data-bind="click:newTemp">New File</button></li>
-				<li><button data-bind="click:saveTemp">Save Temp</button></li>
+				<li><button data-bind="click:newFile">New File</button></li>
+				<li><button data-bind="click:saveFile">Save File</button></li>
+				<li><button data-bind="click:newFolder">New Folder</button></li>
+				<li><button data-bind="click:deleteFile">Delete File</button></li>
+				<li><button data-bind="click:newProject">New Project</button></li>
 				<li><button data-bind="click:exportJson">Export</button></li>
-				<li><button data-bind="click:exportMetaJson, style: {boxShadow:(metaChanged() ? '3px 3px' : '0px 0px')}">Export Meta</button></li>
 				<li><button data-bind="click:showManager.bind($root, characterManager)">Character Manager</button></li>
 				<li><button data-bind="click:showManager.bind($root, beastManager)">Bestiary </button></li>
 				<li><button data-bind="click:showManager.bind($root, itemManager)">Item Manager </button></li>
@@ -239,6 +241,26 @@
 				<li><input type="file" accept="application/json" data-bind="event: {change:importJson}" /></li>
 			</ul>
 		</div>
+		<script id="folderTemplate" type="text/html">
+			<ul>
+				<div data-bind="click: $root.projectFolderClicked.bind($root, $data), clickBubble: false, event: { drop: function(self, evt) { $root.projectFolderDrop($data, $element, evt) }, dragover: $root.projectFolderDragOver.bind($root, $data, $element), dragleave: $root.projectFolderDragLeave.bind($root, $data, $element), dragstart: $root.projectFolderDragStart.bind($root, $data) }">
+					<span>
+						<span class="folderName" data-bind="text: collapsed()?'▸ ':'▾ '"></span>
+						<span class="folderName" draggable="true" data-bind="text: nameView"></span>
+					</span>
+				</div>
+				<li data-bind="visible: !collapsed()">
+				<!-- ko template: { name: 'folderTemplate', foreach: folderView } -->
+				<!-- /ko -->
+				</li>
+				<span data-bind="foreach: fileView, visible: !collapsed()">
+					<li class="fileName" draggable="true" data-bind="click: $root.projectFileClicked.bind($root, $data), clickBubble: false, event: { dragstart: $root.projectFileDragStart.bind($root, $data) }">
+						<span data-bind="text: nameView"></span>
+					</li>
+				</span>
+			</ul>
+		</script> 
+		<div class="projectWindow" data-bind="template: { name: 'folderTemplate', data: project.root }, css: keepProjectWindowOpen()?'openProjectWindow':''"></div>
 		<script type="module" src="modules/editor/editor_application.js"></script>
 	</body>
 </html>

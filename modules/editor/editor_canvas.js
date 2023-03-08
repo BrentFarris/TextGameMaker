@@ -14,19 +14,12 @@ export class EditorCanvas {
 
 	constructor(nodeManager) {
 		this.#nodeManager = nodeManager;
-		this.#canvas = new Canvas(document.getElementById("canvas"), 1.0, 1.0);
+		this.#canvas = new Canvas(document.getElementById("canvas"));
 		this.#registerDrawingEvent();
-		this.#registerUpdateEvent();
 	}
 
 	#registerDrawingEvent() {
 		this.#canvas.drawing.register(() => { this.#draw(); }, null);
-	}
-
-	#registerUpdateEvent() {
-		this.#canvas.updating.register(() => {
-			this.#canvas.resize(document.body.scrollWidth, document.body.scrollHeight);
-		}, null);
 	}
 
 	#draw() {

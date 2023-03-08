@@ -115,7 +115,9 @@ export class Input {
 		/** @type {number} */
 		Multiply: 106,
 		/** @type {number} */
-		Decimal: 110
+		Decimal: 110,
+		/** @type {number} */
+		P: 80,
 	};
 
 	/**

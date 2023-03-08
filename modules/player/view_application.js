@@ -113,7 +113,7 @@ export class ViewApplication extends Application {
 			let text = await zip.file("meta.json").async("string");
 			this.importMeta(JSON.parse(text));
 			zip.folder().forEach(async (relativePath, file) => {
-				if (StringHelpers.endsWith(file.name, ".json") && file.name !== "meta.json") {
+				if (file.name.endsWith(".json") && file.name !== "meta.json") {
 					let storyText = await file.async("string")
 					this.loadedFiles.push({
 						name: file.name,

@@ -3,6 +3,7 @@ import { Inventory, ItemDatabase } from "./database/item_database.js";
 import { LogDatabase } from "./database/log_database.js";
 import { Media } from "./media.js";
 import { VariableDatabase } from "./database/variable_database.js";
+import { LocalStorage } from "./engine/local_storage.js";
 
 /**
  * @abstract
@@ -25,6 +26,9 @@ export class Application {
 
 	/** @type {Inventory} */
 	inventory = new Inventory();
+
+	/** @type {LocalStorage} */
+	storage = new LocalStorage();
 
 	/**
 	 * @virtual

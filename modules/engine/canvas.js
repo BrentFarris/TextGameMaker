@@ -68,7 +68,9 @@ export class Canvas {
 				width = parseFloat(this.elm.parentElement.style.width);
 			if (!width)
 				width = document.body.clientWidth;
-			this.elm.width = width * widthPercent;
+			width *= widthPercent;
+			this.elm.width = width;
+			this.elm.style.width = width + "px";
 		}
 		if (heightPercent != null) {
 			let height = this.elm.parentElement?.clientHeight;
@@ -76,10 +78,10 @@ export class Canvas {
 				height = parseFloat(this.elm.parentElement.style.height);
 			if (!height)
 				height = document.body.clientHeight;
-			this.elm.height = height * heightPercent;
+			height *= heightPercent;
+			this.elm.height = height;
+			this.elm.style.height = height + "px";
 		}
-		this.elm.style.width = this.elm.width + "px";
-        this.elm.style.height = this.elm.height + "px";
 		if (!this.context.HasValue) {
 			let err = "The Canvas element does not have a valid context";
 			console.error(err);

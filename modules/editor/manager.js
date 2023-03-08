@@ -1,5 +1,5 @@
 import { Optional } from "../engine/std.js";
-import { CoreNode, DialogNode, StoryNode, CommentNode } from "../node.js";
+import { CoreNode, DialogNode, StoryNode, CommentNode, BigString } from "../node.js";
 import { Variable, VariableDatabase } from "../database/variable_database.js";
 import { Item, ItemDatabase } from "../database/item_database.js";
 import { Character, CharacterDatabase } from "../database/character_database.js";
@@ -272,8 +272,8 @@ export class ViewManager extends Manager {
 	/** @type {KnockoutObservable<any>} */
 	title = ko.observable(null);
 
-	/** @type {KnockoutObservable<any>} */
-	value = ko.observable(null);
+	/** @type {BigString|null} */
+	targetText = null;
 
 	/** @type {CharacterManager} */
 	#characterManager;
@@ -296,15 +296,15 @@ export class ViewManager extends Manager {
 		if (scope instanceof StoryNode) {
 			let n = /** @type {StoryNode} */ (scope);
 			this.title("Story");
-			this.value(n.text.Value);
+			this.targetText = n.text
 		} else if (scope instanceof CommentNode) {
 			let n = /** @type {CommentNode} */ (scope);
 			this.title("Comment");
-			this.value(n.text.Value);
+			this.targetText = n.text
 		} else {
 			let n = /** @type {DialogNode} */ (scope);
 			this.title(this.#characterManager.database.name(n.character.Value));
-			this.value(n.text.Value);
+			this.targetText = n.text
 		}
 	}
 }

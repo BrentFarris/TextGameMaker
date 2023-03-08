@@ -29,7 +29,7 @@ body {
 	position: absolute;
 	border: 1px solid black;
 	background-color: white;
-	width: 210px;
+	min-width: 210px;
 	top: 32px;
 	left: 32px;
 }
@@ -95,14 +95,14 @@ body {
 }
 
 textarea {
-	resize: vertical;
 	font-size: 0.8rem;
 	padding: 5px;
-	max-width: 100%;
 	line-height: 1.5;
-	border-radius: 5px;
 	border: 1px solid #ccc;
 	box-shadow: 1px 1px 1px #999;
+	background: #eee;
+    border-radius: 5px;
+	caret-color: blue;
 }
 
 .nodeOuts {
@@ -155,6 +155,19 @@ textarea {
 	list-style: none;
 }
 
+.projectWindow ul {
+	list-style: none;
+	margin-left: 10px;
+}
+
+.projectWindow li {
+	margin-left: 12px;
+}
+
+.folderName, .fileName {
+	cursor: pointer;
+}
+
 .actionMenu {
 	position: fixed;
 	bottom: 0;
@@ -184,4 +197,25 @@ textarea {
 .node textarea {
 	min-height: 100px;
 	max-height: 200px;
+	min-width: 175px;
+}
+
+.projectWindow {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 5px;
+	background-color: lightcyan;
+	border-right: 1px solid black;
+	overflow: hidden;
+}
+
+.projectWindow:hover, .openProjectWindow {
+	width: 200px !important;
+	overflow: auto !important;
+}
+
+.projectWindow span:hover {
+	background-color: lightgoldenrodyellow;
 }

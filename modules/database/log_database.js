@@ -1,6 +1,18 @@
 import { Database, DatabaseEntry } from "./database.js";
 
 /**
+ * @typedef {object} KnockoutObservable
+ * @template T
+ * @callable
+ */
+
+/**
+ * @typedef {object} KnockoutObservableArray
+ * @template T
+ * @callable
+ */
+
+/**
  * @extends {DatabaseEntry}
  */
 export class Log extends DatabaseEntry {
