@@ -1,7 +1,7 @@
 import { Manager, CharacterManager, BeastManager, ItemManager,
 	VariableManager, ViewManager, NodeTemplateManager,
 	BeastEntry, TemplateEntry } from "./manager.js";
-import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT, OptionNode } from "../node.js";
+import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT, OptionNode, MusicNode, SoundNode, BackgroundNode } from "../node.js";
 import { ArrayHelpers } from "../engine/std.js";
 import { Input } from "../engine/input.js";
 import { LocalStorage } from "../engine/local_storage.js";
@@ -439,6 +439,12 @@ export class EditorApplication extends Application {
 		await this.project.serialize(this);
 	}
 
+	/**
+	 * @template T
+	 * @param {object} type 
+	 * @param {object} existing 
+	 * @returns {T}
+	 */
 	initializeNode(type, existing) {
 		let node = null;
 		if (existing) {
@@ -805,16 +811,30 @@ export class EditorApplication extends Application {
 					alert(`File already exists: ${files[i].name}`);
 					continue;
 				}
-				if (files[i].type === "audio/mpeg" || files[i].type === "audio/wav"
-					|| files[i].type === "video/ogg" || files[i].type === "audio/x-wav")
-				{
-					let path = await this.media.audioDatabase.add(files[i], URL.createObjectURL(files[i]));
-					let f = folder.createFile(files[i].name);
-					f.setContent(await this.media.audioDatabase.blob(path));
-				} else if (files[i].type === "image/png" || files[i].type === "image/jpeg") {
-					let path = await this.media.imageDatabase.add(files[i], URL.createObjectURL(files[i]));
-					let f = folder.createFile(files[i].name);
-					f.setContent(await this.media.imageDatabase.blob(path));
+				switch (files[i].type) {
+					case "audio/mpeg":
+					case "audio/wav":
+					case "video/ogg":
+					case "audio/x-wav":
+					{
+						let path = await this.media.audioDatabase.add(
+							files[i], URL.createObjectURL(files[i]));
+						let f = folder.createFile(files[i].name);
+						f.setContent(await this.media.audioDatabase.blob(path));
+						break;
+					}
+					case "image/png":
+					case "image/jpeg":
+					case "image/jpg":
+					case "image/gif":
+					case "image/svg+xml":
+					{
+						let path = await this.media.imageDatabase.add(
+							files[i], URL.createObjectURL(files[i]));
+						let f = folder.createFile(files[i].name);
+						f.setContent(await this.media.imageDatabase.blob(path));
+						break;
+					}
 				}
 			}
 		}
@@ -862,6 +882,55 @@ export class EditorApplication extends Application {
 		this.dragFile = file;
 		console.log("Dragging: ", file.Name);
 		return true;
+	}
+
+	canvasDragOver(self, evt) {
+
+	}
+
+	canvasDragLeave(self, evt) {
+
+	}
+
+	/**
+	 * @param {DragEvent} evt 
+	 */
+	canvasDrop(self, evt) {
+		if (this.dragFile) {
+			if (this.dragFile.fileData instanceof File) {
+				switch (this.dragFile.fileData.type) {
+					case "audio/mpeg":
+					case "video/ogg":
+					{
+						/** @type {MusicNode} */
+						let n = this.initializeNode(MusicNode);
+						n.src.Value = this.dragFile.Path;
+						break;
+					}
+					case "audio/wav":
+					case "audio/x-wav":
+					{
+						/** @type {SoundNode} */
+						let n = this.initializeNode(SoundNode);
+						n.src.Value = this.dragFile.Path;
+						break;
+					}
+					case "image/png":
+					case "image/jpeg":
+					case "image/jpg":
+					case "image/gif":
+					case "image/svg+xml":
+					{
+						/** @type {BackgroundNode} */
+						let n = this.initializeNode(BackgroundNode);
+						n.src.Value = this.dragFile.Path;
+						break;
+					}
+				}
+			}
+		}
+		this.dragFile = null;
+		this.dragFolder = null;
 	}
 }
 

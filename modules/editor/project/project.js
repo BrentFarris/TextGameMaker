@@ -27,6 +27,19 @@ export class ProjectFile {
 	/** @param {string} name */
 	set Name(name) { this.nameView(name); }
 
+	/** @return {string} */
+	get Path() {
+		let parts = [this.Name];
+		let parent = this.parent;
+		// Doing parent.parent because we don't want the root folder
+		while (parent.parent != null) {
+			parts.push(parent.Name);
+			parent = parent.parent;
+		}
+		parts.reverse();
+		return parts.join("/");
+	}
+
 	/** @param {object} fileData */
 	setContent(fileData) {
 		this.fileData = fileData;

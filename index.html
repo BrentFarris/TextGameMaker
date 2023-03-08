@@ -12,7 +12,7 @@
 	</head>
 	<body>
 		<div id="container">
-			<canvas id="canvas" data-bind="click:$root.canvasClick.bind($root, $element)"></canvas>
+			<canvas id="canvas" data-bind="click:$root.canvasClick.bind($root, $element), event: { drop: canvasDrop, dragover: canvasDragOver, dragleave: canvasDragLeave }"></canvas>
 			<div data-bind="foreach: nodeManager.Nodes">
 				<div class="node" data-bind="click:$root.nodeClick.bind($root, $element), event: {mouseover:$root.nodeMouseOver.bind($root, $element),mouseout:$root.nodeMouseOut.bind($root, $element)}, style: { left: x + 'px', top: y + 'px' }, attr: {id:`node-${id}`}">
 					<div id="handle" class="nodeHandle" draggable="true" data-bind="text:` ${TypeName}`, event: {mousedown:$root.dragStart.bind($root), touchstart:$root.dragStart.bind($root)}, style: {backgroundColor: Color}"></div>
