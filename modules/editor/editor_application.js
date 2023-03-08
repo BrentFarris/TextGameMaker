@@ -162,7 +162,7 @@ export class EditorApplication extends Application {
 				this.viewManager.close();
 			}
 		}, this);
-	
+		
 		Input.keyDown.register(async (key) => {
 			if (key.ctrlKey && key.key === 's') {
 				key.preventDefault();
@@ -782,6 +782,8 @@ export class EditorApplication extends Application {
 	async projectFileClicked(file) {
 		if (file.Name === "meta.json" || this.project.openFile == file)
 			return;
+		if (!file.Name.endsWith(".json"))
+			return;
 		if (this.project.openFile)
 			await this.#saveFileInternal();
 		this.project.openFile = file;
@@ -792,9 +794,29 @@ export class EditorApplication extends Application {
 	/**
 	 * @param {ProjectFolder} folder 
 	 * @param {HTMLDivElement} elm
+	 * @param {DragEvent} evt
 	 */
-	async projectFolderDrop(folder, elm) {
-		debugger;
+	async projectFolderDrop(folder, elm, evt) {
+		if (evt.dataTransfer?.files && evt.dataTransfer.files.length > 0) {
+			let files = evt.dataTransfer.files;
+			for (let i = 0; i < files.length; i++) {
+				if (folder.fileExists(files[i].name)) {
+					alert(`File already exists: ${files[i].name}`);
+					continue;
+				}
+				if (files[i].type === "audio/mpeg" || files[i].type === "audio/wav"
+					|| files[i].type === "video/ogg" || files[i].type === "audio/x-wav")
+				{
+					let path = await this.media.audioDatabase.add(files[i], URL.createObjectURL(files[i]));
+					let f = folder.createFile(files[i].name);
+					f.setContent(await this.media.audioDatabase.blob(path));
+				} else if (files[i].type === "image/png" || files[i].type === "image/jpeg") {
+					let path = await this.media.imageDatabase.add(files[i], URL.createObjectURL(files[i]));
+					let f = folder.createFile(files[i].name);
+					f.setContent(await this.media.imageDatabase.blob(path));
+				}
+			}
+		}
 		let moved = false;
 		if (this.dragFolder)
 			moved = this.dragFolder.moveTo(folder);

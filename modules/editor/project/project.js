@@ -1,6 +1,6 @@
 import { Application } from "../../application.js";
 import { StorageFolder } from "../../engine/local_storage.js";
-import { each, Optional, StringHelpers } from "../../engine/std.js";
+import { each, eachAsync, Optional, StringHelpers } from "../../engine/std.js";
 
 export class ProjectFile {
 	/** @type {object} */
@@ -313,9 +313,27 @@ export class Project {
 	 */
 	async #addFiles(zipFolder, files) {
 		for (let i = 0; i < files.length; ++i) {
-			let json = JSON.stringify(files[i].fileData);
-			var blob = new Blob([json], {type: "application/json"});
-			zipFolder.file(files[i].Name, blob);
+			let blob = null;
+			if (files[i].Name.endsWith(".json"))
+				blob = new Blob([JSON.stringify(files[i].fileData)], {type: "application/json"});
+			else if (files[i].Name.endsWith(".png"))
+				blob = new Blob([files[i].fileData], {type: "image/png"});
+			else if (files[i].Name.endsWith(".jpg"))
+				blob = new Blob([files[i].fileData], {type: "image/jpg"});
+			else if (files[i].Name.endsWith(".jpeg"))
+				blob = new Blob([files[i].fileData], {type: "image/jpeg"});
+			else if (files[i].Name.endsWith(".gif"))
+				blob = new Blob([files[i].fileData], {type: "image/gif"});
+			else if (files[i].Name.endsWith(".svg"))
+				blob = new Blob([files[i].fileData], {type: "image/svg+xml"});
+			else if (files[i].Name.endsWith(".mp3"))
+				blob = new Blob([files[i].fileData], {type: "audio/mpeg"});
+			else if (files[i].Name.endsWith(".wav"))
+				blob = new Blob([files[i].fileData], {type: "audio/wav"});
+			else if (files[i].Name.endsWith(".ogg"))
+				blob = new Blob([files[i].fileData], {type: "audio/ogg"});
+			if (blob != null)
+				zipFolder.file(files[i].Name, blob);
 		}
 	}
 
@@ -362,7 +380,7 @@ export class Project {
 			if (!projectFolder.fileExists(file))
 				await app.storage.deleteFile(parentFolder, file);
 		}
-		each(parentFolder.children, async (name, folder) => {
+		eachAsync(parentFolder.children, async (name, folder) => {
 			let childFolder = projectFolder.folder(folder.Name);
 			if (childFolder.HasValue)
 				await this.#deleteMissMatchesRecursively(app, folder, childFolder.Value);
@@ -431,13 +449,15 @@ export class Project {
 	 */
 	async export(app) {
 		let zip = new JSZip();
-		let audio = zip.folder("audio");
-		await app.media.audioDatabase.serialize(audio);
-		let images = zip.folder("images");
-		await app.media.imageDatabase.serialize(images);
 		await this.#addFolder(zip, this.root.Folders);
 		await this.#addFiles(zip, this.root.Files);
-		let content = await zip.generateAsync({type:"blob"})
+		// I've done something wrong here, but I don't know what
+		let size = 0;
+		let content = await zip.generateAsync({type:"blob"});
+		while (size != content.size) {
+			size = content.size;
+			content = await zip.generateAsync({type:"blob"});
+		} while(size != content.size);
 		saveAs(content, `${this.Name}.zip`);
 	}
 
@@ -482,9 +502,9 @@ export class Project {
 			let zip = await new_zip.loadAsync(content);
 			await this.importMedia(app, zip)
 			zip.folder().forEach(async (relativePath, file) => {
-				if (StringHelpers.endsWith(relativePath, "/"))
+				if (relativePath.endsWith("/"))
 					this.root.createFolder(relativePath.substring(0, -1));
-				else if (StringHelpers.endsWith(file.name, ".json")) {
+				else if (file.name.endsWith(".json")) {
 					let f = this.root.createFile(relativePath.substring(0, -".json".length));
 					let txt = await file.async("string");
 					f.setContent(JSON.parse(txt));

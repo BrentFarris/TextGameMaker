@@ -243,7 +243,7 @@
 		</div>
 		<script id="folderTemplate" type="text/html">
 			<ul>
-				<div data-bind="click: $root.projectFolderClicked.bind($root, $data), clickBubble: false, event: { drop: $root.projectFolderDrop.bind($root, $data, $element), dragover: $root.projectFolderDragOver.bind($root, $data, $element), dragleave: $root.projectFolderDragLeave.bind($root, $data, $element), dragstart: $root.projectFolderDragStart.bind($root, $data) }">
+				<div data-bind="click: $root.projectFolderClicked.bind($root, $data), clickBubble: false, event: { drop: function(self, evt) { $root.projectFolderDrop($data, $element, evt) }, dragover: $root.projectFolderDragOver.bind($root, $data, $element), dragleave: $root.projectFolderDragLeave.bind($root, $data, $element), dragstart: $root.projectFolderDragStart.bind($root, $data) }">
 					<span>
 						<span class="folderName" data-bind="text: collapsed()?'▸ ':'▾ '"></span>
 						<span class="folderName" draggable="true" data-bind="text: nameView"></span>
