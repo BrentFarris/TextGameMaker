@@ -205,7 +205,17 @@ textarea {
 	top: 0;
 	left: 0;
 	height: 100%;
-	width: 200px;
-	background-color: yellow;
+	width: 5px;
+	background-color: lightcyan;
 	border-right: 1px solid black;
+	overflow: hidden;
+}
+
+.projectWindow:hover {
+	width: 200px;
+	overflow: auto;
+}
+
+.projectWindow span:hover {
+	background-color: lightgoldenrodyellow;
 }

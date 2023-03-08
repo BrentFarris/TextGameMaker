@@ -1,18 +1,6 @@
 import { Application } from "../../application.js";
-import { Optional, StringHelpers } from "../../engine/std.js";
-
-/**
- * @typedef {object} ProjectFileObj
- * @property {string} name
- * @property {object} content
- */
-
-/**
- * @typedef {object} ProjectFolderObj
- * @property {string} name
- * @property {ProjectFileObj[]} files
- * @property {ProjectFolderObj[]} folders
- */
+import { StorageFolder } from "../../engine/local_storage.js";
+import { each, Optional, StringHelpers } from "../../engine/std.js";
 
 export class ProjectFile {
 	/** @type {object} */
@@ -48,11 +36,17 @@ export class ProjectFile {
 	 * @param {ProjectFolder} folder 
 	 */
 	moveTo(folder) {
-		if (folder != this.parent) {
+		let valid = folder != this.parent;
+		if (folder.fileExists(this.Name)) {
+			valid = false;
+			alert("A file with that name already exists in the destination folder.");
+		}
+		if (valid) {
 			folder.fileView.push(this);
 			this.parent.fileView.remove(this);
 			this.parent = folder;
 		}
+		return valid;
 	}
 }
 
@@ -159,10 +153,15 @@ export class ProjectFolder {
 
 	/**
 	 * @param {ProjectFolder} folder 
+	 * @return {boolean}
 	 */
 	moveTo(folder) {
 		let check = folder;
 		let valid = check != this.parent;
+		if (folder.fileExists(this.Name)) {
+			valid = false;
+			alert("A folder with that name already exists in the destination folder.");
+		}
 		while (check != null && valid) {
 			valid = check != this;
 			check = check.parent;
@@ -172,12 +171,27 @@ export class ProjectFolder {
 			this.parent.folderView.remove(this);
 			this.parent = folder;
 		}
+		return valid;
+	}
+
+	/**
+	 * @param {ProjectFile} file
+	 */
+	deleteFile(file) {
+		this.fileView.remove(file);
 	}
 }
 
 export class Project {
+	static get META_FILE_NAME() { return "meta.json" };
+	static get AUDIO_FOLDER_NAME() { return "audio" };
+	static get IMAGES_FOLDER_NAME() { return "images" };
+
 	/** @type {KnockoutObservable<string>} */
 	nameView = ko.observable("Text Adventure");
+
+	/** @type {ProjectFile} */
+	openFile;
 
 	/** @type {ProjectFolder} */
 	root = new ProjectFolder("/", null);
@@ -190,6 +204,108 @@ export class Project {
 
 	/** @param {string} name */
 	set Name(name) { this.nameView(name); }
+
+	/**
+	 * @param {string} name
+	 */
+	constructor(name) {
+		this.Name = name;
+	}
+
+	/**
+	 * @return string
+	 */
+	#tempName() {
+		let name = "Untitled";
+		let i = 0;
+		while (this.root.fileExists(`${name} (${i}).json`))
+			++i;
+		return `${name} (${i}).json`;
+	}
+
+	/**
+	 * @param {object} defaultData
+	 */
+	newTempFile(defaultData) {
+		let name = this.#tempName();
+		this.openFile = this.root.createFile(name);
+		this.openFile.setContent(defaultData);
+	}
+
+	/**
+	 * @returns {Optional<ProjectFile>}
+	 */
+	#findAnyProjectFileButMetaRecursively(folder) {
+		let target = new Optional();
+		let files = folder.Files;
+		for (let i = 0; i < files.length && !target.HasValue; ++i) {
+			if (files[i].Name != Project.META_FILE_NAME && files[i].Name.endsWith(".json"))
+				target.Value = files[i];
+		}
+		let folders = folder.Folders;
+		for (let i = 0; i < folders.length && !target.HasValue; ++i) {
+			target = this.#findAnyProjectFileButMetaRecursively(folders[i]);
+		}
+		return target;
+	}
+
+	/**
+	 * @returns {Optional<ProjectFile>}
+	 */
+	#findAnyProjectFileButMeta() {
+		return this.#findAnyProjectFileButMetaRecursively(this.root);
+	}
+
+	/**
+	 * @param {object} defaultData
+	 */
+	deleteOpenFile(defaultData) {
+		this.openFile.parent.deleteFile(this.openFile);
+		let target = this.#findAnyProjectFileButMeta();
+		if (target.HasValue)
+			this.openFile = target.Value;
+		else
+			this.newTempFile(defaultData);
+	}
+
+	/**
+	 * @param {Application} app
+	 * @param {object} defaultData
+	 */
+	async initialize(app, defaultData) {
+		this.root.createFile(Project.META_FILE_NAME);
+		this.root.createFolder(Project.AUDIO_FOLDER_NAME);
+		this.root.createFolder(Project.IMAGES_FOLDER_NAME);
+		const defaultName = "Untitled.json";
+		if (this.root.fileExists(defaultName))
+			this.openFile = this.root.file(defaultName).Value;
+		else {
+			this.openFile = this.root.createFile(defaultName);
+			this.openFile.setContent(defaultData);
+		}
+		await this.serialize(app);
+	}
+
+	/**
+	 * @param {object} defaultData
+	 */
+	async setupBaseFolders(defaultData) {
+		if (!this.root.folderExists(Project.AUDIO_FOLDER_NAME))
+			this.root.createFolder(Project.AUDIO_FOLDER_NAME);
+		if (!this.root.folderExists(Project.IMAGES_FOLDER_NAME))
+			this.root.createFolder(Project.IMAGES_FOLDER_NAME);
+		if (this.root.fileExists("Untitled.json"))
+			this.openFile = this.root.file("Untitled.json").Value;
+		else {
+			let file = this.#findAnyProjectFileButMeta();
+			if (file.HasValue)
+				this.openFile = file.Value;
+			else {
+				this.openFile = this.root.createFile("Untitled.json");
+				this.openFile.setContent(defaultData);
+			}
+		}
+	}
 
 	/**
 	 * @param {JSZip} zipFolder 
@@ -215,42 +331,99 @@ export class Project {
 	}
 
 	/**
-	 * @param {ProjectFolder} folder 
-	 * @param {ProjectFolderObj} obj 
+	 * @param {Application} app
+	 * @param {StorageFolder} parentFolder
+	 * @param {ProjectFolder} projectFolder 
+	 * @throws {Error}
 	 */
-	serializeFolder(folder, obj) {
-		obj.name = folder.Name;
-		let files = folder.Files;
-		obj.files = [];
-		obj.folders = [];
+	async serializeFolder(app, parentFolder, projectFolder) {
+		let files = projectFolder.Files;
 		for (let i = 0; i < files.length; ++i) {
 			let f = files[i];
-			obj.files.push({ name: f.Name, content: f.fileData });
+			await app.storage.writeFile(parentFolder, f.Name, f.fileData);
 		}
-		let folders = folder.Folders;
+		let folders = projectFolder.Folders;
 		for (let i = 0; i < folders.length; ++i) {
-			obj.folders.push(/** @type {ProjectFolderObj} */ ({}));
-			this.serializeFolder(folders[i], obj.folders[i]);
+			let childFolder = await app.storage.createSubFolder(parentFolder, folders[i].Name);
+			if (!childFolder.HasValue)
+				throw new Error(`Failed to create folder ${folders[i].Name}`);
+			this.serializeFolder(app, childFolder.Value, folders[i]);
 		}
 	}
 
 	/**
 	 * @param {Application} app
-	 * @return {ProjectFolderObj}
+	 * @param {StorageFolder} parentFolder
+	 * @param {ProjectFolder} projectFolder
 	 */
-	serialize(app) {
-		// TODO:  Make temp folder in storage
-		let obj = /** @type {ProjectFolderObj} */ ({});
-		this.serializeFolder(this.root, obj)
-		return obj;
+	async #deleteMissMatchesRecursively(app, parentFolder, projectFolder) {
+		for (let i = 0; i < parentFolder.files.length; ++i) {
+			let file = parentFolder.files[i];
+			if (!projectFolder.fileExists(file))
+				await app.storage.deleteFile(parentFolder, file);
+		}
+		each(parentFolder.children, async (name, folder) => {
+			let childFolder = projectFolder.folder(folder.Name);
+			if (childFolder.HasValue)
+				await this.#deleteMissMatchesRecursively(app, folder, childFolder.Value);
+			else
+				await app.storage.deleteFolder(folder);
+		});
 	}
 
 	/**
 	 * @param {Application} app
-	 * @param {ProjectFolderObj} projectJSON
+	 * @throws {Error}
 	 */
-	deserialize(app) {
+	async serialize(app) {
+		let projectFolder = await app.storage.getFolder(this.Name);
+		if (projectFolder.HasValue)
+			await this.#deleteMissMatchesRecursively(app, projectFolder.Value, this.root);
+		projectFolder = await app.storage.createFolder(this.Name);
+		if (!projectFolder.HasValue)
+			throw new Error("Failed to create project folder");
+		let folder = projectFolder.Value;
+		await this.serializeFolder(app, folder, this.root)
+	}
 
+	/**
+	 * @param {Application} app
+	 * @param {StorageFolder} parentFolder
+	 * @param {ProjectFolder} projectFolder
+	 */
+	async deserializeFolder(app, parentFolder, projectFolder) {
+		for (let i = 0; i < parentFolder.files.length; ++i) {
+			let file = parentFolder.files[i];
+			let data = await app.storage.readFile(parentFolder, file);
+			let fileObj = projectFolder.createFile(file);
+			fileObj.setContent(data);
+		}
+		each(parentFolder.children, (key, val) => {
+			let folderObj = projectFolder.createFolder(/** @type {string} */ (key));
+			this.deserializeFolder(app, val, folderObj);
+		});
+	}
+
+	/**
+	 * @param {Application} app
+	 * @return {Promise<boolean>}
+	 */
+	async deserialize(app) {
+		// TODO:  This will need to be done differently when we support multiple projects
+		let found = null;
+		let fs = await app.storage.getFileSystem();
+		for (let key in fs.children) {
+			found = key;
+			break;
+		}
+		if (!found)
+			return false;
+		let tempFolder = await app.storage.getFolder(found);
+		if (!tempFolder.HasValue)
+			return false;
+		let folder = tempFolder.Value;
+		await this.deserializeFolder(app, folder, this.root);
+		return true;
 	}
 
 	/**
@@ -309,7 +482,6 @@ export class Project {
 			let zip = await new_zip.loadAsync(content);
 			await this.importMedia(app, zip)
 			zip.folder().forEach(async (relativePath, file) => {
-				debugger;
 				if (StringHelpers.endsWith(relativePath, "/"))
 					this.root.createFolder(relativePath.substring(0, -1));
 				else if (StringHelpers.endsWith(file.name, ".json")) {

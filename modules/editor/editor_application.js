@@ -4,7 +4,7 @@ import { Manager, CharacterManager, BeastManager, ItemManager,
 import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT, OptionNode } from "../node.js";
 import { ArrayHelpers } from "../engine/std.js";
 import { Input } from "../engine/input.js";
-import { Storage } from "../engine/storage.js";
+import { LocalStorage } from "../engine/local_storage.js";
 import { HTTP } from "../engine/http.js";
 import { EditorCanvas } from "./editor_canvas.js";
 import { NodeManager } from "./node_manager.js";
@@ -57,12 +57,9 @@ function getEvent(e) { return e || window.event; }
 
 export class EditorApplication extends Application {
 	static get PROJECTS_FOLDER() { return "projects" };
-	static get TEMP_FILE_NAME() { return "temp.json" };
-	static get TEMP_META_FILE_NAME() { return "temp-meta.json" };
-	static get META_FILE_NAME() { return "meta.json" };
-
+	
 	/** @type {Project} */
-	project = new Project();
+	project = new Project("Untitled Project");
 
 	/** @type {CharacterManager} */
 	characterManager;
@@ -82,8 +79,8 @@ export class EditorApplication extends Application {
 	/** @type {NodeTemplateManager} */
 	templateManager = new NodeTemplateManager(document.getElementById("templateManager"));
 
-	/** @type {Storage} */
-	storage = new Storage();
+	/** @type {LocalStorage} */
+	storage = new LocalStorage();
 
 	/** @type {KnockoutObservable<boolean>} */
 	fileOptionsVisible = ko.observable(false);
@@ -98,7 +95,7 @@ export class EditorApplication extends Application {
 	nodeManager = new NodeManager();
 
 	/** @type {KnockoutObservable<string>} */
-	name = ko.observable("");
+	name = ko.observable("TITLE");
 	
 	/** @type {CoreNode|null} */
 	pendingSelectNode = null;
@@ -163,19 +160,6 @@ export class EditorApplication extends Application {
 			}
 		}, this);
 	
-		(async () => {
-			let folder = await this.storage.getFolder(EditorApplication.PROJECTS_FOLDER);
-			if (folder.HasValue) {
-				if (await this.storage.fileExists(folder.Value, EditorApplication.TEMP_META_FILE_NAME))
-					this.importMeta(await this.storage.readFile(folder.Value, EditorApplication.TEMP_META_FILE_NAME));
-				else
-					this.name("start");
-				if (await this.storage.fileExists(folder.Value, EditorApplication.TEMP_FILE_NAME))
-					this.import(await this.storage.readFile(folder.Value, EditorApplication.TEMP_FILE_NAME));
-			} else
-				this.name("start");
-		})();
-	
 		Input.keyDown.register((key) => {
 			if (key.keyCode == Input.keys.Escape) {
 				this.cancelOutLink();
@@ -213,6 +197,18 @@ export class EditorApplication extends Application {
 				}
 			}
 		}, this);
+
+		(async () => {
+			if (!await this.project.deserialize(this))
+				await this.project.initialize(this, this.getJson());
+			else {
+				let mf = this.project.root.file(Project.META_FILE_NAME);
+				this.importMeta(mf.Value.fileData);
+				this.project.setupBaseFolders(this.getJson());
+				this.import(this.project.openFile.fileData);
+			}
+			this.name(this.project.openFile.Name);
+		})();
 	}
 
 	importMeta(json) {
@@ -233,11 +229,11 @@ export class EditorApplication extends Application {
 			this.variableDatabase.addMany(json.variables);
 		if (json.nodeTemplates)
 			this.templateManager.nodeTemplates(json.nodeTemplates);
-		alert("The metadata has been imported");
 		this.metaChanged(false);
 	}
 
 	import(json) {
+		this.#clearFile();
 		this.lastData = json;
 		this.name(json.name);
 		if (!this.nodeManager.isEmpty()) {
@@ -345,14 +341,13 @@ export class EditorApplication extends Application {
 		e = getEvent(e);
 		if (e.keyCode === Input.keys.Enter) {
 			manager.inputExec();
-			this.saveTemp();
 			this.metaChanged(true);
 		}
 	}
 
 	exportJson() {
 		/** @type {ProjectFile} */
-		let metaFile = this.project.root.file(EditorApplication.META_FILE_NAME).Value;
+		let metaFile = this.project.root.file(Project.META_FILE_NAME).Value;
 		metaFile.setContent(this.getMetaJson());
 		/** @type {ProjectFile} */
 		let current;
@@ -362,63 +357,77 @@ export class EditorApplication extends Application {
 			current = this.project.root.createFile("start.json");
 		current.setContent(this.getJson());
 		this.project.export(this);
-
-		//let info = this.getJson();
-		//var json = JSON.stringify(info);
-		//var blob = new Blob([json], {type: "application/json"});
-		//saveAs(blob, `${this.name()}.json`);
-		//this.fileOptionsVisible(false);
 	}
 
-	exportMetaJson() {
-		let info = this.getMetaJson();
-		var json = JSON.stringify(info);
-		var blob = new Blob([json], {type: "application/json"});
-		saveAs(blob, EditorApplication.META_FILE_NAME);
-		this.metaChanged(false);
-		this.fileOptionsVisible(false);
-	}
-
-	async newTemp() {
-		if (!confirm("Are you sure that you would like to start a new file?"))
+	async newProject() {
+		if (!confirm("Are you sure you want to start a new project?"))
 			return;
-		this.project = new Project();
-		this.project.root.createFile(EditorApplication.META_FILE_NAME);
-		let folder = await this.storage.getFolder(EditorApplication.PROJECTS_FOLDER);
-		if (!folder.HasValue) {
-			window.location.reload();
-			return;
-		}
-		await this.storage.deleteFile(folder.Value, EditorApplication.TEMP_FILE_NAME);
+		await this.#saveFileInternal();
 		this.nodeManager.clear();
-		this.name("");
 		this.#canvas.drawFrame();
-		if (confirm("Would you also like completely new meta data?")) {
-			await this.storage.deleteFile(folder.Value, EditorApplication.TEMP_META_FILE_NAME);
-			this.characterDatabase.clear();
-			this.beastManager.beasts.removeAll();
-			this.itemDatabase.clear();
-			this.variableDatabase.clear();
-			this.templateManager.nodeTemplates.removeAll();
-			this.metaChanged(false);
-			this.name("start");
-			//this.importMeta(await HTTP.get("view/json/meta.json"));
-		}
+		this.characterDatabase.clear();
+		this.beastManager.beasts.removeAll();
+		this.itemDatabase.clear();
+		this.variableDatabase.clear();
+		this.templateManager.nodeTemplates.removeAll();
+		this.metaChanged(false);
+		//this.importMeta(await HTTP.get("view/json/meta.json"));
+		this.fileOptionsVisible(false);
+		// TODO:  Make sure this doesn't clash with any other projects
+		this.project = new Project("Untitled Project");
+		await this.project.initialize(this, this.getJson());
+		this.name(this.project.openFile.Name);
+	}
+
+	#clearFile() {
+		this.nodeManager.clear();
+		this.#canvas.drawFrame();
 		this.fileOptionsVisible(false);
 	}
 
-	async saveTemp(anything) {
+	async newFile() {
+		await this.#saveFileInternal();
+		this.#clearFile();
+		this.project.newTempFile(this.getJson());
+		this.name(this.project.openFile.Name);
+	}
+
+	async #saveFileInternal() {
+		this.project.openFile.setContent(this.getJson());
+		// TODO:  Save just this file
+		await this.project.serialize(this);
+	}
+
+	async saveFile() {
 		this.#canvas.drawFrame();
 		this.#canvas.setRenderFreezeFrame();
 		this.#canvas.drawFrame();
-		let folder = await this.storage.getFolder(EditorApplication.PROJECTS_FOLDER);
-		if (!folder.HasValue)
-			folder = await this.storage.createFolder(EditorApplication.PROJECTS_FOLDER);
-		await this.storage.writeFile(folder.Value, EditorApplication.TEMP_FILE_NAME, this.getJson());
-		await this.storage.writeFile(folder.Value, EditorApplication.TEMP_META_FILE_NAME, this.getMetaJson());
-		if (anything)
-			alert("Temporary data saved");
+		await this.#saveFileInternal();
 		this.fileOptionsVisible(false);
+		alert("File saved");
+	}
+
+	async newFolder() {
+		let name = prompt("Enter the name of the new folder");
+		if (!name || !name.trim())
+			return;
+		name = name.trim();
+		if (this.project.root.folderExists(name)) {
+			alert("A folder with that name already exists");
+			return;
+		}
+		this.project.root.createFolder(name);
+		this.fileOptionsVisible(false);
+	}
+
+	async deleteFile() {
+		if (!confirm("Are you sure you want to delete this file?"))
+			return;
+		this.project.deleteOpenFile(this.getJson());
+		this.import(this.project.openFile.fileData);
+		this.fileOptionsVisible(false);
+		this.name(this.project.openFile.Name);
+		await this.project.serialize(this);
 	}
 
 	initializeNode(type, existing) {
@@ -448,7 +457,6 @@ export class EditorApplication extends Application {
 		this.settingTo.to(scope);
 		this.settingTo = null;
 		elm.style.borderColor = "black";
-		this.saveTemp();
 	}
 	
 	nodeMouseOver(elm, scope, e) {
@@ -470,7 +478,6 @@ export class EditorApplication extends Application {
 		if (scope.to()) {
 			scope.to(null);
 			this.#canvas.drawFrame();
-			this.saveTemp();
 			return;
 		}
 		this.settingTo = scope;
@@ -493,7 +500,6 @@ export class EditorApplication extends Application {
 			}
 		}
 		this.nodeManager.remove(scope);
-		this.saveTemp();
 	}
 
 	selectNode(scope, elm) {
@@ -606,38 +612,38 @@ export class EditorApplication extends Application {
 			y = 0;
 		target.style.top = x + "px";
 	    target.style.left = y + "px";
-		let dpn = /** @type {CoreNode} */ (this.#dragPos.node);
-		let dpe = /** @type {HTMLElement} */ (this.#dragPos.elm.parentElement);
-		dpn.x = parseInt(dpe.style.left);
-		dpn.y = parseInt(dpe.style.top);
-		// If the node is outside of the bounds, then auto scroll
-		let moveBox = NODE_HANDLE_HEIGHT * 3;
-		let scrollX = window.innerWidth - dpn.x - moveBox + window.scrollX;
-		if (scrollX < 0) {
-			scrollX *= 0.5;
-			window.scrollTo(window.scrollX - scrollX, window.scrollY);
-			this.#dragPos.x1 += scrollX;
-			this.#dragPos.x2 += scrollX;
-		} else if (scrollX + moveBox > window.innerWidth) {
-			scrollX -= window.innerWidth - moveBox;
-			scrollX *= 0.5;
-			window.scrollTo(window.scrollX - scrollX, window.scrollY);
-			this.#dragPos.x1 += scrollX;
-			this.#dragPos.x2 += scrollX;
-		}
-		let scrollY = window.innerHeight - dpn.y - moveBox + window.scrollY;
-		if (scrollY < 0) {
-			scrollY *= 0.5;
-			window.scrollTo(window.scrollX, window.scrollY - scrollY);
-			this.#dragPos.y1 += scrollY;
-			this.#dragPos.y2 += scrollY;
-		} else if (scrollY + moveBox > window.innerHeight) {
-			scrollY -= window.innerHeight - moveBox;
-			scrollY *= 0.5;
-			window.scrollTo(window.scrollX, window.scrollY - scrollY);
-			this.#dragPos.y1 += scrollY;
-			this.#dragPos.y2 += scrollY;
-		}
+		//let dpn = /** @type {CoreNode} */ (this.#dragPos.node);
+		//let dpe = /** @type {HTMLElement} */ (this.#dragPos.elm.parentElement);
+		//dpn.x = parseInt(dpe.style.left);
+		//dpn.y = parseInt(dpe.style.top);
+		//// If the node is outside of the bounds, then auto scroll
+		//let moveBox = NODE_HANDLE_HEIGHT * 3;
+		//let scrollX = window.innerWidth - dpn.x - moveBox + window.scrollX;
+		//if (scrollX < 0) {
+		//	scrollX *= 0.5;
+		//	window.scrollTo(window.scrollX - scrollX, window.scrollY);
+		//	this.#dragPos.x1 += scrollX;
+		//	this.#dragPos.x2 += scrollX;
+		//} else if (scrollX + moveBox > window.innerWidth) {
+		//	scrollX -= window.innerWidth - moveBox;
+		//	scrollX *= 0.5;
+		//	window.scrollTo(window.scrollX - scrollX, window.scrollY);
+		//	this.#dragPos.x1 += scrollX;
+		//	this.#dragPos.x2 += scrollX;
+		//}
+		//let scrollY = window.innerHeight - dpn.y - moveBox + window.scrollY;
+		//if (scrollY < 0) {
+		//	scrollY *= 0.5;
+		//	window.scrollTo(window.scrollX, window.scrollY - scrollY);
+		//	this.#dragPos.y1 += scrollY;
+		//	this.#dragPos.y2 += scrollY;
+		//} else if (scrollY + moveBox > window.innerHeight) {
+		//	scrollY -= window.innerHeight - moveBox;
+		//	scrollY *= 0.5;
+		//	window.scrollTo(window.scrollX, window.scrollY - scrollY);
+		//	this.#dragPos.y1 += scrollY;
+		//	this.#dragPos.y2 += scrollY;
+		//}
 	}
 
 	dragEnd(e) {
@@ -653,22 +659,22 @@ export class EditorApplication extends Application {
 		this.#dragPos.node = null;
 		this.nodeManager.deselect();
 		this.#canvas.drawFrame();
-		this.saveTemp();
 	}
 
-	setPageName() {
+	async setPageName() {
 		let name = prompt('Input a name for this page:');
 		if (!name || !name.trim().length)
 			return;
 		name = name.trim();
-		if (name === EditorApplication.TEMP_FILE_NAME
-			|| name === EditorApplication.TEMP_META_FILE_NAME
-			|| name === EditorApplication.META_FILE_NAME)
-		{
+		if (name === Project.META_FILE_NAME)
 			alert("The specified name is reserved by the system, please try a different name");
-		} else
-			this.name(name);
-		this.saveTemp();
+		else if (this.project.openFile.parent.fileExists(`${name}.json`))
+			alert("The specified name already exists, please try a different name");
+		else {
+			this.project.openFile.Name = `${name}.json`;
+			this.name(this.project.openFile.Name);
+			await this.#saveFileInternal();
+		}
 	};
 
 	renameCharacter(scope) {
@@ -691,7 +697,6 @@ export class EditorApplication extends Application {
 			return;
 		this.characterDatabase.remove(scope);
 		this.metaChanged(true);
-		this.saveTemp();
 	};
 
 	renameBeast(scope) {
@@ -714,7 +719,6 @@ export class EditorApplication extends Application {
 			return;
 		this.beastManager.beasts.remove(scope);
 		this.metaChanged(true);
-		this.saveTemp();
 	}
 
 	renameItem(scope) {
@@ -737,14 +741,12 @@ export class EditorApplication extends Application {
 			return;
 		this.itemDatabase.remove(scope);
 		this.metaChanged(true);
-		this.saveTemp();
 	}
 
 	deleteVariable(scope) {
 		if (!confirm(`Are you sure you wish to delete the variable: ${scope.name}?`))
 			return;
 		this.variableDatabase.remove(scope);
-		this.saveTemp();
 	}
 
 	toggleFileOptions() {
@@ -799,23 +801,49 @@ export class EditorApplication extends Application {
 	}
 
 	/**
-	 * @param {ProjectFolder} folder 
+	 * @param {ProjectFile} file 
 	 */
-	projectFolderDrop(folder) {
-		if (this.dragFolder)
-			this.dragFolder.moveTo(folder);
-		else if (this.dragFile)
-			this.dragFile.moveTo(folder);
-		console.log("Dropping to: ", folder.Name);
-		this.dragFolder = null;
-		this.dragFile = null;
+	async projectFileClicked(file) {
+		if (file.Name === "meta.json" || this.project.openFile == file)
+			return;
+		if (this.project.openFile)
+			await this.#saveFileInternal();
+		this.project.openFile = file;
+		this.name(file.Name);
+		this.import(file.fileData);
 	}
 
 	/**
 	 * @param {ProjectFolder} folder 
+	 * @param {HTMLDivElement} elm
 	 */
-	projectFolderDragOver(folder) {
-		console.log("Hovering over: ", folder.Name);
+	async projectFolderDrop(folder, elm) {
+		let moved = false;
+		if (this.dragFolder)
+			moved = this.dragFolder.moveTo(folder);
+		else if (this.dragFile)
+			moved = this.dragFile.moveTo(folder);
+		this.dragFolder = null;
+		this.dragFile = null;
+		if (moved)
+			await this.#saveFileInternal();
+		elm.style.backgroundColor = "";
+	}
+
+	/**
+	 * @param {ProjectFolder} folder 
+	 * @param {HTMLDivElement} elm
+	 */
+	projectFolderDragOver(folder, elm) {
+		elm.style.backgroundColor = "lightgray";
+	}
+
+	/**
+	 * @param {ProjectFolder} folder 
+	 * @param {HTMLDivElement} elm
+	 */
+	projectFolderDragLeave(folder, elm) {
+		elm.style.backgroundColor = "";
 	}
 
 	/**
@@ -838,9 +866,17 @@ export class EditorApplication extends Application {
 }
 
 (function() {
-	ko.applyBindings(new EditorApplication(), document.body);
+	let app = new EditorApplication();
+	ko.applyBindings(app, document.body);
 	window.onerror = (msg, url, linenumber) => {
 		alert(`Error message: ${msg}\nURL:${url}\nLine Number: ${linenumber}`);
 		return false;
 	};
+
+	document.onkeydown = async e => {
+		if (e.ctrlKey && e.key === 's') {
+			e.preventDefault();
+			await app.saveFile();
+		}
+	}
 })();
