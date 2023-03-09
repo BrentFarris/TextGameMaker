@@ -45,14 +45,6 @@ export class Manager {
 	}
 
 	/**
-	 * @param {CoreNode} scope 
-	 * @virtual
-	 */
-	showForNode(node) {
-
-	}
-
-	/**
 	 * @virtual
 	 */
 	close() {
@@ -264,57 +256,6 @@ export class VariableManager extends Manager {
 			this.type("");
 		}
 	};
-}
-
-/**
- * A popup window that can be used to view the details of a node
- * @class
- * @extends {Manager}
- */
-export class ViewManager extends Manager {
-	/** @type {KnockoutObservable<any>} */
-	title = ko.observable(null);
-
-	/** @type {BigString|null} */
-	targetText = null;
-
-	/** @type {CharacterManager} */
-	#characterManager;
-
-	/**
-	 * @param {HTMLElement|null} elm 
-	 * @param {CharacterManager} characterManager
-	 */
-	constructor(elm, characterManager) {
-		super(elm);
-		this.#characterManager = characterManager;
-	}
-
-	/**
-	 * @override
-	 */
-	show() {}
-
-	/**
-	 * @param {CoreNode} node 
-	 * @override
-	 */
-	showForNode(node) {
-		super.show()
-		if (node instanceof StoryNode) {
-			let n = /** @type {StoryNode} */ (node);
-			this.title("Story");
-			this.targetText = n.text
-		} else if (node instanceof CommentNode) {
-			let n = /** @type {CommentNode} */ (node);
-			this.title("Comment");
-			this.targetText = n.text
-		} else {
-			let n = /** @type {DialogNode} */ (node);
-			this.title(this.#characterManager.database.name(n.character.Value));
-			this.targetText = n.text
-		}
-	}
 }
 
 /**
