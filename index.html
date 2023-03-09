@@ -229,7 +229,7 @@
 			</div>
 		</div>
 		<div class="nodeSearch" data-bind="visible: showNodeSearch">
-			<input type="text" data-bind="textInput: $root.nodeSearchFilter, hasFocus: showNodeSearch()" />
+			<input type="text" data-bind="textInput: $root.nodeSearchFilter, hasFocus: showNodeSearch(), event: {keyup: $root.nodeSearchExec}" />
 			<div data-bind="foreach: nodeManager.NodeTypes">
 				<div class="nodeSearchEntry" data-bind="visible: $data.toLowerCase().indexOf($root.nodeSearchFilter().toLowerCase()) >= 0, text: $data, click: $root.nodeSearchCreateNode.bind($root, $data)"></div>
 			</div>

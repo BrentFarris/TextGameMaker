@@ -524,6 +524,21 @@ export class EditorApplication extends Application {
 	}
 
 	/**
+	 * @param {Application} self
+	 * @param {KeyboardEvent} evt 
+	 */
+	nodeSearchExec(self, evt) {
+		if (evt.keyCode === 13) {
+			let nt = this.nodeManager.NodeTypes;
+			let search = this.nodeSearchFilter().toLowerCase();
+			let found = nt.find(n => n.toLowerCase().indexOf(search) >= 0);
+			if (found)
+				this.nodeSearchCreateNode(found);
+			evt.preventDefault();
+		}
+	}
+
+	/**
 	 * @param {string} nodeType 
 	 */
 	nodeSearchCreateNode(nodeType) {
@@ -648,14 +663,17 @@ export class EditorApplication extends Application {
 		this.metaChanged(true);
 	}
 
-	dupeNode(scope) {
-		let info = scope.serialize();
+	/**
+	 * @param {CoreNode} sourceNode 
+	 */
+	dupeNode(sourceNode) {
+		let info = sourceNode.serialize();
 		info.id = this.#index++;
 		for (let i = 0; i < info.outs.length; i++)
 			info.outs[i] = null;
-		info.x = window.scrollX + 64;
-		info.y = window.scrollY + 64;
-		this.initializeNode(NodeTypeMap[scope.type], info);
+		info.x = sourceNode.x + 64;
+		info.y = sourceNode.y + 64;
+		this.initializeNode(NodeTypeMap[sourceNode.type], info);
 	}
 
 	dragStart(scope, e) {
