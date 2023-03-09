@@ -65,7 +65,7 @@ body {
 	min-width: 24px;
 }
 
-.managerWindow, .projectList {
+.managerWindow, .projectList, .popup {
 	position: fixed;
 	top: 50%;
 	left: 50%;
@@ -236,4 +236,36 @@ textarea {
 
 .projectListEntry:hover {
 	background-color: lightgoldenrodyellow;
+}
+
+.popupContainer {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
+	z-index: 999;
+}
+
+.popup {
+	width: 300px;
+}
+
+.popup h3 {
+	text-align: center;
+}
+
+.popup input {
+	padding: 5px;
+	width: 100%;
+	margin-bottom: 10px;
+}
+
+.popupButtons {
+	text-align: center;
+}
+
+.popup button {
+	padding: 5px;
 }
