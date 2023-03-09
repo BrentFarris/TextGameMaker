@@ -135,9 +135,6 @@ export class EditorApplication extends Application {
 	#index = 0;
 
 	/** @type {number} */
-	#lastPageY = 0;
-
-	/** @type {number} */
 	#farthestX = 0;
 
 	/** @type {EditorCanvas} */
@@ -155,11 +152,11 @@ export class EditorApplication extends Application {
 			document.getElementById("viewNodeManager"), this.characterManager);
 		this.#canvas = new EditorCanvas(this.nodeManager);
 
-		document.addEventListener("mousemove", this.drag.bind(this));
-		document.addEventListener("touchmove", this.drag.bind(this));
-		document.addEventListener("mouseup", this.dragEnd.bind(this));
-		document.addEventListener("touchend", this.dragEnd.bind(this));
-		document.addEventListener("touchcancel", this.dragEnd.bind(this));
+		document.addEventListener("mousemove", this.#drag.bind(this));
+		document.addEventListener("touchmove", this.#drag.bind(this));
+		document.addEventListener("mouseup", this.#dragEnd.bind(this));
+		document.addEventListener("touchend", this.#dragEnd.bind(this));
+		document.addEventListener("touchcancel", this.#dragEnd.bind(this));
 	
 		Input.keyUp.register((key) => {
 			// Escape key should close all manager windows
@@ -237,6 +234,7 @@ export class EditorApplication extends Application {
 				this.import(this.project.openFile.fileData);
 			}
 			this.name(this.project.openFile.Name);
+			this.#canvas.resize();
 		})();
 	}
 
@@ -312,7 +310,6 @@ export class EditorApplication extends Application {
 			if (!hasReturn)
 				ArrayHelpers.clear(this.jumpStack);
 			window.scrollTo(0, 0);
-			this.#lastPageY = 0;
 		}
 	}
 
@@ -635,7 +632,7 @@ export class EditorApplication extends Application {
 		dpn.y = parseInt(dpe.style.top);
 	}
 
-	drag(e) {
+	#drag(e) {
 		if (this.#dragPos.elm === null)
 			return;
 		e = getEvent(e);
@@ -665,7 +662,7 @@ export class EditorApplication extends Application {
 		this.#canvas.resize();
 	}
 
-	dragEnd(e) {
+	#dragEnd(e) {
 		if (!this.#dragPos.elm)
 			return;
 		this.#setNodeDraggedPos();
