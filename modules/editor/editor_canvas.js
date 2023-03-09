@@ -1,4 +1,5 @@
 import { Canvas } from "../engine/canvas.js"
+import { Optional } from "../engine/std.js";
 import { CoreNode, NODE_WIDTH, NODE_HANDLE_HEIGHT, NODE_LINE_OFFSET } from "../node.js";
 import { NodeManager } from "./node_manager.js";
 
@@ -11,10 +12,10 @@ export class EditorCanvas {
 
 	/** @type {NodeManager} */
 	#nodeManager;
-
+	
 	constructor(nodeManager) {
 		this.#nodeManager = nodeManager;
-		this.#canvas = new Canvas(document.getElementById("canvas"));
+		this.#canvas = new Canvas(document.getElementById("canvas"), 1.0, 1.0);
 		this.#registerDrawingEvent();
 	}
 
