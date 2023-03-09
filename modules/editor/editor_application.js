@@ -89,6 +89,12 @@ export class EditorApplication extends Application {
 	fileOptionsVisible = ko.observable(false);
 
 	/** @type {KnockoutObservable<boolean>} */
+	showNodeSearch = ko.observable(false);
+
+	/** @type {KnockoutObservable<boolean>} */
+	nodeSearchFilter = ko.observable("");
+
+	/** @type {KnockoutObservable<boolean>} */
 	metaChanged = ko.observable(false);
 
 	/** @type {KnockoutObservable<boolean>} */
@@ -167,6 +173,7 @@ export class EditorApplication extends Application {
 				this.templateManager.close();
 				this.viewManager.close();
 				this.projectListVisible(false);
+				this.showNodeSearch(false);
 			}
 		}, this);
 		
@@ -263,6 +270,9 @@ export class EditorApplication extends Application {
 				return true;
 			case Input.keys.V:
 				this.showManager(this.variableManager);
+				return true;
+			case Input.keys.Space:
+				this.showNodeSearch(true);
 				return true;
 		}
 		return false;
@@ -514,6 +524,15 @@ export class EditorApplication extends Application {
 
 	createNode(scope, evt, existing) {
 		this.initializeNode(NodeTypeMap[this.createNodeType()], existing);
+	}
+
+	/**
+	 * @param {string} nodeType 
+	 */
+	nodeSearchCreateNode(nodeType) {
+		this.initializeNode(NodeTypeMap[nodeType]);
+		this.nodeSearchFilter("");
+		this.showNodeSearch(false);
 	}
 
 	nodeClick(elm, scope, e) {

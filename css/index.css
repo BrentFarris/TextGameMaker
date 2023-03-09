@@ -65,7 +65,7 @@ body {
 	min-width: 24px;
 }
 
-.managerWindow, .projectList, .popup {
+.managerWindow, .projectList, .popup, .nodeSearch {
 	position: fixed;
 	top: 50%;
 	left: 50%;
@@ -74,6 +74,8 @@ body {
 	border: 1px solid black;
 	padding: 10px;
 	box-shadow: 5px 10px;
+	max-height: 50%;
+	overflow: auto;
 }
 
 .managerWindow {
@@ -235,12 +237,16 @@ textarea {
 	background-color: lightgoldenrodyellow;
 }
 
-.projectListEntry {
+.projectListEntry, .nodeSearchEntry {
 	cursor: pointer;
 }
 
-.projectListEntry:hover {
+.projectListEntry:hover, .nodeSearchEntry:hover {
 	background-color: lightgoldenrodyellow;
+}
+
+.nodeSearchEntry {
+	padding: 5px;
 }
 
 .popupContainer {
