@@ -132,7 +132,6 @@
 						<!-- ko if: $data.TypeName == "OutsNode" -->
 						<button data-bind="click:addOut">+</button>
 						<!-- /ko -->
-						<button data-bind="visible:TypeName==='Dialog' || TypeName==='Story' || TypeName==='Comment', click:$root.showManager.bind($root, $root.viewManager, $data)">View</button>
 						<button data-bind="click:$root.deleteNode.bind($root)">Delete</button>
 						<button data-bind="click:$root.makeTemplate.bind($root)">^</button>
 						<button data-bind="click:$root.dupeNode.bind($root)">Dupe</button>
@@ -201,15 +200,6 @@
 			</ul>
 			<div style="text-align:center;">
 				<button data-bind="click:variableManager.close.bind(variableManager)">Close</button>
-			</div>
-		</div>
-		<div id="viewNodeManager" class="managerWindow">
-			<!-- ko if: viewManager.targetText -->
-			<h2 data-bind="text: viewManager.title()"></h2>
-			<p data-bind="html: $root.nl2br(viewManager.targetText.value())"></p>
-			<!-- /ko -->
-			<div style="text-align:center;">
-				<button data-bind="click:viewManager.close.bind(viewManager)">Close</button>
 			</div>
 		</div>
 		<div id="templateManager" class="managerWindow">

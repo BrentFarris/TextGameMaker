@@ -1,5 +1,5 @@
 import { Manager, CharacterManager, BeastManager, ItemManager,
-	VariableManager, ViewManager, NodeTemplateManager,
+	VariableManager, NodeTemplateManager,
 	BeastEntry, TemplateEntry } from "./manager.js";
 import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT, OptionNode, MusicNode, SoundNode, BackgroundNode, JumpNode } from "../node.js";
 import { ArrayHelpers, each } from "../engine/std.js";
@@ -76,9 +76,6 @@ export class EditorApplication extends Application {
 	/** @type {VariableManager} */
 	variableManager;
 
-	/** @type {ViewManager} */
-	viewManager;
-
 	/** @type {NodeTemplateManager} */
 	templateManager = new NodeTemplateManager(document.getElementById("templateManager"));
 
@@ -154,8 +151,6 @@ export class EditorApplication extends Application {
 			document.getElementById("itemManager"), this.itemDatabase);
 		this.variableManager = new VariableManager(
 			document.getElementById("variableManager"), this.variableDatabase);
-		this.viewManager = new ViewManager(
-			document.getElementById("viewNodeManager"), this.characterManager);
 		this.#canvas = new EditorCanvas(this.nodeManager);
 
 		document.addEventListener("mousemove", this.#drag.bind(this));
@@ -171,7 +166,6 @@ export class EditorApplication extends Application {
 				this.beastManager.close();
 				this.itemManager.close();
 				this.templateManager.close();
-				this.viewManager.close();
 				this.projectListVisible(false);
 				this.showNodeSearch(false);
 			}
