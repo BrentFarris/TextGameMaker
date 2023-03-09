@@ -683,7 +683,7 @@ export class EditorApplication extends Application {
 				this.name(this.project.openFile.Name);
 				await this.#saveFileInternal();
 			}
-		});
+		}, undefined, undefined, undefined, this.project.openFile.Name);
 	};
 
 	renameCharacter(scope) {
@@ -698,7 +698,7 @@ export class EditorApplication extends Application {
 			let contents = this.characterDatabase.asArray()
 			this.characterDatabase.clear();
 			this.characterDatabase.addMany(contents);
-		});
+		}, undefined, undefined, undefined, scope.name);
 	}
 
 	deleteCharacter(scope) {
@@ -720,7 +720,7 @@ export class EditorApplication extends Application {
 			let contents = this.beastManager.beasts();
 			this.beastManager.beasts([]);
 			this.beastManager.beasts(contents);
-		});
+		}, undefined, undefined, undefined, scope.name);
 	}
 
 	deleteBeast(scope) {
