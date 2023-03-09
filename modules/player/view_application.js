@@ -347,18 +347,6 @@ export class ViewApplication extends Application {
 		this.remoteFunctions[name](this);
 	}
 
-	parseText(text, scope) {
-		let matches = text.match(/\{[a-zA-Z0-9\s]+\}/gi);
-		if (matches) {
-			for (let i = 0; i < matches.length; i++) {
-				let varName = matches[i].substring(1, matches[i].length - 1);
-				if (this.variableDatabase.exists(varName))
-					text = text.replace(matches[i], this.variableDatabase.value(varName));
-			}
-		}
-		return StringHelpers.nl2br(text);
-	}
-
 	/**
 	 * @param {number} nodeId 
 	 * @param {number} optionId 
@@ -373,14 +361,6 @@ export class ViewApplication extends Application {
 	 */
 	deactivateNodeOption(nodeId, optionId) {
 		this.nodeById(nodeId).options()[optionId].active(false);
-	}
-
-	/**
-	 * @param {number} id 
-	 * @return {string}
-	 */
-	characterName(id) {
-		return this.characterDatabase.name(id);
 	}
 
 	/**
