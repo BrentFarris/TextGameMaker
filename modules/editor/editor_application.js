@@ -486,6 +486,7 @@ export class EditorApplication extends Application {
 		this.settingTo.to(scope);
 		this.settingTo = null;
 		elm.style.borderColor = "black";
+		this.#canvas.drawFrame();
 	}
 	
 	nodeMouseOver(elm, scope, e) {
@@ -615,6 +616,13 @@ export class EditorApplication extends Application {
 		this.#canvas.drawFrame();
 	}
 
+	#setNodeDraggedPos() {
+		let dpn = /** @type {CoreNode} */ (this.#dragPos.node);
+		let dpe = /** @type {HTMLElement} */ (this.#dragPos.elm.parentElement);
+		dpn.x = parseInt(dpe.style.left);
+		dpn.y = parseInt(dpe.style.top);
+	}
+
 	drag(e) {
 		if (this.#dragPos.elm === null)
 			return;
@@ -641,20 +649,21 @@ export class EditorApplication extends Application {
 			y = 0;
 		target.style.top = x + "px";
 	    target.style.left = y + "px";
+		this.#setNodeDraggedPos();
+		this.#canvas.resize();
 	}
 
 	dragEnd(e) {
 		if (!this.#dragPos.elm)
 			return;
-		let dpn = /** @type {CoreNode} */ (this.#dragPos.node);
-		let dpe = /** @type {HTMLElement} */ (this.#dragPos.elm.parentElement);
-		dpn.x = parseInt(dpe.style.left);
-		dpn.y = parseInt(dpe.style.top);
-		if (dpn.x > this.#farthestX)
-			this.#farthestX = dpn.x + NODE_WIDTH;
+		this.#setNodeDraggedPos();
+		if (this.#dragPos.node.x > this.#farthestX)
+			this.#farthestX = this.#dragPos.node.x + NODE_WIDTH;
 		this.#dragPos.elm = null;
 		this.#dragPos.node = null;
 		this.nodeManager.deselect();
+		this.#canvas.trim();
+		this.#canvas.setRenderFreezeFrame();
 		this.#canvas.drawFrame();
 	}
 
