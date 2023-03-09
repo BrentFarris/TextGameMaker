@@ -203,11 +203,16 @@ textarea {
 	min-width: 175px;
 }
 
-.projectWindow::before {
-	content: "(P to toggle open)";
+.projectWindow::after {
+	content: "'P' to toggle this window \A CTRL/CMD + Click to rename \A ALT Click to delete";
 	font-style: italic;
 	font-size: 0.7em;
 	color: #555;
+	white-space: pre;
+	word-wrap: break-word;
+	position: absolute;
+	bottom: 10px;
+	left: 10px;
 }
 
 .projectWindow {
