@@ -89,7 +89,8 @@ export class EditorCanvas {
 	}
 
 	drawFrame() {
-		Canvas.start(this.#canvas);
+		if (this.#canvasAutoStop)
+			Canvas.start(this.#canvas);
 	}
 
 	setContinuousRender() {

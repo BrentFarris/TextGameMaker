@@ -170,18 +170,16 @@ export class EditorApplication extends Application {
 			}
 		}, this);
 		
-		Input.keyDown.register(async (key) => {
-			if (key.ctrlKey && key.key === 's') {
-				key.preventDefault();
+		Input.keyDown.register(async (evt) => {
+			if (evt.ctrlKey && evt.key === 's') {
+				evt.preventDefault();
 				await this.saveFile();
-			} else if (key.keyCode == Input.keys.Escape) {
+			} else if (evt.keyCode == Input.keys.Escape)
 				this.cancelOutLink();
-			} else if (key.keyCode == Input.keys.P)
-				this.keepProjectWindowOpen(!this.keepProjectWindowOpen());
-			else if (key.keyCode === Input.keys.Left || key.keyCode === Input.keys.Right) {
+			else if (evt.keyCode === Input.keys.Left || evt.keyCode === Input.keys.Right) {
 				if (Input.Ctrl && Input.Alt) {
 					let change = 10;
-					if (key.keyCode === Input.keys.Left)
+					if (evt.keyCode === Input.keys.Left)
 						change *= -1;
 					for (let i = 0; i < this.nodeManager.Count; i++) {
 						let node = this.nodeManager.at(i);
@@ -194,10 +192,10 @@ export class EditorApplication extends Application {
 					}
 					this.#canvas.drawFrame();
 				}
-			} else if (key.keyCode === Input.keys.Up || key.keyCode === Input.keys.Down) {
+			} else if (evt.keyCode === Input.keys.Up || evt.keyCode === Input.keys.Down) {
 				if (Input.Ctrl && Input.Alt) {
 					let change = 10;
-					if (key.keyCode === Input.keys.Up)
+					if (evt.keyCode === Input.keys.Up)
 						change *= -1;
 					for (let i = 0; i < this.nodeManager.Count; i++) {
 						let node = this.nodeManager.at(i);
@@ -210,7 +208,9 @@ export class EditorApplication extends Application {
 					}
 					this.#canvas.drawFrame();
 				}
-			}
+			} else if (evt.target == document.body)
+				if (this.#bodyKeyEvent(evt))
+					evt.preventDefault();
 		}, this);
 
 		(async () => {
@@ -236,6 +236,36 @@ export class EditorApplication extends Application {
 			this.name(this.project.openFile.Name);
 			this.#canvas.resize();
 		})();
+	}
+
+	/**
+	 * @param {KeyboardEvent} evt 
+	 * @return {boolean}
+	 */
+	#bodyKeyEvent(evt) {
+		switch (evt.keyCode) {
+			case Input.keys.Delete:
+			case Input.keys.Backspace:
+				if (this.hoveringNode)
+					this.deleteNode(this.hoveringNode.scope);
+				return true;
+			case Input.keys.P:
+				this.keepProjectWindowOpen(!this.keepProjectWindowOpen());
+				return true;
+			case Input.keys.C:
+				this.showManager(this.characterManager);
+				return true;
+			case Input.keys.B:
+				this.showManager(this.beastManager);
+				return true;
+			case Input.keys.I:
+				this.showManager(this.itemManager);
+				return true;
+			case Input.keys.V:
+				this.showManager(this.variableManager);
+				return true;
+		}
+		return false;
 	}
 
 	async #updateProjectList() {
@@ -360,9 +390,13 @@ export class EditorApplication extends Application {
 
 	/**
 	 * @param {Manager} manager
+	 * @param {CoreNode} [node]
 	 */
-	showManager(manager, scope) {
-		manager.show(scope);
+	showManager(manager, node) {
+		if (node)
+			manager.showForNode(node);
+		else
+			manager.show();
 		this.fileOptionsVisible(false);
 	}
 
@@ -531,6 +565,7 @@ export class EditorApplication extends Application {
 				}
 			}
 			this.nodeManager.remove(scope);
+			this.#canvas.drawFrame();
 		});
 	}
 

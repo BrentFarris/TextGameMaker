@@ -37,12 +37,19 @@ export class Manager {
 	}
 
 	/**
+	 * @virtual
+	 */
+	show() {
+		if (this.elm.HasValue)
+			this.elm.Value.style.display = "block";
+	}
+
+	/**
 	 * @param {CoreNode} scope 
 	 * @virtual
 	 */
-	show(scope) {
-		if (this.elm.HasValue)
-			this.elm.Value.style.display = "block";
+	showForNode(node) {
+
 	}
 
 	/**
@@ -81,11 +88,10 @@ export class CharacterManager extends Manager {
 	}
 
 	/**
-	 * @param {CoreNode} scope 
 	 * @override
 	 */
-	show(scope) {
-		super.show(scope);
+	show() {
+		super.show();
 		this.elm.Value.getElementsByTagName("input")[0].focus();
 	}
 
@@ -131,11 +137,10 @@ export class BeastManager extends Manager {
 	}
 
 	/**
-	 * @param {CoreNode} scope 
 	 * @override
 	 */
-	show(scope) {
-		super.show(scope);
+	show() {
+		super.show();
 		this.elm.Value.getElementsByTagName("input")[0].focus();
 	}
 
@@ -181,11 +186,10 @@ export class ItemManager extends Manager {
 	}
 
 	/**
-	 * @param {CoreNode} scope 
 	 * @override
 	 */
-	show(scope) {
-		super.show(scope);
+	show() {
+		super.show();
 		this.elm.Value.getElementsByTagName("input")[0].focus();
 	}
 
@@ -236,11 +240,10 @@ export class VariableManager extends Manager {
 	}
 
 	/**
-	 * @param {CoreNode} scope 
 	 * @override
 	 */
-	show(scope) {
-		super.show(scope);
+	show() {
+		super.show();
 		this.elm.Value.getElementsByTagName("input")[0].focus();
 	}
 
@@ -288,21 +291,26 @@ export class ViewManager extends Manager {
 	}
 
 	/**
-	 * @param {CoreNode} scope 
 	 * @override
 	 */
-	show(scope) {
-		super.show(scope);
-		if (scope instanceof StoryNode) {
-			let n = /** @type {StoryNode} */ (scope);
+	show() {}
+
+	/**
+	 * @param {CoreNode} node 
+	 * @override
+	 */
+	showForNode(node) {
+		super.show()
+		if (node instanceof StoryNode) {
+			let n = /** @type {StoryNode} */ (node);
 			this.title("Story");
 			this.targetText = n.text
-		} else if (scope instanceof CommentNode) {
-			let n = /** @type {CommentNode} */ (scope);
+		} else if (node instanceof CommentNode) {
+			let n = /** @type {CommentNode} */ (node);
 			this.title("Comment");
 			this.targetText = n.text
 		} else {
-			let n = /** @type {DialogNode} */ (scope);
+			let n = /** @type {DialogNode} */ (node);
 			this.title(this.#characterManager.database.name(n.character.Value));
 			this.targetText = n.text
 		}
@@ -326,10 +334,9 @@ export class NodeTemplateManager extends Manager {
 	}
 
 	/**
-	 * @param {CoreNode} scope 
 	 * @override
 	 */
-	show(scope) {
-		super.show(scope);
+	show() {
+		super.show();
 	}
 }
