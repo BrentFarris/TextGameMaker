@@ -650,6 +650,7 @@ export class EditorApplication extends Application {
 		target.style.top = x + "px";
 	    target.style.left = y + "px";
 		this.#setNodeDraggedPos();
+		this.#canvas.resize();
 	}
 
 	dragEnd(e) {
@@ -661,6 +662,7 @@ export class EditorApplication extends Application {
 		this.#dragPos.elm = null;
 		this.#dragPos.node = null;
 		this.nodeManager.deselect();
+		this.#canvas.trim();
 		this.#canvas.setRenderFreezeFrame();
 		this.#canvas.drawFrame();
 	}

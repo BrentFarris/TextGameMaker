@@ -1,6 +1,6 @@
 import { Canvas } from "../engine/canvas.js"
 import { Optional } from "../engine/std.js";
-import { CoreNode, NODE_WIDTH, NODE_HANDLE_HEIGHT, NODE_LINE_OFFSET } from "../node.js";
+import { CoreNode, NODE_WIDTH, NODE_HEIGHT, NODE_HANDLE_HEIGHT, NODE_LINE_OFFSET } from "../node.js";
 import { NodeManager } from "./node_manager.js";
 
 export class EditorCanvas {
@@ -15,7 +15,7 @@ export class EditorCanvas {
 	
 	constructor(nodeManager) {
 		this.#nodeManager = nodeManager;
-		this.#canvas = new Canvas(document.getElementById("canvas"), 1.0, 1.0);
+		this.#canvas = new Canvas(document.getElementById("canvas"));
 		this.#registerDrawingEvent();
 	}
 
@@ -65,6 +65,27 @@ export class EditorCanvas {
 		}
 		if (this.#canvasAutoStop && this.#nodeManager.Count)
 			Canvas.stop(this.#canvas);
+	}
+
+	/**
+	 * 
+	 */
+	resize() {
+		const extraBuffer = 100;
+		let nodes = this.#nodeManager.Nodes;
+		for (let i = 0; i < nodes.length; ++i) {
+			let node = nodes[i];
+			if (node.x + NODE_WIDTH > this.#canvas.width)
+				this.#canvas.width = node.x + NODE_WIDTH + extraBuffer;
+			if (node.y + NODE_HEIGHT > this.#canvas.height)
+				this.#canvas.height = node.y + NODE_HEIGHT + extraBuffer;
+		}
+	}
+
+	trim() {
+		this.#canvas.width = 0;
+		this.#canvas.height = 0;
+		this.resize();
 	}
 
 	drawFrame() {
