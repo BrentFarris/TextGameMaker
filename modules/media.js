@@ -206,6 +206,9 @@ export class Media {
 	/** @type {KnockoutObservable<number>} */
 	backgroundImageOpacity = ko.observable(1.0);
 
+	/** @type {KnockoutObservable<boolean>} */
+	backgroundImageForceFit = ko.observable(false);
+
 	/** @type {AudioDatabase} */
 	audioDatabase = new AudioDatabase();
 

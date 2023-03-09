@@ -10,11 +10,11 @@
 		<script type="text/javascript" src="js/ext/knockout.js"></script>
 		<script type="text/javascript" src="js/ext/FileSaver.js"></script>
 	</head>
-	<body>
+	<body data-bind="event: { drop: bodyDrop, dragover: bodyDragOver, dragleave: bodyDragLeave }">
 		<div id="container">
-			<canvas id="canvas" data-bind="click:$root.canvasClick.bind($root, $element), event: { drop: canvasDrop, dragover: canvasDragOver, dragleave: canvasDragLeave }"></canvas>
+			<canvas id="canvas" data-bind="click:$root.canvasClick.bind($root, $element)"></canvas>
 			<div data-bind="foreach: nodeManager.Nodes">
-				<div class="node" data-bind="click:$root.nodeClick.bind($root, $element), event: {mouseover:$root.nodeMouseOver.bind($root, $element),mouseout:$root.nodeMouseOut.bind($root, $element)}, style: { left: x + 'px', top: y + 'px' }, attr: {id:`node-${id}`}">
+				<div class="node" data-bind="visible: true && (()=>{$root.nodeManager.elementMap[$data.id]=$element;return true;})(), click:$root.nodeClick.bind($root, $element), event: {mouseover:$root.nodeMouseOver.bind($root, $element),mouseout:$root.nodeMouseOut.bind($root, $element)}, style: { left: x + 'px', top: y + 'px' }, attr: {id:`node-${id}`}">
 					<div id="handle" class="nodeHandle" draggable="true" data-bind="text:` ${TypeName}`, event: {mousedown:$root.dragStart.bind($root), touchstart:$root.dragStart.bind($root)}, style: {backgroundColor: Color}"></div>
 					<div id="contents" class="nodeContents">
 						<div data-bind="foreach: fields">
@@ -219,12 +219,12 @@
 				<h3 data-bind="text: popup.title"></h3>
 				<p data-bind="text: popup.description"></p>
 				<br />
-				<input type="text" data-bind="visible: popup.isPrompt, hasFocus: popup.isPrompt(), textInput: popup.input, event: {keyup: popup.inputExec.bind(popup)}" placeholder="Input..." />
+				<input type="text" data-bind="visible: popup.isPrompt, hasFocus: popup.focusInput, textInput: popup.input, event: {keyup: popup.inputExec.bind(popup)}" placeholder="Input..." />
 				<br data-bind="visible: popup.isPrompt" />
 				<div class="popupButtons">
-					<button data-bind="visible: (popup.isConfirm() || popup.isPrompt()), text: popup.noText, click: popup.cancel.bind(popup)"></button>
-					<button data-bind="visible: (popup.isConfirm() || popup.isPrompt()), hasFocus: !popup.isPrompt(), text: popup.yesText, click: popup.confirm.bind(popup)"></button>
-					<button data-bind="visible: popup.isAlert, hasFocus: popup.isAlert(), text: popup.alertOkayText, click: popup.close.bind(popup)"></button>
+					<button data-bind="visible: (popup.isConfirm() || popup.isPrompt()), hasFocus: popup.focusCancel, text: popup.noText, click: popup.cancel.bind(popup)"></button>
+					<button data-bind="visible: (popup.isConfirm() || popup.isPrompt()), hasFocus: popup.focusConfirm, text: popup.yesText, click: popup.confirm.bind(popup)"></button>
+					<button data-bind="visible: popup.isAlert, hasFocus: popup.focusOkay, text: popup.alertOkayText, click: popup.close.bind(popup)"></button>
 				</div>
 			</div>
 		</div>

@@ -3,9 +3,6 @@ import { ArrayHelpers, each, random } from "./engine/std.js";
 import { Application } from "./application.js";
 import { Log } from "./database/log_database.js";
 
-export const NODE_WIDTH = 210;
-export const NODE_HEIGHT = 250;
-export const NODE_HANDLE_HEIGHT = 24;
 export const NODE_LINE_OFFSET = 10;
 
 /**
@@ -1322,6 +1319,9 @@ export class ReturnNode extends PassNode {
  * @extends {SourceNode}
  */
 export class BackgroundNode extends SourceNode {
+	/** @type {BoolValue} */
+	forceFit = new BoolValue("Force fit:");
+
 	/**
 	 * @param {BackgroundNode} createInfo
 	 */

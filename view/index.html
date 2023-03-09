@@ -13,8 +13,8 @@
 		<div id="container">
 			<div class="containerOverlay">
 				<div class="displayLeft">
-					<div class="containerBg" data-bind="style:{backgroundImage:`url(${media.backgroundImage()})`, opacity:media.backgroundImageOpacity()}"></div>
-					<div class="containerBgBuffer" data-bind="style:{backgroundImage:`url(${media.backgroundImageBuffer()})`, opacity:media.backgroundImageBufferOpacity()}"></div>
+					<div data-bind="style:{backgroundImage:`url(${media.backgroundImage()})`, opacity:media.backgroundImageOpacity()}, css: media.backgroundImageForceFit()?'containerBGForceFit':'containerBg'"></div>
+					<div data-bind="style:{backgroundImage:`url(${media.backgroundImageBuffer()})`, opacity:media.backgroundImageBufferOpacity()}, css: media.backgroundImageForceFit()?'containerBGForceFit':'containerBg'"></div>
 				</div>
 				<div class="displayCenter">
 					<div class="nodeContent">
