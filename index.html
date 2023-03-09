@@ -56,7 +56,7 @@
 							<textarea class="inputs dialog" data-bind="value: value, attr: {placeholder: placeholder}" onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'></textarea>
 							<!-- /ko -->
 							<!-- ko if: TypeName == "ShortString" -->
-							<input class="inputs value" type="text" data-bind="value: value, attr: {placeholder: placeholder}" />
+							<input class="inputs value" type="text" data-bind="textInput: value, attr: {placeholder: placeholder}" />
 							<!-- /ko -->
 							<!-- ko if: TypeName == "VariableValueString" -->
 								<!-- ko if: type() === "string" || type() === "number" -->
@@ -109,7 +109,7 @@
 						<div data-bind="foreach: options">
 							<div class="nodeOption" data-bind="click:$root.optionClick.bind($root, $parent, $index())">
 								<input type="checkbox" data-bind="checked:active, click:$root.toggleCheck.bind(null, active, $element)"/>
-								<input class="inputs value" type="text" data-bind="value:text" />
+								<input class="inputs value" type="text" data-bind="textInput:text" />
 								<button data-bind="click:$parent.removeOption.bind($parent, $index())">x</button>
 							</div>
 						</div>
@@ -158,7 +158,7 @@
 			<button data-bind="click:toggleFileOptions">File Menu</button>
 		</div>
 		<div id="characterManager" class="managerWindow">
-			<input type="text" data-bind="value: characterManager.name, event: {keyup: managerInputExec.bind($root, characterManager)}" />
+			<input type="text" data-bind="textInput: characterManager.name, event: {keyup: managerInputExec.bind($root, characterManager)}" />
 			<ul data-bind="foreach: characterDatabase.entryView" class="scrollList">
 				<li><span data-bind="text: name"></span> <button data-bind="click:$root.renameCharacter.bind($root)">Rename</button> <button data-bind="click:$root.deleteCharacter.bind($root)">-</button></li>
 			</ul>
@@ -167,7 +167,7 @@
 			</div>
 		</div>
 		<div id="beastManager" class="managerWindow">
-			<input type="text" data-bind="value: beastManager.name, event: {keyup: managerInputExec.bind($root, beastManager)}" />
+			<input type="text" data-bind="textInput: beastManager.name, event: {keyup: managerInputExec.bind($root, beastManager)}" />
 			<ul data-bind="foreach: beastManager.beasts" class="scrollList">
 				<li><span data-bind="text: name"></span> <button data-bind="click:$root.renameBeast.bind($root)">Rename</button> <button data-bind="click:$root.deleteBeast.bind($root)">-</button></li>
 			</ul>
@@ -176,7 +176,7 @@
 			</div>
 		</div>
 		<div id="itemManager" class="managerWindow">
-			<input type="text" data-bind="value: itemManager.name, event: {keyup: managerInputExec.bind($root, itemManager)}" />
+			<input type="text" data-bind="textInput: itemManager.name, event: {keyup: managerInputExec.bind($root, itemManager)}" />
 			<ul data-bind="foreach: $root.itemDatabase.entryView" class="scrollList">
 				<li><span data-bind="text: name"></span> <button data-bind="click:$root.renameItem.bind($root)">Rename</button> <button data-bind="click:$root.deleteItem.bind($root)">-</button></li>
 			</ul>
@@ -195,7 +195,7 @@
 				<option value="beast">Beast</option>
 				<option value="item">Item</option>
 			</select>
-			<input type="text" data-bind="value: variableManager.name, event: {keyup: managerInputExec.bind($root, variableManager)}" />
+			<input type="text" data-bind="textInput: variableManager.name, event: {keyup: managerInputExec.bind($root, variableManager)}" />
 			<ul data-bind="foreach: $root.variableDatabase.entryView" class="scrollList">
 				<li>[<span data-bind="text: type"></span>] <span data-bind="text: name"></span> <span class="fakeLink" data-bind="click:$root.deleteVariable.bind($root)">Delete</span></li>
 			</ul>
@@ -213,7 +213,7 @@
 			</div>
 		</div>
 		<div id="templateManager" class="managerWindow">
-			<!-- <input type="text" data-bind="value: characterManager.name, event: {keyup: characterManager.create.bind(characterManager)}" /> -->
+			<!-- <input type="text" data-bind="textInput: characterManager.name, event: {keyup: characterManager.create.bind(characterManager)}" /> -->
 			<ul data-bind="foreach: templateManager.nodeTemplates" class="scrollList">
 				<li><span data-bind="text: name"></span> <button data-bind="click:$root.createNodeFromTemplate.bind($root)">+</button> <button data-bind="click:$root.deleteNodeTemplate.bind($root)">-</button></li>
 			</ul>
@@ -229,13 +229,19 @@
 				<h3 data-bind="text: popup.title"></h3>
 				<p data-bind="text: popup.description"></p>
 				<br />
-				<input type="text" data-bind="visible: popup.isPrompt, value: popup.input, event: {keyup: popup.inputExec.bind(popup)}" placeholder="Input..." />
+				<input type="text" data-bind="visible: popup.isPrompt, hasFocus: popup.isPrompt(), textInput: popup.input, event: {keyup: popup.inputExec.bind(popup)}" placeholder="Input..." />
 				<br data-bind="visible: popup.isPrompt" />
 				<div class="popupButtons">
 					<button data-bind="visible: (popup.isConfirm() || popup.isPrompt()), text: popup.noText, click: popup.cancel.bind(popup)"></button>
-					<button data-bind="visible: (popup.isConfirm() || popup.isPrompt()), text: popup.yesText, click: popup.confirm.bind(popup)"></button>
-					<button data-bind="visible: popup.isAlert, text: popup.alertOkayText, click: popup.close.bind(popup)"></button>
+					<button data-bind="visible: (popup.isConfirm() || popup.isPrompt()), hasFocus: !popup.isPrompt(), text: popup.yesText, click: popup.confirm.bind(popup)"></button>
+					<button data-bind="visible: popup.isAlert, hasFocus: popup.isAlert(), text: popup.alertOkayText, click: popup.close.bind(popup)"></button>
 				</div>
+			</div>
+		</div>
+		<div class="nodeSearch" data-bind="visible: showNodeSearch">
+			<input type="text" data-bind="textInput: $root.nodeSearchFilter, hasFocus: showNodeSearch()" />
+			<div data-bind="foreach: nodeManager.NodeTypes">
+				<div class="nodeSearchEntry" data-bind="visible: $data.toLowerCase().indexOf($root.nodeSearchFilter().toLowerCase()) >= 0, text: $data, click: $root.nodeSearchCreateNode.bind($root, $data)"></div>
 			</div>
 		</div>
 		<div class="pageName">
@@ -277,7 +283,7 @@
 					</li>
 				</span>
 			</ul>
-		</script> 
+		</script>
 		<div class="projectWindow" data-bind="template: { name: 'folderTemplate', data: project.root }, css: keepProjectWindowOpen()?'openProjectWindow':''"></div>
 		<script type="module" src="modules/editor/editor_application.js"></script>
 	</body>
