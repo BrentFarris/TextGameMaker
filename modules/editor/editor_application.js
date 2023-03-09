@@ -13,6 +13,7 @@ import { Variable } from "../database/variable_database.js";
 import { Character } from "../database/character_database.js";
 import { StringHelpers } from "../engine/std.js"
 import { Project, ProjectFile, ProjectFolder } from "./project/project.js";
+import { Popup } from "./popup.js";
 
 function getEvent(e) { return e || window.event; }
 
@@ -56,6 +57,9 @@ function getEvent(e) { return e || window.event; }
 
 export class EditorApplication extends Application {
 	static get PROJECTS_FOLDER() { return "projects" };
+
+	/** @type {Popup} */
+	popup = new Popup();
 	
 	/** @type {Project} */
 	project = new Project("Untitled Project");
@@ -225,11 +229,11 @@ export class EditorApplication extends Application {
 			else
 				await this.project.setupNew(this);
 			if (!await this.project.deserialize(this))
-				await this.project.initialize(this, this.getJson());
+				await this.project.initialize(this, this.#blankJson());
 			else {
 				let mf = this.project.root.file(Project.META_FILE_NAME);
 				this.importMeta(mf.Value.fileData);
-				this.project.pickRandomFile(this.getJson());
+				this.project.pickRandomFile(this.#blankJson());
 				this.import(this.project.openFile.fileData);
 			}
 			this.name(this.project.openFile.Name);
@@ -245,13 +249,14 @@ export class EditorApplication extends Application {
 	}
 
 	importMeta(json) {
-		let current = this.getMetaJson();
-		if (current.characters.length || current.variables.length || current.nodeTemplates.length
-			|| current.beasts.length || current.items.length)
-		{
-			if (!confirm("You have existing metadata would you like to overwrite it?"))
-				return;
-		}
+		// TODO:  This is weird in the new setup
+		//let current = this.getMetaJson();
+		//if (current.characters.length || current.variables.length || current.nodeTemplates.length
+		//	|| current.beasts.length || current.items.length)
+		//{
+		//	if (!confirm("You have existing metadata would you like to overwrite it?"))
+		//		return;
+		//}
 		if (json.characters)
 			this.characterDatabase.addMany(json.characters);
 		if (json.beasts)
@@ -269,12 +274,7 @@ export class EditorApplication extends Application {
 		this.#clearFile();
 		this.lastData = json;
 		this.name(json.name);
-		if (!this.nodeManager.isEmpty()) {
-			if (!confirm("Your current nodes will be deleted on importing of this file. Make sure to export the current nodes or they will be lost. Would you like to continue the import and delete the existing nodes?")) {
-				return;
-			}
-			this.nodeManager.clear();
-		}
+		this.nodeManager.clear();
 		let i = 0;
 		for (i = 0; i < json.nodes.length; i++)
 			this.initializeNode(NodeTypeMap[json.nodes[i].type], json.nodes[i]);
@@ -291,14 +291,8 @@ export class EditorApplication extends Application {
 			let json = JSON.parse(/** @type {string} */ (reader.result));
 			if ("characters" in json)
 				this.importMeta(json);
-			else {
-				if (!this.characterDatabase.Count) {
-					if (confirm("You have not imported any meta information, you should import your meta file first. Would you still like to continue loading the node information?")) {
-						this.import(json);
-					}
-				} else
-					this.import(json);
-			}
+			else
+				this.import(json);
 		};
         reader.readAsText(input.files[0]);
 		this.fileOptionsVisible(false);
@@ -329,6 +323,16 @@ export class EditorApplication extends Application {
 		if (!this.jumpStack.length)
 			return;
 		this.openFile(this.jumpStack.pop());
+	}
+
+	/**
+	 * @returns {FileJSON}
+	 */
+	#blankJson() {
+		return {
+			name: "Untitled",
+			nodes: []
+		};
 	}
 
 	/**
@@ -393,23 +397,23 @@ export class EditorApplication extends Application {
 	}
 
 	async newProject() {
-		if (!confirm("Are you sure you want to start a new project?"))
-			return;
-		await this.#saveFileInternal();
-		this.nodeManager.clear();
-		this.#canvas.drawFrame();
-		this.characterDatabase.clear();
-		this.beastManager.beasts.removeAll();
-		this.itemDatabase.clear();
-		this.variableDatabase.clear();
-		this.templateManager.nodeTemplates.removeAll();
-		this.metaChanged(false);
-		//this.importMeta(await HTTP.get("view/json/meta.json"));
-		this.fileOptionsVisible(false);
-		// TODO:  Make sure this doesn't clash with any other projects
-		await this.project.setupNew(this);
-		await this.project.initialize(this, this.getJson());
-		this.name(this.project.openFile.Name);
+		this.popup.showConfirm("New Project?", "Are you sure you want to start a new project?", async () => {
+			await this.#saveFileInternal();
+			this.nodeManager.clear();
+			this.#canvas.drawFrame();
+			this.characterDatabase.clear();
+			this.beastManager.beasts.removeAll();
+			this.itemDatabase.clear();
+			this.variableDatabase.clear();
+			this.templateManager.nodeTemplates.removeAll();
+			this.metaChanged(false);
+			//this.importMeta(await HTTP.get("view/json/meta.json"));
+			this.fileOptionsVisible(false);
+			// TODO:  Make sure this doesn't clash with any other projects
+			await this.project.setupNew(this);
+			await this.project.initialize(this, this.#blankJson());
+			this.name(this.project.openFile.Name);
+		});
 	}
 
 	#clearFile() {
@@ -421,7 +425,7 @@ export class EditorApplication extends Application {
 	async newFile() {
 		await this.#saveFileInternal();
 		this.#clearFile();
-		this.project.newTempFile(this.getJson());
+		this.project.newTempFile(this.#blankJson());
 		this.name(this.project.openFile.Name);
 	}
 
@@ -437,20 +441,21 @@ export class EditorApplication extends Application {
 		this.#canvas.drawFrame();
 		await this.#saveFileInternal();
 		this.fileOptionsVisible(false);
-		alert("File saved");
+		this.popup.showAlert("File saved", "The file has been saved successfully");
 	}
 
 	async newFolder() {
-		let name = prompt("Enter the name of the new folder");
-		if (!name || !name.trim())
-			return;
-		name = name.trim();
-		if (this.project.root.folderExists(name)) {
-			alert("A folder with that name already exists");
-			return;
-		}
-		this.project.root.createFolder(name);
-		this.fileOptionsVisible(false);
+		this.popup.showPrompt("New Folder", "Enter the name of the new folder", (name) => {
+			if (!name || !name.trim())
+				return;
+			name = name.trim();
+			if (this.project.root.folderExists(name)) {
+				this.popup.showAlert("Folder already exists", "A folder with that name already exists");
+				return;
+			}
+			this.project.root.createFolder(name);
+			this.fileOptionsVisible(false);
+		});
 	}
 
 	/**
@@ -519,17 +524,17 @@ export class EditorApplication extends Application {
 	}
 
 	deleteNode(scope) {
-		if (!confirm("Are you sure you wish to delete this node?")) 
-			return;
-		for (let i = 0; i < this.nodeManager.Count; i++) {
-			let outs = this.nodeManager.at(i).outs();
-			for (let j = 0; j < outs.length; j++) {
-				if (outs[j].to() === scope) {
-					outs[j].to(null);
+		this.popup.showConfirm("Delete node", "Are you sure you wish to delete this node?", () => {
+			for (let i = 0; i < this.nodeManager.Count; i++) {
+				let outs = this.nodeManager.at(i).outs();
+				for (let j = 0; j < outs.length; j++) {
+					if (outs[j].to() === scope) {
+						outs[j].to(null);
+					}
 				}
 			}
-		}
-		this.nodeManager.remove(scope);
+			this.nodeManager.remove(scope);
+		});
 	}
 
 	selectNode(scope, elm) {
@@ -550,29 +555,36 @@ export class EditorApplication extends Application {
 	}
 
 	makeTemplate(scope) {
-		if (!confirm("Are you sure you would like to make this node into a template?"))
-			return;
-		let name = prompt("What would you like to name this template?");
-		if (!name || !name.trim())
-			return;
-		name = name.trim();
-		let templates = this.templateManager.nodeTemplates();
-		for (let i = 0; i < templates.length; i++) {
-			if (templates[i].name.toLowerCase() === name.toLowerCase()) {
-				if (!confirm("A template with that name already exists, would you like to overwrite it?"))
+		this.popup.showConfirm("Make template", "Are you sure you would like to make this node into a template?", () => {
+			this.popup.showPrompt("Make template", "Enter the name of the template", (name) => {
+				if (!name || !name.trim())
 					return;
-				this.templateManager.nodeTemplates.splice(i, 1);
-				break;
-			}
-		}
-		let info = scope.serialize();
-		for (let i = 0; i < info.outs.length; i++)
-			info.outs[i] = null;
-		this.templateManager.nodeTemplates.push({
-			name: name,
-			template: info
+				name = name.trim();
+				let templates = this.templateManager.nodeTemplates();
+				let found = -1;
+				for (let i = 0; i < templates.length && found == -1; i++) {
+					if (templates[i].name.toLowerCase() === name.toLowerCase())
+						found = i;
+				}
+				let end = () => {
+					let info = scope.serialize();
+					for (let i = 0; i < info.outs.length; i++)
+						info.outs[i] = null;
+					this.templateManager.nodeTemplates.push({
+						name: name,
+						template: info
+					});
+					this.metaChanged(true);
+				};
+				if (found !== -1) {
+					this.popup.showConfirm("Overwrite template", "A template with that name already exists, would you like to overwrite it?", () => {
+						this.templateManager.nodeTemplates.splice(found, 1);
+						end();
+					});
+				} else
+					end();
+			});
 		});
-		this.metaChanged(true);
 	}
 
 	createNodeFromTemplate(scope) {
@@ -668,88 +680,92 @@ export class EditorApplication extends Application {
 	}
 
 	async setPageName() {
-		let name = prompt('Input a name for this page:');
-		if (!name || !name.trim().length)
-			return;
-		name = name.trim();
-		if (name === Project.META_FILE_NAME)
-			alert("The specified name is reserved by the system, please try a different name");
-		else if (this.project.openFile.parent.fileExists(`${name}.json`))
-			alert("The specified name already exists, please try a different name");
-		else {
-			this.project.openFile.Name = `${name}.json`;
-			this.name(this.project.openFile.Name);
-			await this.#saveFileInternal();
-		}
+		this.popup.showPrompt("Set page name", "What would you like to name this page?", async (name) => {
+			if (!name || !name.trim().length)
+				return;
+			name = name.trim();
+			if (name === Project.META_FILE_NAME)
+				this.popup.showAlert("Invalid file name", "The specified name is reserved by the system, please try a different name");
+			else if (this.project.openFile.parent.fileExists(`${name}.json`))
+				this.popup.showAlert("Invalid file name", "The specified name already exists, please try a different name");
+			else {
+				this.project.openFile.Name = `${name}.json`;
+				this.name(this.project.openFile.Name);
+				await this.#saveFileInternal();
+			}
+		}, undefined, undefined, undefined, this.project.openFile.Name);
 	};
 
 	renameCharacter(scope) {
-		let newName = prompt("What would you like to rename this character to?", scope.name);
-		if (!newName || !newName.length) {
-			alert("Invalid name specified");
-			return;
-		}
-		scope.name = newName;
-		// Splice and valueHasMutated are not calling refresh, so we are going to have to do
-		// a "dirty" refresh by re-assigning the array
-		let contents = this.characterDatabase.asArray()
-		this.characterDatabase.clear();
-		this.characterDatabase.addMany(contents);
+		this.popup.showPrompt("Rename character", "What would you like to rename this character to?", (newName) => {
+			if (!newName || !newName.length) {
+				this.popup.showAlert("No name supplied", "You must supply a valid name for the character");
+				return;
+			}
+			scope.name = newName;
+			// Splice and valueHasMutated are not calling refresh, so we are going to have to do
+			// a "dirty" refresh by re-assigning the array
+			let contents = this.characterDatabase.asArray()
+			this.characterDatabase.clear();
+			this.characterDatabase.addMany(contents);
+		}, undefined, undefined, undefined, scope.name);
 	}
 
 	deleteCharacter(scope) {
-		if (!confirm(`Are you sure you wish to delete the character: ${scope.name}?`))
-			return;
-		this.characterDatabase.remove(scope);
-		this.metaChanged(true);
+		this.popup.showConfirm("Delete character", `Are you sure you wish to delete the character: ${scope.name}?`, () => {
+			this.characterDatabase.remove(scope);
+			this.metaChanged(true);
+		});
 	};
 
 	renameBeast(scope) {
-		let newName = prompt("What would you like to rename this beast to?", scope.name);
-		if (!newName || !newName.length) {
-			alert("Invalid name specified");
-			return;
-		}
-		scope.name = newName;
-		// Splice and valueHasMutated are not calling refresh, so we are going to have to do
-		// a "dirty" refresh by re-assigning the array
-		let contents = this.beastManager.beasts();
-		this.beastManager.beasts([]);
-		this.beastManager.beasts(contents);
+		this.popup.showPrompt("Rename beast", "What would you like to rename this beast to?", (newName) => {
+			if (!newName || !newName.length) {
+				this.popup.showAlert("No name supplied", "You must supply a valid name for the beast");
+				return;
+			}
+			scope.name = newName;
+			// Splice and valueHasMutated are not calling refresh, so we are going to have to do
+			// a "dirty" refresh by re-assigning the array
+			let contents = this.beastManager.beasts();
+			this.beastManager.beasts([]);
+			this.beastManager.beasts(contents);
+		}, undefined, undefined, undefined, scope.name);
 	}
 
 	deleteBeast(scope) {
-		if (!confirm(`Are you sure you wish to delete the beast: ${scope.name}?`))
-			return;
-		this.beastManager.beasts.remove(scope);
-		this.metaChanged(true);
+		this.popup.showConfirm("Delete beast", `Are you sure you wish to delete the beast: ${scope.name}?`, () => {
+			this.beastManager.beasts.remove(scope);
+			this.metaChanged(true);
+		});
 	}
 
 	renameItem(scope) {
-		let newName = prompt("What would you like to rename this beast to?", scope.name);
-		if (!newName || !newName.length) {
-			alert("Invalid name specified");
-			return;
-		}
-		scope.name = newName;
-		// Splice and valueHasMutated are not calling refresh, so we are going to have to do
-		// a "dirty" refresh by re-assigning the array
-		let contents = this.itemDatabase.asArray()
-		this.itemDatabase.clear();
-		this.itemDatabase.addMany(contents);
+		this.popup.showPrompt("Rename item", "What would you like to rename this item to?", (newName) => {
+			if (!newName || !newName.length) {
+				this.popup.showAlert("No name supplied", "You must supply a valid name for the item");
+				return;
+			}
+			scope.name = newName;
+			// Splice and valueHasMutated are not calling refresh, so we are going to have to do
+			// a "dirty" refresh by re-assigning the array
+			let contents = this.itemDatabase.asArray()
+			this.itemDatabase.clear();
+			this.itemDatabase.addMany(contents);
+		}, undefined, undefined, undefined, scope.name);
 	}
 
 	deleteItem(scope) {
-		if (!confirm(`Are you sure you wish to delete the beast: ${scope.name}?`))
-			return;
-		this.itemDatabase.remove(scope);
-		this.metaChanged(true);
+		this.popup.showConfirm("Delete item", `Are you sure you wish to delete the item: ${scope.name}?`, () => {
+			this.itemDatabase.remove(scope);
+			this.metaChanged(true);
+		});
 	}
 
 	deleteVariable(scope) {
-		if (!confirm(`Are you sure you wish to delete the variable: ${scope.name}?`))
-			return;
-		this.variableDatabase.remove(scope);
+		this.popup.showConfirm("Delete variable", `Are you sure you wish to delete the variable: ${scope.name}?`, () => {
+			this.variableDatabase.remove(scope);
+		});
 	}
 
 	toggleFileOptions() {
@@ -799,22 +815,24 @@ export class EditorApplication extends Application {
 	 */
 	async projectFolderClicked(folder) {
 		if (Input.Ctrl) {
-			let name = prompt("What would you like to rename your folder to?", folder.Name);
-			if (name?.trim().length > 0 && name.indexOf("/") == -1) {
-				try {
-					if (folder == this.project.root)
-						await this.project.rename(name, this);
-					else {
-						folder.Name = name;
-						await this.project.serialize(this);
+			this.popup.showPrompt("Rename folder", "What would you like to rename your folder to?", async (name) => {
+				if (name?.trim().length > 0 && name.indexOf("/") == -1) {
+					try {
+						if (folder == this.project.root)
+							await this.project.rename(name, this);
+						else {
+							folder.Name = name;
+							await this.project.serialize(this);
+						}
+					} catch (err) {
+						this.popup.showAlert("Error", err.message);
 					}
-				} catch (err) {
-					alert(/** @type {Error} */ (err).message);
 				}
-			}
+			}, undefined, undefined, undefined, folder.Name);
 		} else if (Input.Alt) {
-			if (confirm(`Would you like to delete the folder '${folder.Path}' and all it's contents?`))
+			this.popup.showConfirm("Delete folder", `Are you sure you wish to delete the folder: ${folder.Path}?`, () => {
 				folder.parent.deleteFolder(folder);
+			});
 		} else
 			folder.collapsed(!folder.collapsed());
 		return true;
@@ -834,14 +852,14 @@ export class EditorApplication extends Application {
 	 */
 	async projectFileClicked(file) {
 		if (Input.Alt) {
-			if (confirm(`Would you like to delete the file '${file.Path}'?`)) {
+			this.popup.showConfirm("Delete file", `Are you sure you wish to delete the file: ${file.Path}?`, () => {
 				if (file == this.project.openFile) {
-					this.project.deleteOpenFile(this.getJson());
+					this.project.deleteOpenFile(this.#blankJson());
 					this.import(this.project.openFile.fileData);
 					this.name(this.project.openFile.Name);
 				} else
 					file.parent.deleteFile(file);
-			}
+			});
 		} else {
 			if (file.Name === "meta.json" || this.project.openFile == file)
 				return;
@@ -863,7 +881,7 @@ export class EditorApplication extends Application {
 			let files = evt.dataTransfer.files;
 			for (let i = 0; i < files.length; i++) {
 				if (folder.fileExists(files[i].name)) {
-					alert(`File already exists: ${files[i].name}`);
+					this.popup.showAlert("File already exists", `File already exists: ${files[i].name}`);
 					continue;
 				}
 				switch (files[i].type) {
@@ -1012,7 +1030,7 @@ export class EditorApplication extends Application {
 	let app = new EditorApplication();
 	ko.applyBindings(app, document.body);
 	window.onerror = (msg, url, linenumber) => {
-		alert(`Error message: ${msg}\nURL:${url}\nLine Number: ${linenumber}`);
+		this.popup.showAlert("Error", `Error message: ${msg}\nURL:${url}\nLine Number: ${linenumber}`);
 		return false;
 	};
 })();

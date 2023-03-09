@@ -224,6 +224,20 @@
 		<div class="projectList" data-bind="visible: projectListVisible, foreach: projectList">
 			<div class="projectListEntry" data-bind="text: $data, click: $root.selectProject.bind($root, $data)"></div>
 		</div>
+		<div class="popupContainer" data-bind="visible: popup.showing">
+			<div class="popup">
+				<h3 data-bind="text: popup.title"></h3>
+				<p data-bind="text: popup.description"></p>
+				<br />
+				<input type="text" data-bind="visible: popup.isPrompt, value: popup.input, event: {keyup: popup.inputExec.bind(popup)}" placeholder="Input..." />
+				<br data-bind="visible: popup.isPrompt" />
+				<div class="popupButtons">
+					<button data-bind="visible: (popup.isConfirm() || popup.isPrompt()), text: popup.noText, click: popup.cancel.bind(popup)"></button>
+					<button data-bind="visible: (popup.isConfirm() || popup.isPrompt()), text: popup.yesText, click: popup.confirm.bind(popup)"></button>
+					<button data-bind="visible: popup.isAlert, text: popup.alertOkayText, click: popup.close.bind(popup)"></button>
+				</div>
+			</div>
+		</div>
 		<div class="pageName">
 			<h2 data-bind="visible:name().length, text:name, click:setPageName">TITLE</h2>
 		</div>
