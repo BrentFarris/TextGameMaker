@@ -117,7 +117,57 @@ export class Input {
 		/** @type {number} */
 		Decimal: 110,
 		/** @type {number} */
+		A: 65,
+		/** @type {number} */
+		B: 66,
+		/** @type {number} */
+		C: 67,
+		/** @type {number} */
+		D: 68,
+		/** @type {number} */
+		E: 69,
+		/** @type {number} */
+		F: 70,
+		/** @type {number} */
+		G: 71,
+		/** @type {number} */
+		H: 72,
+		/** @type {number} */
+		I: 73,
+		/** @type {number} */
+		J: 74,
+		/** @type {number} */
+		K: 75,
+		/** @type {number} */
+		L: 76,
+		/** @type {number} */
+		M: 77,
+		/** @type {number} */
+		N: 78,
+		/** @type {number} */
+		O: 79,
+		/** @type {number} */
 		P: 80,
+		/** @type {number} */
+		Q: 81,
+		/** @type {number} */
+		R: 82,
+		/** @type {number} */
+		S: 83,
+		/** @type {number} */
+		T: 84,
+		/** @type {number} */
+		U: 85,
+		/** @type {number} */
+		V: 86,
+		/** @type {number} */
+		W: 87,
+		/** @type {number} */
+		X: 88,
+		/** @type {number} */
+		Y: 89,
+		/** @type {number} */
+		Z: 90,
 	};
 
 	/**
