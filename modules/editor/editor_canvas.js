@@ -1,6 +1,5 @@
 import { Canvas } from "../engine/canvas.js"
-import { Optional } from "../engine/std.js";
-import { CoreNode, NODE_WIDTH, NODE_HEIGHT, NODE_HANDLE_HEIGHT, NODE_LINE_OFFSET } from "../node.js";
+import { CoreNode, NODE_LINE_OFFSET } from "../node.js";
 import { NodeManager } from "./node_manager.js";
 
 export class EditorCanvas {
@@ -36,12 +35,15 @@ export class EditorCanvas {
 					continue;
 				}
 				let from = node;
+				let fromElm = this.#nodeManager.elementMap[node.id];
+				let fromHandle = fromElm.getElementsByClassName("nodeHandle")[0];
 				let to = /** @type {CoreNode} */ (outs[j].to());
+				let toHandle = fromElm.getElementsByClassName("nodeHandle")[0];
 				let yOffset = ((j + 1) * 22);
-				let startX = from.x + NODE_WIDTH,
-					startY = (from.y + NODE_HANDLE_HEIGHT * 0.5) + yOffset,
+				let startX = from.x + fromElm.clientWidth,
+					startY = (from.y + fromHandle.clientHeight * 0.5) + yOffset,
 					endX = to.x,
-					endY = to.y + NODE_HANDLE_HEIGHT * 0.5,
+					endY = to.y + toHandle.clientHeight * 0.5,
 					startOffset = NODE_LINE_OFFSET,
 					endOffset = NODE_LINE_OFFSET;
 				let ctx = this.#canvas.context.Value;
@@ -50,9 +52,9 @@ export class EditorCanvas {
 				ctx.moveTo(startX, startY);
 				ctx.lineTo(startX + startOffset, startY);
 				// The node is not to the right of this node
-				if (to.x < from.x + NODE_WIDTH) {
-					ctx.lineTo(startX + startOffset, endY - NODE_HANDLE_HEIGHT);
-					ctx.lineTo(endX - endOffset, endY - NODE_HANDLE_HEIGHT);
+				if (to.x < from.x + fromElm.clientWidth) {
+					ctx.lineTo(startX + startOffset, endY - fromHandle.clientHeight * 0.5);
+					ctx.lineTo(endX - endOffset, endY - toHandle.clientHeight * 0.5);
 					ctx.lineTo(endX - endOffset, endY);
 				} else
 					ctx.lineTo(endX - endOffset, endY);
@@ -67,14 +69,16 @@ export class EditorCanvas {
 	 * 
 	 */
 	resize() {
-		const extraBuffer = 100;
+		const extraBufferX = 100;
+		const extraBufferY = 275;
 		let nodes = this.#nodeManager.Nodes;
 		for (let i = 0; i < nodes.length; ++i) {
 			let node = nodes[i];
-			if (node.x + NODE_WIDTH > this.#canvas.width)
-				this.#canvas.width = node.x + NODE_WIDTH + extraBuffer;
-			if (node.y + NODE_HEIGHT > this.#canvas.height)
-				this.#canvas.height = node.y + NODE_HEIGHT + extraBuffer;
+			let elm = this.#nodeManager.elementMap[node.id];
+			if (node.x + elm.clientWidth > this.#canvas.width)
+				this.#canvas.width = node.x + elm.clientWidth + extraBufferX;
+			if (node.y + elm.clientHeight > this.#canvas.height)
+				this.#canvas.height = node.y + elm.clientHeight + extraBufferY;
 		}
 	}
 

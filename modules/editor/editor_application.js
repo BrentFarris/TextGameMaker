@@ -1,7 +1,7 @@
 import { Manager, CharacterManager, BeastManager, ItemManager,
 	VariableManager, NodeTemplateManager,
 	BeastEntry, TemplateEntry } from "./manager.js";
-import { CoreNode, NodeTypeMap, ValueType, Output, NODE_WIDTH, NODE_HANDLE_HEIGHT, OptionNode, MusicNode, SoundNode, BackgroundNode, JumpNode } from "../node.js";
+import { CoreNode, NodeTypeMap, ValueType, Output, OptionNode, MusicNode, SoundNode, BackgroundNode, JumpNode } from "../node.js";
 import { ArrayHelpers, each } from "../engine/std.js";
 import { Input } from "../engine/input.js";
 import { LocalStorage } from "../engine/local_storage.js";
@@ -168,6 +168,7 @@ export class EditorApplication extends Application {
 				this.templateManager.close();
 				this.projectListVisible(false);
 				this.showNodeSearch(false);
+				this.popup.cancel();
 			}
 		}, this);
 		
@@ -178,7 +179,7 @@ export class EditorApplication extends Application {
 			} else if (evt.keyCode == Input.keys.Escape)
 				this.cancelOutLink();
 			else if (evt.keyCode === Input.keys.Left || evt.keyCode === Input.keys.Right) {
-				if (Input.Ctrl && Input.Alt) {
+				if (Input.Ctrl && Input.Shift) {
 					let change = 10;
 					if (evt.keyCode === Input.keys.Left)
 						change *= -1;
@@ -194,7 +195,7 @@ export class EditorApplication extends Application {
 					this.#canvas.drawFrame();
 				}
 			} else if (evt.keyCode === Input.keys.Up || evt.keyCode === Input.keys.Down) {
-				if (Input.Ctrl && Input.Alt) {
+				if (Input.Ctrl && Input.Shift) {
 					let change = 10;
 					if (evt.keyCode === Input.keys.Up)
 						change *= -1;
@@ -510,8 +511,10 @@ export class EditorApplication extends Application {
 			node.x = window.scrollX + window.innerWidth * 0.5;
 			node.y = window.scrollY + window.innerHeight * 0.5;
 		}
-		if (node.x > this.#farthestX)
-			this.#farthestX = node.x + NODE_WIDTH;
+		if (node.x > this.#farthestX) {
+			let elm = this.nodeManager.elementMap[node.id];
+			this.#farthestX = node.x + elm?.clientWidth ?? 250;
+		}
 		this.nodeManager.add(node);
 		return node;
 	}
@@ -714,8 +717,10 @@ export class EditorApplication extends Application {
 		if (!this.#dragPos.elm)
 			return;
 		this.#setNodeDraggedPos();
-		if (this.#dragPos.node.x > this.#farthestX)
-			this.#farthestX = this.#dragPos.node.x + NODE_WIDTH;
+		if (this.#dragPos.node.x > this.#farthestX) {
+			this.#farthestX = this.#dragPos.node.x
+				+ this.nodeManager.elementMap[this.#dragPos.node.id].clientWidth;
+		}
 		this.#dragPos.elm = null;
 		this.#dragPos.node = null;
 		this.nodeManager.deselect();
@@ -874,7 +879,7 @@ export class EditorApplication extends Application {
 					}
 				}
 			}, undefined, undefined, undefined, folder.Name);
-		} else if (Input.Alt) {
+		} else if (Input.Shift) {
 			this.popup.showConfirm("Delete folder", `Are you sure you wish to delete the folder: ${folder.Path}?`, () => {
 				folder.parent.deleteFolder(folder);
 			});
@@ -896,7 +901,7 @@ export class EditorApplication extends Application {
 	 * @param {ProjectFile} file 
 	 */
 	async projectFileClicked(file) {
-		if (Input.Alt) {
+		if (Input.Shift) {
 			this.popup.showConfirm("Delete file", `Are you sure you wish to delete the file: ${file.Path}?`, () => {
 				if (file == this.project.openFile) {
 					this.project.deleteOpenFile(this.#blankJson());
@@ -1000,18 +1005,18 @@ export class EditorApplication extends Application {
 		return true;
 	}
 
-	canvasDragOver(self, evt) {
+	bodyDragOver(self, evt) {
 
 	}
 
-	canvasDragLeave(self, evt) {
+	bodyDragLeave(self, evt) {
 
 	}
 
 	/**
 	 * @param {DragEvent} evt 
 	 */
-	canvasDrop(self, evt) {
+	bodyDrop(self, evt) {
 		if (this.dragFile) {
 			if (this.dragFile.fileData instanceof File) {
 				switch (this.dragFile.fileData.type) {

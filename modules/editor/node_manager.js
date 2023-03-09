@@ -14,6 +14,9 @@ export class NodeManager {
 	/** @type {string[]} */
 	#nodeTypes = [];
 
+	/** @type {Object<number,HTMLElement>} */
+	elementMap = {};
+
 	constructor() {
 		each(NodeTypeMap, (key, val) => {
 			this.#nodeTypes.push(/** @type {string} */ (key));

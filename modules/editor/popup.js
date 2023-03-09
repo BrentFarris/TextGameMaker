@@ -15,6 +15,18 @@ export class Popup {
 	/** @type {KnockoutObservable<boolean>} */
 	isPrompt = ko.observable(false);
 	
+	/** @type {KnockoutObservable<boolean>} */
+	focusOkay = ko.observable(false);
+	
+	/** @type {KnockoutObservable<boolean>} */
+	focusConfirm = ko.observable(false);
+	
+	/** @type {KnockoutObservable<boolean>} */
+	focusCancel = ko.observable(false);
+	
+	/** @type {KnockoutObservable<boolean>} */
+	focusInput = ko.observable(false);
+	
 	/** @type {KnockoutObservable<string>} */
 	title = ko.observable("Title");
 	
@@ -78,6 +90,10 @@ export class Popup {
 		this.yesText("");
 		this.noText("");
 		this.alertOkayText("");
+		this.focusInput(false);
+		this.focusOkay(false);
+		this.focusConfirm(false);
+		this.focusCancel(false);
 		this.#promptCallback = null;
 		this.#successCallback = null;
 		this.#failureCallback = null;
@@ -95,6 +111,7 @@ export class Popup {
 		this.alertOkayText(okayText || "Okay");
 		this.isAlert(true);
 		this.showing(true);
+		this.focusOkay(true);
 		this.#successCallback = successCallback || null;
 	}
 
@@ -113,6 +130,7 @@ export class Popup {
 		this.noText(noText || "Cancel");
 		this.isConfirm(true);
 		this.showing(true);
+		this.focusConfirm(true);
 		this.#successCallback = successCallback;
 		this.#failureCallback = failureCallback || null;
 	}
@@ -134,6 +152,7 @@ export class Popup {
 		this.input(input || "");
 		this.isPrompt(true);
 		this.showing(true);
+		this.focusInput(true);
 		this.#promptCallback = promptCallback;
 		this.#failureCallback = failureCallback || null;
 	}
