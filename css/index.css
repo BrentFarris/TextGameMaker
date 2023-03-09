@@ -300,7 +300,7 @@ textarea {
 }
 
 .writerPreview::before {
-	content: "Preview (you can use HTML tags like 'b', 'i', and 'span' [for color])";
+	content: "Preview (you can use HTML tags like 'b', 'i', and 'span' [for text style])";
 	position: absolute;
 	left: 5px;
 	top: 5px;
