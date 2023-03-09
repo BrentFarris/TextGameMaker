@@ -8,6 +8,9 @@ export class NodeManager {
 	/** @type {Optional<CoreNode>} */
 	#selectedNode = new Optional();
 
+	/** @type {KnockoutObservable<CoreNode>} */
+	focusededNode = ko.observable();
+
 	/** @type {string[]} */
 	#nodeTypes = [];
 
@@ -61,6 +64,13 @@ export class NodeManager {
 	 */
 	select(node) {
 		this.#selectedNode.Value = node;
+	}
+
+	/**
+	 * @param {CoreNode} node 
+	 */
+	focus(node) {
+		this.focusededNode(node);
 	}
 
 	/**
