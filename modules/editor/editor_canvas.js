@@ -7,9 +7,6 @@ export class EditorCanvas {
 	/** @type {Canvas} */
 	#canvas;
 
-	/** @type {boolean} */
-	#canvasAutoStop = true;
-
 	/** @type {NodeManager} */
 	#nodeManager;
 	
@@ -63,8 +60,7 @@ export class EditorCanvas {
 				ctx.stroke();
 			}
 		}
-		if (this.#canvasAutoStop && this.#nodeManager.Count)
-			Canvas.stop(this.#canvas);
+		Canvas.stop(this.#canvas);
 	}
 
 	/**
@@ -89,15 +85,6 @@ export class EditorCanvas {
 	}
 
 	drawFrame() {
-		if (this.#canvasAutoStop)
-			Canvas.start(this.#canvas);
-	}
-
-	setContinuousRender() {
-		this.#canvasAutoStop = false;
-	}
-
-	setRenderFreezeFrame() {
-		this.#canvasAutoStop = true;
+		Canvas.start(this.#canvas);
 	}
 }

@@ -53,7 +53,7 @@
 							<!-- /ko -->
 							<!-- ko if: TypeName == "BigString" -->
 							<br />
-							<textarea class="inputs dialog" data-bind="value: value, attr: {placeholder: placeholder}" onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'></textarea>
+							<textarea class="inputs dialog" data-bind="textInput: value, attr: {placeholder: placeholder}, event: { focus: ()=>$root.nodeManager.focus($parent), blur: ()=>$root.nodeManager.focus(null) }" onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"'></textarea>
 							<!-- /ko -->
 							<!-- ko if: TypeName == "ShortString" -->
 							<input class="inputs value" type="text" data-bind="textInput: value, attr: {placeholder: placeholder}" />
@@ -285,6 +285,15 @@
 			</ul>
 		</script>
 		<div class="projectWindow" data-bind="template: { name: 'folderTemplate', data: project.root }, css: keepProjectWindowOpen()?'openProjectWindow':''"></div>
+		<div class="writerPreview" data-bind="visible: $root.nodeManager.focusededNode() != null, with: $root.nodeManager.focusededNode">
+			<h2>TEST</h2>
+			<!-- ko if: $data && 'character' in $data -->
+			<p class="characterNameActive" data-bind="text: $root.characterName(character.Value)"></p>
+			<!-- /ko -->
+			<!-- ko if: $data && 'text' in $data -->
+			<p data-bind="html: $root.parseText(text.value())"></p>
+			<!-- /ko -->
+		</div>
 		<script type="module" src="modules/editor/editor_application.js"></script>
 	</body>
 </html>

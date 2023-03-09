@@ -472,13 +472,13 @@ export class EditorApplication extends Application {
 
 	async #saveFileInternal() {
 		this.project.openFile.setContent(this.getJson());
+		this.project.root.file("meta.json").Value.setContent(this.getMetaJson());
 		// TODO:  Save just this file
 		await this.project.serialize(this);
 	}
 
 	async saveFile() {
 		this.#canvas.drawFrame();
-		this.#canvas.setRenderFreezeFrame();
 		this.#canvas.drawFrame();
 		await this.#saveFileInternal();
 		this.fileOptionsVisible(false);
@@ -674,7 +674,6 @@ export class EditorApplication extends Application {
 		}
 		this.#dragPos.x2 = inputX;
 		this.#dragPos.y2 = inputY;
-		this.#canvas.setContinuousRender();
 		this.isolate(scope);
 		this.#canvas.drawFrame();
 	}
@@ -714,6 +713,7 @@ export class EditorApplication extends Application {
 	    target.style.left = y + "px";
 		this.#setNodeDraggedPos();
 		this.#canvas.resize();
+		this.#canvas.drawFrame();
 	}
 
 	#dragEnd(e) {
@@ -726,7 +726,6 @@ export class EditorApplication extends Application {
 		this.#dragPos.node = null;
 		this.nodeManager.deselect();
 		this.#canvas.trim();
-		this.#canvas.setRenderFreezeFrame();
 		this.#canvas.drawFrame();
 	}
 
@@ -966,7 +965,7 @@ export class EditorApplication extends Application {
 		let moved = false;
 		if (this.dragFolder)
 			moved = this.dragFolder.moveTo(folder);
-		else if (this.dragFile)
+		else if (this.dragFile && this.dragFile.Name != Project.META_FILE_NAME)
 			moved = this.dragFile.moveTo(folder);
 		this.dragFolder = null;
 		this.dragFile = null;
@@ -1076,13 +1075,37 @@ export class EditorApplication extends Application {
 		await this.project.open(projectName, this);
 		this.projectListVisible(false);
 	}
+
+	/**
+	 * @param {number} id 
+	 * @return {string}
+	 */
+	 characterName(id) {
+		return this.characterDatabase.name(id);
+	}
+
+	/**
+	 * @param {string} text 
+	 * @returns {string}
+	 */
+	parseText(text) {
+		let matches = text.match(/\{[a-zA-Z0-9\s]+\}/gi);
+		if (matches) {
+			for (let i = 0; i < matches.length; i++) {
+				let varName = matches[i].substring(1, matches[i].length - 1);
+				if (this.variableDatabase.exists(varName))
+					text = text.replace(matches[i], this.variableDatabase.value(varName));
+			}
+		}
+		return StringHelpers.nl2br(text);
+	}
 }
 
 (function() {
 	let app = new EditorApplication();
 	ko.applyBindings(app, document.body);
 	window.onerror = (msg, url, linenumber) => {
-		this.popup.showAlert("Error", `Error message: ${msg}\nURL:${url}\nLine Number: ${linenumber}`);
+		app.popup.showAlert("Error", `Error message: ${msg}\nURL:${url}\nLine Number: ${linenumber}`);
 		return false;
 	};
 })();

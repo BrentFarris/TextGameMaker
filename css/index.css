@@ -286,3 +286,27 @@ textarea {
 	margin-bottom: 5px;
 	font-size: 0.8em;
 }
+
+.writerPreview {
+	position: fixed;
+	height: 100px;
+	width: 100%;
+	bottom: 0;
+	background-color: white;
+	border-top: 1px solid black;
+	z-index: 25;
+	padding: 25px;
+	overflow: auto;
+}
+
+.characterName {
+	font-size: small;
+}
+
+.characterName, .characterNameActive {
+	font-weight: bold;
+}
+
+.characterNameActive {
+	color: steelblue;
+}
