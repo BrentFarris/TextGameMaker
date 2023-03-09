@@ -4,7 +4,6 @@ import { Manager, CharacterManager, BeastManager, ItemManager,
 import { CoreNode, NodeTypeMap, ValueType, Output, OptionNode, MusicNode, SoundNode, BackgroundNode, JumpNode } from "../node.js";
 import { ArrayHelpers, each } from "../engine/std.js";
 import { Input } from "../engine/input.js";
-import { LocalStorage } from "../engine/local_storage.js";
 import { EditorCanvas } from "./editor_canvas.js";
 import { NodeManager } from "./node_manager.js";
 import { Application } from "../application.js";
@@ -14,6 +13,7 @@ import { Character } from "../database/character_database.js";
 import { StringHelpers } from "../engine/std.js"
 import { Project, ProjectFile, ProjectFolder } from "./project/project.js";
 import { Popup } from "./popup.js";
+import { ProjectDatabase } from "./project/project_database.js";
 
 function getEvent(e) { return e || window.event; }
 
@@ -62,7 +62,10 @@ export class EditorApplication extends Application {
 	popup = new Popup();
 	
 	/** @type {Project} */
-	project = new Project("Untitled Project");
+	project;
+
+	/** @type {ProjectDatabase} */
+	projectDatabase;
 
 	/** @type {CharacterManager} */
 	characterManager;
@@ -78,9 +81,6 @@ export class EditorApplication extends Application {
 
 	/** @type {NodeTemplateManager} */
 	templateManager = new NodeTemplateManager(document.getElementById("templateManager"));
-
-	/** @type {LocalStorage} */
-	storage = new LocalStorage();
 
 	/** @type {KnockoutObservable<boolean>} */
 	fileOptionsVisible = ko.observable(false);
@@ -145,6 +145,8 @@ export class EditorApplication extends Application {
 
 	constructor() {
 		super();
+		this.projectDatabase = new ProjectDatabase();
+		this.project  = new Project("Untitled Project", this.projectDatabase);
 		this.characterManager = new CharacterManager(
 			document.getElementById("characterManager"), this.characterDatabase);
 		this.itemManager = new ItemManager(
@@ -217,14 +219,10 @@ export class EditorApplication extends Application {
 
 		(async () => {
 			// Locate the first available project
-			let fs = await this.storage.getFileSystem();
-			let foundProject = null;
-			each(fs.children, (key, val) => {
-				foundProject = /** @type {string} */ (key);
-				return false;
-			});
-			if (foundProject)
-				this.project.Name = foundProject;
+			await this.projectDatabase.connect();
+			let names = await this.projectDatabase.listProjects();
+			if (names?.length > 0)
+				this.project.Name = names[0];
 			else
 				await this.project.setupNew(this);
 			if (!await this.project.deserialize(this))
@@ -275,10 +273,9 @@ export class EditorApplication extends Application {
 
 	async #updateProjectList() {
 		this.projectList.removeAll();
-		let fs = await this.storage.getFileSystem();
-		each(fs.children, (key, val) => {
-			this.projectList.push(key);
-		});
+		let projects = await this.projectDatabase.listProjects();
+		for (let i = 0; i < projects?.length ?? 0; ++i)
+			this.projectList.push(projects[i]);
 	}
 
 	importMeta(json) {
@@ -524,6 +521,21 @@ export class EditorApplication extends Application {
 	}
 
 	/**
+	 * @param {Application} self
+	 * @param {KeyboardEvent} evt 
+	 */
+	nodeSearchExec(self, evt) {
+		if (evt.keyCode === 13) {
+			let nt = this.nodeManager.NodeTypes;
+			let search = this.nodeSearchFilter().toLowerCase();
+			let found = nt.find(n => n.toLowerCase().indexOf(search) >= 0);
+			if (found)
+				this.nodeSearchCreateNode(found);
+			evt.preventDefault();
+		}
+	}
+
+	/**
 	 * @param {string} nodeType 
 	 */
 	nodeSearchCreateNode(nodeType) {
@@ -648,14 +660,17 @@ export class EditorApplication extends Application {
 		this.metaChanged(true);
 	}
 
-	dupeNode(scope) {
-		let info = scope.serialize();
+	/**
+	 * @param {CoreNode} sourceNode 
+	 */
+	dupeNode(sourceNode) {
+		let info = sourceNode.serialize();
 		info.id = this.#index++;
 		for (let i = 0; i < info.outs.length; i++)
 			info.outs[i] = null;
-		info.x = window.scrollX + 64;
-		info.y = window.scrollY + 64;
-		this.initializeNode(NodeTypeMap[scope.type], info);
+		info.x = sourceNode.x + 64;
+		info.y = sourceNode.y + 64;
+		this.initializeNode(NodeTypeMap[sourceNode.type], info);
 	}
 
 	dragStart(scope, e) {

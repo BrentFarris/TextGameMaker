@@ -1,6 +1,6 @@
 import { Application } from "../../application.js";
-import { StorageFolder } from "../../engine/local_storage.js";
-import { each, eachAsync, Optional, StringHelpers } from "../../engine/std.js";
+import { Optional } from "../../engine/std.js";
+import { ProjectData, ProjectDatabase, ProjectDataFile, ProjectDataFolder } from "./project_database.js";
 
 export class ProjectFile {
 	/** @type {object} */
@@ -247,8 +247,8 @@ export class Project {
 	/** @type {ProjectFolder} */
 	root = new ProjectFolder("/", null);
 
-	/** @type {object} */
-	meta = {};
+	/** @type {ProjectDatabase} */
+	#db;
 
 	/** @return {string} */
 	get Name() { return this.nameView(); }
@@ -261,9 +261,11 @@ export class Project {
 
 	/**
 	 * @param {string} name
+	 * @param {ProjectDatabase} database
 	 */
-	constructor(name) {
+	constructor(name, database) {
 		this.Name = name;
+		this.#db = database;
 	}
 
 	/**
@@ -291,9 +293,9 @@ export class Project {
 		let found = true;
 		let name = untitledName;
 		let i = 0;
+		const existing = await this.#db.listProjects();
 		do {
-			let folder = await app.storage.getFolder(name);
-			found = folder.HasValue;
+			found = existing.includes(name);
 			if (found)
 				name = `${untitledName} ${++i}`;
 		} while(found);
@@ -306,28 +308,20 @@ export class Project {
 	 * @param {Application} app 
 	 */
 	async open(name, app) {
-		let folder = await app.storage.getFolder(name);
-		if (folder.HasValue) {
+		let proj = await this.#db.readProject(name);
+		if (proj) {
 			this.Name = name;
 			this.root.clear();
-			await this.deserialize(app);
+			await this.deserialize();
 		}
 	}
 
 	/**
 	 * @param {string} newName 
-	 * @param {Application} app
 	 */
-	async rename(newName, app) {
-		let oldName = this.Name;
-		let newFolder = await app.storage.getFolder(newName);
-		if (newFolder.HasValue)
-			throw new Error("A project with that name already exists");
+	async rename(newName) {
+		await this.#db.renameProject(this.Name, newName);
 		this.Name = newName;
-		let oldFolder = await app.storage.getFolder(oldName);
-		if (oldFolder.HasValue)
-			await app.storage.deleteFolder(oldFolder.Value);
-		await this.serialize(app);
 	}
 
 	/**
@@ -400,7 +394,7 @@ export class Project {
 			this.openFile = this.root.createFile(defaultName);
 			this.openFile.setContent(defaultData);
 		}
-		await this.serialize(app);
+		await this.serialize();
 	}
 
 	/**
@@ -462,96 +456,63 @@ export class Project {
 	}
 
 	/**
-	 * @param {Application} app
-	 * @param {StorageFolder} parentFolder
 	 * @param {ProjectFolder} projectFolder 
-	 * @throws {Error}
+	 * @param {ProjectDataFolder} dataFolder
 	 */
-	async serializeFolder(app, parentFolder, projectFolder) {
+	serializeFolder(projectFolder, dataFolder) {
 		let files = projectFolder.Files;
 		for (let i = 0; i < files.length; ++i) {
 			let f = files[i];
-			await app.storage.writeFile(parentFolder, f.Name, f.fileData);
+			dataFolder.files.push(new ProjectDataFile(f.Name, f.fileData));
 		}
 		let folders = projectFolder.Folders;
 		for (let i = 0; i < folders.length; ++i) {
-			let childFolder = await app.storage.createSubFolder(parentFolder, folders[i].Name);
-			if (!childFolder.HasValue)
-				throw new Error(`Failed to create folder ${folders[i].Name}`);
-			this.serializeFolder(app, childFolder.Value, folders[i]);
+			let f = folders[i];
+			let df = new ProjectDataFolder(f.Name);
+			dataFolder.folders.push(df);
+			this.serializeFolder(f, df);
 		}
 	}
 
 	/**
-	 * @param {Application} app
-	 * @param {StorageFolder} parentFolder
+	 * 
+	 */
+	async serialize() {
+		let data = new ProjectData(this.Name);
+		this.serializeFolder(this.root, data.root);
+		await this.#db.saveProject(data);
+	}
+
+	/**
 	 * @param {ProjectFolder} projectFolder
+	 * @param {ProjectDataFolder} dataFolder
 	 */
-	async #deleteMissMatchesRecursively(app, parentFolder, projectFolder) {
-		for (let i = 0; i < parentFolder.files.length; ++i) {
-			let file = parentFolder.files[i];
-			if (!projectFolder.fileExists(file))
-				await app.storage.deleteFile(parentFolder, file);
+	deserializeFolder(projectFolder, dataFolder) {
+		for (let i = 0; i < dataFolder.files.length; ++i) {
+			let f = dataFolder.files[i];
+			let fileObj = projectFolder.createFile(f.name);
+			fileObj.setContent(f.content);
 		}
-		eachAsync(parentFolder.children, async (name, folder) => {
-			let childFolder = projectFolder.folder(folder.Name);
-			if (childFolder.HasValue)
-				await this.#deleteMissMatchesRecursively(app, folder, childFolder.Value);
-			else
-				await app.storage.deleteFolder(folder);
-		});
-	}
-
-	/**
-	 * @param {Application} app
-	 * @throws {Error}
-	 */
-	async serialize(app) {
-		let projectFolder = await app.storage.getFolder(this.Name);
-		if (projectFolder.HasValue)
-			await this.#deleteMissMatchesRecursively(app, projectFolder.Value, this.root);
-		projectFolder = await app.storage.createFolder(this.Name);
-		if (!projectFolder.HasValue)
-			throw new Error("Failed to create project folder");
-		let folder = projectFolder.Value;
-		await this.serializeFolder(app, folder, this.root)
-	}
-
-	/**
-	 * @param {Application} app
-	 * @param {StorageFolder} parentFolder
-	 * @param {ProjectFolder} projectFolder
-	 */
-	async deserializeFolder(app, parentFolder, projectFolder) {
-		for (let i = 0; i < parentFolder.files.length; ++i) {
-			let file = parentFolder.files[i];
-			let data = await app.storage.readFile(parentFolder, file);
-			let fileObj = projectFolder.createFile(file);
-			fileObj.setContent(data);
+		for (let i = 0; i < dataFolder.folders.length; ++i) {
+			let f = dataFolder.folders[i];
+			let folderObj = projectFolder.createFolder(f.name);
+			this.deserializeFolder(folderObj, f);
 		}
-		each(parentFolder.children, (key, val) => {
-			let folderObj = projectFolder.createFolder(/** @type {string} */ (key));
-			this.deserializeFolder(app, val, folderObj);
-		});
 	}
 
 	/**
-	 * @param {Application} app
 	 * @return {Promise<boolean>}
 	 */
-	async deserialize(app) {
-		let tempFolder = await app.storage.getFolder(this.Name);
-		if (!tempFolder.HasValue)
-			return false;
-		let folder = tempFolder.Value;
-		await this.deserializeFolder(app, folder, this.root);
+	async deserialize() {
+		let projectData = await this.#db.readProject(this.Name);
+		await this.deserializeFolder(this.root, projectData.root);
 		return true;
 	}
 
 	/**
-	 * @param {Application} app
+	 * 
 	 */
-	async export(app) {
+	async export() {
 		let zip = new JSZip();
 		await this.#addFolder(zip, this.root.Folders);
 		await this.#addFiles(zip, this.root.Files);
