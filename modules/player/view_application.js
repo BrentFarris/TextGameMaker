@@ -1,7 +1,7 @@
 import { each, getURLParam, Optional, StringHelpers } from "../engine/std.js";
 import { CoreNode, NodeTypeMap, OptionNode, Output, StartNode, StoryNode } from "../node.js";
 import { Application } from "../application.js";
-import { Media } from "../media.js";
+import { AudioDatabase, ImageDatabase, Media } from "../media.js";
 import { Variable } from "../database/variable_database.js";
 
 /**
@@ -70,11 +70,9 @@ export class ViewApplication extends Application {
 
 	async importMedia(files) {
 		for (let i = 0; i < files.length; i++) {
-			if (files[i].type === "audio/mpeg" || files[i].type === "audio/wav"
-				|| files[i].type === "video/ogg" || files[i].type === "audio/x-wav")
-			{
+			if (AudioDatabase.isFileAudio(files[i]))
 				await this.media.audioDatabase.add(files[i], URL.createObjectURL(files[i]));
-			} else if (files[i].type === "image/png" || files[i].type === "image/jpeg")
+			else if (ImageDatabase.isFileImage(files[i]))
 				await this.media.imageDatabase.add(files[i], URL.createObjectURL(files[i]));
 		}
 	}
@@ -82,18 +80,13 @@ export class ViewApplication extends Application {
 	async importZippedMedia(zip) {
 		return new Promise((res, rej) => {
 			let count = 1;
-			zip.folder("audio").forEach((relativePath, file) => {
+			zip.forEach((relativePath, file) => {
 				count++;
-				file.async("blob").then((blob) => {
-					this.media.audioDatabase.add(file, URL.createObjectURL(blob));
-					if (--count === 0)
-						res(null);
-				});
-			});
-			zip.folder("images").forEach((relativePath, file) => {
-				count++;
-				file.async("blob").then((blob) => {
-					this.media.imageDatabase.add(file, URL.createObjectURL(blob));
+				file.async("blob").then(async (blob) => {
+					if (AudioDatabase.isFileAudio(relativePath))
+						await this.media.audioDatabase.add(relativePath, URL.createObjectURL(blob));
+					else if (ImageDatabase.isFileImage(relativePath))
+						await this.media.imageDatabase.add(relativePath, URL.createObjectURL(blob));
 					if (--count === 0)
 						res(null);
 				});
