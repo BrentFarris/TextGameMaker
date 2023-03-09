@@ -789,6 +789,7 @@ export class EditorApplication extends Application {
 
 	canvasClick(scope, elm) {
 		this.cancelOutLink();
+		this.fileOptionsVisible(false);
 	}
 
 	/**
