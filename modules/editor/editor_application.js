@@ -229,11 +229,11 @@ export class EditorApplication extends Application {
 			else
 				await this.project.setupNew(this);
 			if (!await this.project.deserialize(this))
-				await this.project.initialize(this, this.getJson());
+				await this.project.initialize(this, this.#blankJson());
 			else {
 				let mf = this.project.root.file(Project.META_FILE_NAME);
 				this.importMeta(mf.Value.fileData);
-				this.project.pickRandomFile(this.getJson());
+				this.project.pickRandomFile(this.#blankJson());
 				this.import(this.project.openFile.fileData);
 			}
 			this.name(this.project.openFile.Name);
@@ -328,6 +328,16 @@ export class EditorApplication extends Application {
 	/**
 	 * @returns {FileJSON}
 	 */
+	#blankJson() {
+		return {
+			name: "Untitled",
+			nodes: []
+		};
+	}
+
+	/**
+	 * @returns {FileJSON}
+	 */
 	getJson() {
 		let sanitize = [];
 		for (let i = 0; i < this.nodeManager.Count; i++)
@@ -401,7 +411,7 @@ export class EditorApplication extends Application {
 			this.fileOptionsVisible(false);
 			// TODO:  Make sure this doesn't clash with any other projects
 			await this.project.setupNew(this);
-			await this.project.initialize(this, this.getJson());
+			await this.project.initialize(this, this.#blankJson());
 			this.name(this.project.openFile.Name);
 		});
 	}
@@ -415,7 +425,7 @@ export class EditorApplication extends Application {
 	async newFile() {
 		await this.#saveFileInternal();
 		this.#clearFile();
-		this.project.newTempFile(this.getJson());
+		this.project.newTempFile(this.#blankJson());
 		this.name(this.project.openFile.Name);
 	}
 
@@ -844,7 +854,7 @@ export class EditorApplication extends Application {
 		if (Input.Alt) {
 			this.popup.showConfirm("Delete file", `Are you sure you wish to delete the file: ${file.Path}?`, () => {
 				if (file == this.project.openFile) {
-					this.project.deleteOpenFile(this.getJson());
+					this.project.deleteOpenFile(this.#blankJson());
 					this.import(this.project.openFile.fileData);
 					this.name(this.project.openFile.Name);
 				} else
