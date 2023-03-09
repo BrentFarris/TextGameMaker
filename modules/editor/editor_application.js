@@ -1069,30 +1069,6 @@ export class EditorApplication extends Application {
 		await this.project.open(projectName, this);
 		this.projectListVisible(false);
 	}
-
-	/**
-	 * @param {number} id 
-	 * @return {string}
-	 */
-	 characterName(id) {
-		return this.characterDatabase.name(id);
-	}
-
-	/**
-	 * @param {string} text 
-	 * @returns {string}
-	 */
-	parseText(text) {
-		let matches = text.match(/\{[a-zA-Z0-9\s]+\}/gi);
-		if (matches) {
-			for (let i = 0; i < matches.length; i++) {
-				let varName = matches[i].substring(1, matches[i].length - 1);
-				if (this.variableDatabase.exists(varName))
-					text = text.replace(matches[i], this.variableDatabase.value(varName));
-			}
-		}
-		return StringHelpers.nl2br(text);
-	}
 }
 
 (function() {
