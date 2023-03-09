@@ -41,6 +41,7 @@ body {
 	background-size: cover;
 	left: 0;
 	top: 0;
+	background-position-x: center;
 }
 
 .history p {
