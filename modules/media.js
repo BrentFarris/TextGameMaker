@@ -19,6 +19,37 @@ export class AudioDatabase {
 
 	/**
 	 * @param {File|string} file 
+	 * @return {boolean}
+	 */
+	static isFileAudio(file) {
+		const types = ["audio/mpeg", "audio/wav", "video/ogg", "audio/x-wav"];
+		const extensions = [".mp3", ".wav"];
+		let name = /** @type {string} */ (file);
+		if (file instanceof File)
+			name = file.type?.length > 0 ? file.type : file.name;
+		return types.includes(name) || extensions.includes(name.substring(name.lastIndexOf(".")));
+	}
+
+	/**
+	 * @param {File} file 
+	 * @return {boolean}
+	 */
+	static isFileBGM(file) {
+		const types = ["audio/wav", "video/ogg"];
+		return types.includes(file.type);
+	}
+
+	/**
+	 * @param {File} file 
+	 * @return {boolean}
+	 */
+	static isFileSFX(file) {
+		const types = ["audio/wav", "audio/x-wav"];
+		return types.includes(file.type);
+	}
+
+	/**
+	 * @param {File|string} file 
 	 * @param {string} src 
 	 * @return {Promise<string>}
 	 */
@@ -82,6 +113,19 @@ export class AudioDatabase {
 export class ImageDatabase {
 	/** @type Object<string,ImageResource> */
 	#resources = {};
+
+	/**
+	 * @param {File|string} file 
+	 * @return {boolean}
+	 */
+	static isFileImage(file) {
+		const types = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/svg+xml"];
+		const extensions = [".png", ".jpeg", ".jpg", ".gif", ".svg"];
+		let name = /** @type {string} */ (file);
+		if (file instanceof File)
+			name = file.type?.length > 0 ? file.type : file.name;
+		return types.includes(name) || extensions.includes(name.substring(name.lastIndexOf(".")));
+	}
 
 	/**
 	 * @param {File|string} file 
