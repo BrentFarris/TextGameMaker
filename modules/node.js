@@ -1319,6 +1319,9 @@ export class ReturnNode extends PassNode {
  * @extends {SourceNode}
  */
 export class BackgroundNode extends SourceNode {
+	/** @type {BoolValue} */
+	forceFit = new BoolValue("Force fit:");
+
 	/**
 	 * @param {BackgroundNode} createInfo
 	 */

@@ -34,14 +34,23 @@ body {
 	background-color: darkslategray;
 }
 
-.containerBg, .containerBgBuffer {
+.containerBg, .containerBGForceFit {
 	position: relative;
 	width: 100%;
 	height: 100%;
-	background-size: cover;
 	left: 0;
 	top: 0;
 	background-position-x: center;
+	background-position-y: center;
+}
+
+.containerBg {
+	background-size: cover;
+}
+
+.containerBGForceFit {
+	background-size: contain;
+	background-repeat: no-repeat;
 }
 
 .history p {
