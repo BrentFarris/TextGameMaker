@@ -1,7 +1,7 @@
 import { Manager, CharacterManager, BeastManager, ItemManager,
 	VariableManager, NodeTemplateManager,
 	BeastEntry, TemplateEntry } from "./manager.js";
-import { CoreNode, NodeTypeMap, ValueType, Output, OptionNode, MusicNode, SoundNode, BackgroundNode, JumpNode } from "../node.js";
+import { CoreNode, NodeTypeMap, ValueType, Output, OptionNode, MusicNode, SoundNode, BackgroundNode, JumpNode, OutsNode } from "../node.js";
 import { ArrayHelpers, each } from "../engine/std.js";
 import { Input } from "../engine/input.js";
 import { EditorCanvas } from "./editor_canvas.js";
@@ -123,10 +123,6 @@ export class EditorApplication extends Application {
 
 	/** @type {Output|null} */
 	settingTo = null;
-	
-	// TODO:  This and lastData should be typedefs
-	/** @type {ProjectFile[]} */
-	jumpStack = [];
 	
 	/** @type {JSON|null} */
 	lastData = null;
@@ -334,24 +330,9 @@ export class EditorApplication extends Application {
 	async jumpLoad(scope) {
 		let file = this.project.findFile(scope.src.Value);
 		if (file.HasValue) {
-			this.jumpStack.push(this.project.openFile);
 			this.openFile(file.Value);
-			let hasReturn = false;
-			for (let i = 0; i < file.Value.fileData.nodes.length && !hasReturn; i++)
-				hasReturn = file.Value.fileData.nodes[i].type === "Return";
-			if (!hasReturn)
-				ArrayHelpers.clear(this.jumpStack);
 			window.scrollTo(0, 0);
 		}
-	}
-
-	/**
-	 * 
-	 */
-	async returnLoad() {
-		if (!this.jumpStack.length)
-			return;
-		this.openFile(this.jumpStack.pop());
 	}
 
 	/**
@@ -862,6 +843,14 @@ export class EditorApplication extends Application {
 	 */
 	isOptionNode(node) {
 		return node instanceof OptionNode;
+	}
+
+	/**
+	 * @param {CoreNode} node 
+	 * @returns {boolean}
+	 */
+	isOutsNode(node) {
+		return node instanceof OutsNode;
 	}
 
 	toggleCheck(value, elm) {

@@ -281,7 +281,7 @@ export class Project {
 		for (let i = 0; i < parts.length - 1 && folder.HasValue; ++i)
 			folder = folder.Value.folder(parts[i]);
 		if (folder.HasValue)
-			target = folder.Value.file(path[path.length - 1]);
+			target = folder.Value.file(parts[parts.length - 1]);
 		return target;
 	}
 

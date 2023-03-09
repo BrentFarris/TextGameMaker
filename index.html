@@ -13,7 +13,7 @@
 		<div id="container">
 			<canvas id="canvas" data-bind="click:$root.canvasClick.bind($root, $element)"></canvas>
 			<div data-bind="foreach: nodeManager.Nodes">
-				<div class="node" data-bind="visible: true && (()=>{$root.nodeManager.elementMap[$data.id]=$element;return true;})(), click:$root.nodeClick.bind($root, $element), event: {mouseover:$root.nodeMouseOver.bind($root, $element),mouseout:$root.nodeMouseOut.bind($root, $element)}, style: { left: x + 'px', top: y + 'px' }, attr: {id:`node-${id}`}">
+				<div class="node" data-bind="visible: true && (()=>{$root.nodeManager.elementMap[$data.id]=$element;return true;})(), click:$root.nodeClick.bind($root, $element), event: {mouseover:$root.nodeMouseOver.bind($root, $element),mouseout:$root.nodeMouseOut.bind($root, $element)}, style: { left: x + 'px', top: y + 'px', minHeight: $root.isOutsNode($data)?`${outs().length*22+25}px`:'inherit' }, attr: {id:`node-${id}`}">
 					<div id="handle" class="nodeHandle" draggable="true" data-bind="text:` ${TypeName}`, event: {mousedown:$root.dragStart.bind($root), touchstart:$root.dragStart.bind($root)}, style: {backgroundColor: Color}"></div>
 					<div id="contents" class="nodeContents">
 						<div data-bind="foreach: fields">
@@ -128,17 +128,14 @@
 						<!-- ko if: $root.isOptionNode($data) -->
 						<button data-bind="click:addOption">+</button>
 						<!-- /ko -->
-						<!-- ko if: $data.TypeName == "OutsNode" -->
+						<!-- ko if: $root.isOutsNode($data) -->
 						<button data-bind="click:addOut">+</button>
 						<!-- /ko -->
 						<button data-bind="click:$root.deleteNode.bind($root)">Delete</button>
 						<button data-bind="click:$root.makeTemplate.bind($root)">^</button>
 						<button data-bind="click:$root.dupeNode.bind($root)">Dupe</button>
-						<!-- ko if: $data.TypeName == "JumpNode" -->
+						<!-- ko if: $data.TypeName == "Jump" -->
 						<button data-bind="click:$root.jumpLoad.bind($root)">Go</button>
-						<!-- /ko -->
-						<!-- ko if: $data.TypeName == "ReturnNode" -->
-						<button data-bind="click:$root.returnLoad.bind($root)">Go</button>
 						<!-- /ko -->
 					</div>
 					<div class="nodeOuts" data-bind="foreach: outs">
