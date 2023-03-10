@@ -382,7 +382,8 @@ export class ViewApplication extends Application {
 		await this.importZip(blob);
 	}
 
-	async requestSampleGame() {
+	async requestSampleGame(elm) {
+		elm.style.display = "none";
 		let sample = getURLParam("sample");
 		this.loadSampleGame(sample.Value);
 	}
