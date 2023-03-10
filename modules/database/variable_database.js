@@ -84,7 +84,7 @@ export class VariableDatabase extends Database {
 	 */
 	exists(name) {
 		let found = false;
-		this.each(v => found = found || v.name === name);
+		this.each(v => { found = found || v.name === name });
 		return found;
 	}
 }
