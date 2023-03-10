@@ -14,6 +14,7 @@ import { StringHelpers } from "../engine/std.js"
 import { Project, ProjectFile, ProjectFolder } from "./project/project.js";
 import { Popup } from "./popup.js";
 import { ProjectDatabase } from "./project/project_database.js";
+import { AudioDatabase } from "../media.js";
 
 function getEvent(e) { return e || window.event; }
 
@@ -313,17 +314,15 @@ export class EditorApplication extends Application {
 		this.#canvas.drawFrame();
 	}
 
-	importJson(scope, event) {
+	async importFile(scope, event) {
 		let input = event.target;
-        let reader = new FileReader();
-        reader.onload = () => {
-			let json = JSON.parse(/** @type {string} */ (reader.result));
-			if ("characters" in json)
-				this.importMeta(json);
-			else
-				this.import(json);
-		};
-        reader.readAsText(input.files[0]);
+		if (input.files[0].name.endsWith(".zip")) {
+			await this.project.import(this, input.files[0], () => {
+				this.import(this.project.openFile.fileData);
+				this.name(this.project.openFile.Name);
+			});
+		} else
+			this.#processFilesImport(this.project.root, input.files);
 		this.fileOptionsVisible(false);
 	}
 
@@ -396,6 +395,7 @@ export class EditorApplication extends Application {
 	}
 
 	async exportJson() {
+		await this.project.serialize();
 		/** @type {ProjectFile} */
 		let metaFile = this.project.root.file(Project.META_FILE_NAME).Value;
 		metaFile.setContent(this.getMetaJson());
@@ -921,6 +921,44 @@ export class EditorApplication extends Application {
 	}
 
 	/**
+	 * @param {ProjectFolder} folder
+	 * @param {FileList} files
+	 */
+	async #processFilesImport(folder, files) {
+		for (let i = 0; i < files.length; i++) {
+			if (folder.fileExists(files[i].name)) {
+				this.popup.showAlert("File already exists", `File already exists: ${files[i].name}`);
+				continue;
+			}
+			switch (files[i].type) {
+				case "audio/mpeg":
+				case "audio/wav":
+				case "video/ogg":
+				case "audio/x-wav":
+				{
+					let path = await this.media.audioDatabase.add(
+						files[i], URL.createObjectURL(files[i]));
+					let f = folder.createFile(files[i].name);
+					f.setContent(await this.media.audioDatabase.blob(path));
+					break;
+				}
+				case "image/png":
+				case "image/jpeg":
+				case "image/jpg":
+				case "image/gif":
+				case "image/svg+xml":
+				{
+					let path = await this.media.imageDatabase.add(
+						files[i], URL.createObjectURL(files[i]));
+					let f = folder.createFile(files[i].name);
+					f.setContent(await this.media.imageDatabase.blob(path));
+					break;
+				}
+			}
+		}
+	}
+
+	/**
 	 * @param {ProjectFolder} folder 
 	 * @param {HTMLDivElement} elm
 	 * @param {DragEvent} evt
@@ -928,37 +966,7 @@ export class EditorApplication extends Application {
 	async projectFolderDrop(folder, elm, evt) {
 		if (evt.dataTransfer?.files && evt.dataTransfer.files.length > 0) {
 			let files = evt.dataTransfer.files;
-			for (let i = 0; i < files.length; i++) {
-				if (folder.fileExists(files[i].name)) {
-					this.popup.showAlert("File already exists", `File already exists: ${files[i].name}`);
-					continue;
-				}
-				switch (files[i].type) {
-					case "audio/mpeg":
-					case "audio/wav":
-					case "video/ogg":
-					case "audio/x-wav":
-					{
-						let path = await this.media.audioDatabase.add(
-							files[i], URL.createObjectURL(files[i]));
-						let f = folder.createFile(files[i].name);
-						f.setContent(await this.media.audioDatabase.blob(path));
-						break;
-					}
-					case "image/png":
-					case "image/jpeg":
-					case "image/jpg":
-					case "image/gif":
-					case "image/svg+xml":
-					{
-						let path = await this.media.imageDatabase.add(
-							files[i], URL.createObjectURL(files[i]));
-						let f = folder.createFile(files[i].name);
-						f.setContent(await this.media.imageDatabase.blob(path));
-						break;
-					}
-				}
-			}
+			this.#processFilesImport(folder, files);
 		}
 		let moved = false;
 		if (this.dragFolder)

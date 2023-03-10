@@ -1,5 +1,6 @@
 import { Application } from "../../application.js";
 import { Optional } from "../../engine/std.js";
+import { AudioDatabase, ImageDatabase } from "../../media.js";
 import { ProjectData, ProjectDatabase, ProjectDataFile, ProjectDataFolder } from "./project_database.js";
 
 export class ProjectFile {
@@ -416,9 +417,10 @@ export class Project {
 
 	/**
 	 * @param {JSZip} zipFolder 
-	 * @param {ProjectFile[]} files 
+	 * @param {ProjectFolder} folder
 	 */
-	async #addFiles(zipFolder, files) {
+	async #addFiles(zipFolder, folder) {
+		let files = folder.Files;
 		for (let i = 0; i < files.length; ++i) {
 			let blob = null;
 			if (files[i].Name.endsWith(".json"))
@@ -446,13 +448,14 @@ export class Project {
 
 	/**
 	 * @param {JSZip} zipFolder 
-	 * @param {ProjectFolder[]} folders 
+	 * @param {ProjectFolder} folder 
 	 */
-	async #addFolder(zipFolder, folders) {
-		for (let i = 0; i < folders.length; ++i) {
-			let folder = zipFolder.folder(folders[i].Name);
-			await this.#addFiles(folder, folders[i].Files);
-		}
+	async #addFolder(zipFolder, folder) {
+		let subFolder =  zipFolder.folder(folder.Name);
+		await this.#addFiles(subFolder, folder);
+		let folders = folder.Folders;
+		for (let i = 0; i < folders.length; ++i)
+			await this.#addFolder(subFolder, folders[i]);
 	}
 
 	/**
@@ -517,8 +520,10 @@ export class Project {
 	 */
 	async export() {
 		let zip = new JSZip();
-		await this.#addFolder(zip, this.root.Folders);
-		await this.#addFiles(zip, this.root.Files);
+		let folders = this.root.Folders;
+		for (let i = 0; i < folders.length; ++i)
+			await this.#addFolder(zip, folders[i]);
+		await this.#addFiles(zip, this.root);
 		// I've done something wrong here, but I don't know what
 		let size = 0;
 		let content = await zip.generateAsync({type:"blob"});
@@ -537,21 +542,25 @@ export class Project {
 	async importMedia(app, zip) {
 		return new Promise((res, rej) => {
 			let count = 1;
-			zip.folder("audio").forEach((relativePath, file) => {
-				count++;
-				file.async("blob").then((blob) => {
-					app.media.audioDatabase.add(file, URL.createObjectURL(blob));
-					if (--count === 0)
-						res(null);
-				});
+			zip.forEach((relativePath, file) => {
+				if (AudioDatabase.isFileAudio(file.name)) {
+					count++;
+					file.async("blob").then((blob) => {
+						app.media.audioDatabase.add(file, URL.createObjectURL(blob));
+						if (--count === 0)
+							res(null);
+					});
+				}
 			});
-			zip.folder("images").forEach((relativePath, file) => {
-				count++;
-				file.async("blob").then((blob) => {
-					app.media.imageDatabase.add(file, URL.createObjectURL(blob));
-					if (--count === 0)
-						res(null);
-				});
+			zip.forEach((relativePath, file) => {
+				if (ImageDatabase.isFileImage(file.name)) {
+					count++;
+					file.async("blob").then((blob) => {
+						app.media.imageDatabase.add(file, URL.createObjectURL(blob));
+						if (--count === 0)
+							res(null);
+					});
+				}
 			});
 			if (--count == 0)
 				return res(null);
@@ -560,22 +569,44 @@ export class Project {
 
 	/**
 	 * @param {Application} app
-	 * @param {File|Blob} fileBlob 
+	 * @param {File} fileBlob 
+	 * @param {Function} callback
 	 */
-	async import(app, fileBlob) {
+	async import(app, fileBlob, callback) {
 		let reader = new FileReader();
+		this.Name = fileBlob.name.substring(0, fileBlob.name.length-".zip".length);
+		this.root.clear();
 		reader.onload = async (e) => {
 			let content = e.target?.result;
 			let new_zip = new JSZip();
 			let zip = await new_zip.loadAsync(content);
-			await this.importMedia(app, zip)
+			// TODO:  Import this in the same foreach below
+			//await this.importMedia(app, zip)
 			zip.folder().forEach(async (relativePath, file) => {
-				if (relativePath.endsWith("/"))
-					this.root.createFolder(relativePath.substring(0, -1));
-				else if (file.name.endsWith(".json")) {
-					let f = this.root.createFile(relativePath.substring(0, -".json".length));
+				if (relativePath.endsWith("/")) {
+					debugger;
+					let parts = relativePath.substring(0, relativePath.length-1).split("/");
+					let folder = this.root;
+					if (parts.length > 1)
+						folder = this.root.folder(parts[0]).Value;
+					for (let i = 1; i < parts.length - 1; ++i)
+						folder = folder.folder(parts[i]).Value;
+					folder.createFolder(parts[parts.length - 1]);
+				} else if (file.name.endsWith(".json")) {
+					let parts = relativePath.split("/");
+					let folder = this.root;
+					for (let i = 0; i < parts.length - 1; ++i)
+						folder = folder.folder(parts[i]).Value;
+					// substring the relative path to remove the .json extension
+					let f = folder.createFile(parts[parts.length - 1]);
 					let txt = await file.async("string");
 					f.setContent(JSON.parse(txt));
+					// Select first file that isn't meta.json
+					if (callback && file.name != Project.META_FILE_NAME) {
+						this.openFile = f;
+						callback();
+						callback = null;
+					}
 				}
 			});
 		};
