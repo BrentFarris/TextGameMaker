@@ -81,7 +81,7 @@ export class ViewApplication extends Application {
 		return new Promise((res, rej) => {
 			let count = 1;
 			zip.forEach((relativePath, file) => {
-				count++;
+			count++;
 				file.async("blob").then(async (blob) => {
 					if (AudioDatabase.isFileAudio(relativePath))
 						await this.media.audioDatabase.add(relativePath, URL.createObjectURL(blob));
@@ -246,7 +246,7 @@ export class ViewApplication extends Application {
 		if (typeof loadedFile === "string") {
 			let found = false;
 			for (let i = 0; i < this.loadedFiles.length && !found; ++i) {
-				found = `json/${this.loadedFiles[i].name}` == loadedFile;
+				found = this.loadedFiles[i].name == loadedFile;
 				if (found)
 					loadedFile = this.loadedFiles[i];
 			}

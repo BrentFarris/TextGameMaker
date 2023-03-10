@@ -395,7 +395,7 @@ export class EditorApplication extends Application {
 		}
 	}
 
-	exportJson() {
+	async exportJson() {
 		/** @type {ProjectFile} */
 		let metaFile = this.project.root.file(Project.META_FILE_NAME).Value;
 		metaFile.setContent(this.getMetaJson());
@@ -406,7 +406,7 @@ export class EditorApplication extends Application {
 		else
 			current = this.project.root.createFile("start.json");
 		current.setContent(this.getJson());
-		this.project.export(this);
+		await this.project.export();
 	}
 
 	async newProject() {
@@ -420,7 +420,6 @@ export class EditorApplication extends Application {
 			this.variableDatabase.clear();
 			this.templateManager.nodeTemplates.removeAll();
 			this.metaChanged(false);
-			//this.importMeta(await HTTP.get("view/json/meta.json"));
 			this.fileOptionsVisible(false);
 			// TODO:  Make sure this doesn't clash with any other projects
 			await this.project.setupNew(this);
