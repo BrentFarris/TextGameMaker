@@ -301,10 +301,10 @@ export class ViewApplication extends Application {
 	}
 
 	updateText() {
-		if (this.node() instanceof StoryNode)
-			this.textStyle("italic");
-		else
-			this.textStyle("normal");
+		//if (this.node() instanceof StoryNode)
+		//	this.textStyle("italic");
+		//else
+		//	this.textStyle("normal");
 		document.getElementById("primaryText")?.scrollIntoView();
 	}
 
