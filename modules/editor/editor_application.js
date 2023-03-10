@@ -1061,6 +1061,9 @@ export class EditorApplication extends Application {
 				let n = this.initializeNode(JumpNode, undefined, evt.offsetX, evt.offsetY);
 				n.src.Value = this.dragFile.Path;
 			}
+		} else if (evt.dataTransfer?.files && evt.dataTransfer.files.length > 0) {
+			let files = evt.dataTransfer.files;
+			this.#processFilesImport(this.project.root, files);
 		}
 		this.dragFile = null;
 		this.dragFolder = null;
