@@ -191,9 +191,20 @@
 				<option value="item">Item</option>
 			</select>
 			<input type="text" data-bind="textInput: variableManager.name, event: {keyup: managerInputExec.bind($root, variableManager)}" />
-			<ul data-bind="foreach: $root.variableDatabase.entryView" class="scrollList">
-				<li>[<span data-bind="text: type"></span>] <span data-bind="text: name"></span> <span class="fakeLink" data-bind="click:$root.deleteVariable.bind($root)">Delete</span></li>
-			</ul>
+			<div class="varGrid" data-bind="foreach: $root.variableDatabase.entryView" class="scrollList">
+				<div data-bind="text: `[${type}]`"></div>
+				<div data-bind="text: name"></div>
+				<div>
+					<input type="text" data-bind="visible: type=='string', textInput: value" />
+					<input type="number" data-bind="visible: type=='whole', textInput: value" />
+					<input type="number" data-bind="visible: type=='number', textInput: value" />
+					<input type="checkbox" data-bind="visible: type=='bool', checked: value" />
+					<span data-bind="visible: type=='char'">No default support at this time</span>
+					<span data-bind="visible: type=='beast'">No default support at this time</span>
+					<span data-bind="visible: type=='item'">No default support at this time</span>
+				</div>
+				<button data-bind="click:$root.deleteVariable.bind($root)">x</button>
+			</div>
 			<div style="text-align:center;">
 				<button data-bind="click:variableManager.close.bind(variableManager)">Close</button>
 			</div>

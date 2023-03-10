@@ -515,7 +515,8 @@ export class EditorApplication extends Application {
 	 * @param {string} nodeType 
 	 */
 	nodeSearchCreateNode(nodeType) {
-		this.initializeNode(NodeTypeMap[nodeType]);
+		let mPos = Input.mousePosition;
+		this.initializeNode(NodeTypeMap[nodeType], undefined, mPos.x, mPos.y);
 		this.nodeSearchFilter("");
 		this.showNodeSearch(false);
 	}
@@ -1031,9 +1032,18 @@ export class EditorApplication extends Application {
 					case "audio/mpeg":
 					case "video/ogg":
 					{
-						/** @type {MusicNode} */
-						let n = this.initializeNode(MusicNode, undefined, evt.offsetX, evt.offsetY);
-						n.src.Value = this.dragFile.Path;
+						let target = this.dragFile;
+						let x = evt.offsetX;
+						let y = evt.offsetY;
+						this.popup.showConfirm("Audio type?", "Would you like this to be a background music node or a sound node?", ()=>{
+							/** @type {MusicNode} */
+							let n = this.initializeNode(MusicNode, undefined, x, y);
+							n.src.Value = target.Path;
+						}, ()=> {
+							/** @type {SoundNode} */
+							let n = this.initializeNode(SoundNode, undefined, x, y);
+							n.src.Value = target.Path;
+						}, "BGM", "Sound");
 						break;
 					}
 					case "audio/wav":
@@ -1061,6 +1071,9 @@ export class EditorApplication extends Application {
 				let n = this.initializeNode(JumpNode, undefined, evt.offsetX, evt.offsetY);
 				n.src.Value = this.dragFile.Path;
 			}
+		} else if (evt.dataTransfer?.files && evt.dataTransfer.files.length > 0) {
+			let files = evt.dataTransfer.files;
+			this.#processFilesImport(this.project.root, files);
 		}
 		this.dragFile = null;
 		this.dragFolder = null;
