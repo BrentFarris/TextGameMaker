@@ -381,6 +381,12 @@ export class ViewApplication extends Application {
 		let blob = await res.blob();
 		await this.importZip(blob);
 	}
+
+	async requestSampleGame() {
+		debugger;
+		let sample = getURLParam("sample");
+		this.loadSampleGame(sample.Value);
+	}
 }
 
 let application = new ViewApplication();
@@ -404,7 +410,8 @@ application.addRemoteFunction("yell", () => {
 
 	let sample = getURLParam("sample");
 	if (sample.HasValue) {
-		application.loadSampleGame(sample.Value);
+		let ss = /** @type {HTMLInputElement} */ (document.getElementById("startSample"));
+		ss.style.display = "block";
 		lf.style.display = "none";
 	}
 })();

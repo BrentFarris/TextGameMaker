@@ -194,3 +194,18 @@ ul {
 	margin-bottom: 10px;
 	height: calc(100% - 76px);
 }
+
+#startSample {
+	display: none;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+#startSample button {
+	width: 100%;
+	padding: 25px;
+	font-size: 2em;
+	font-weight: bold;
+}
