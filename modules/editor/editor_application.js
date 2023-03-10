@@ -1031,9 +1031,18 @@ export class EditorApplication extends Application {
 					case "audio/mpeg":
 					case "video/ogg":
 					{
-						/** @type {MusicNode} */
-						let n = this.initializeNode(MusicNode, undefined, evt.offsetX, evt.offsetY);
-						n.src.Value = this.dragFile.Path;
+						let target = this.dragFile;
+						let x = evt.offsetX;
+						let y = evt.offsetY;
+						this.popup.showConfirm("Audio type?", "Would you like this to be a background music node or a sound node?", ()=>{
+							/** @type {MusicNode} */
+							let n = this.initializeNode(MusicNode, undefined, x, y);
+							n.src.Value = target.Path;
+						}, ()=> {
+							/** @type {SoundNode} */
+							let n = this.initializeNode(SoundNode, undefined, x, y);
+							n.src.Value = target.Path;
+						}, "BGM", "Sound");
 						break;
 					}
 					case "audio/wav":
