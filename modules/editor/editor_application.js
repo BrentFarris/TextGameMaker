@@ -1055,7 +1055,7 @@ export class EditorApplication extends Application {
 						break;
 					}
 				}
-			} else if (this.dragFile.Name.endsWith(".json") && this.dragFile.Name.endsWith(Project.META_FILE_NAME)) {
+			} else if (this.dragFile.Name.endsWith(".json") && !this.dragFile.Name.endsWith(Project.META_FILE_NAME)) {
 				/** @type {JumpNode} */
 				let n = this.initializeNode(JumpNode, undefined, evt.offsetX, evt.offsetY);
 				n.src.Value = this.dragFile.Path;
