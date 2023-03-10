@@ -584,7 +584,6 @@ export class Project {
 			//await this.importMedia(app, zip)
 			zip.folder().forEach(async (relativePath, file) => {
 				if (relativePath.endsWith("/")) {
-					debugger;
 					let parts = relativePath.substring(0, relativePath.length-1).split("/");
 					let folder = this.root;
 					if (parts.length > 1)
