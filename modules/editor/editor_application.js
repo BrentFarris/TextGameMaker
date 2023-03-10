@@ -515,7 +515,8 @@ export class EditorApplication extends Application {
 	 * @param {string} nodeType 
 	 */
 	nodeSearchCreateNode(nodeType) {
-		this.initializeNode(NodeTypeMap[nodeType]);
+		let mPos = Input.mousePosition;
+		this.initializeNode(NodeTypeMap[nodeType], undefined, mPos.x, mPos.y);
 		this.nodeSearchFilter("");
 		this.showNodeSearch(false);
 	}

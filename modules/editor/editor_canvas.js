@@ -53,8 +53,8 @@ export class EditorCanvas {
 				ctx.lineTo(startX + startOffset, startY);
 				// The node is not to the right of this node
 				if (to.x < from.x + fromElm.clientWidth) {
-					ctx.lineTo(startX + startOffset, endY - fromHandle.clientHeight * 0.5);
-					ctx.lineTo(endX - endOffset, endY - toHandle.clientHeight * 0.5);
+					ctx.lineTo(startX + startOffset, endY - fromHandle.clientHeight * 0.5 - 5.0);
+					ctx.lineTo(endX - endOffset, endY - toHandle.clientHeight * 0.5 - 5.0);
 					ctx.lineTo(endX - endOffset, endY);
 				} else
 					ctx.lineTo(endX - endOffset, endY);
