@@ -1137,6 +1137,9 @@ export class SoundNode extends SourceNode {
 	/** @type {GameAudio|null} */
 	static #current = null;
 
+	/** @type {BoolValue} */
+	uninterruptible = new BoolValue("Uninterruptible");
+
 	/**
 	 * @param {SoundNode} createInfo 
 	 */
@@ -1164,7 +1167,8 @@ export class SoundNode extends SourceNode {
 		let elm = app.media.audioDatabase.elm(this.src.Value);
 		let sound = new GameAudio(elm);
 		sound.play();
-		SoundNode.#current = sound;
+		if (!this.uninterruptible)
+			SoundNode.#current = sound;
 		return super.execute(app);
 	}
 }
