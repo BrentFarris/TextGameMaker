@@ -1134,6 +1134,9 @@ export class SourceNode extends PassNode {
  * @extends {SourceNode}
  */
 export class SoundNode extends SourceNode {
+	/** @type {GameAudio|null} */
+	static #current = null;
+
 	/**
 	 * @param {SoundNode} createInfo 
 	 */
@@ -1156,9 +1159,12 @@ export class SoundNode extends SourceNode {
 	 * @override
 	 */
 	execute(app) {
+		if (SoundNode.#current)
+			SoundNode.#current.stop();
 		let elm = app.media.audioDatabase.elm(this.src.Value);
 		let sound = new GameAudio(elm);
 		sound.play();
+		SoundNode.#current = sound;
 		return super.execute(app);
 	}
 }
@@ -1307,7 +1313,6 @@ export class ReturnNode extends PassNode {
 	 * @override
 	 */
 	execute(app) {
-		debugger;
 		app.returnToPrevious();
 		return super.execute(app);
 	}
