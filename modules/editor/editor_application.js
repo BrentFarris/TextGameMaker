@@ -396,16 +396,6 @@ export class EditorApplication extends Application {
 	}
 
 	async exportJson() {
-		/** @type {ProjectFile} */
-		let metaFile = this.project.root.file(Project.META_FILE_NAME).Value;
-		metaFile.setContent(this.getMetaJson());
-		/** @type {ProjectFile} */
-		let current;
-		if (this.project.root.fileExists("start.json"))
-			current = this.project.root.file("start.json").Value;
-		else
-			current = this.project.root.createFile("start.json");
-		current.setContent(this.getJson());
 		await this.project.export();
 	}
 
