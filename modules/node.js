@@ -425,7 +425,7 @@ export class CoreNode {
 				}
 			});
 		}
-		ArrayHelpers.clear(this.tos);
+		//ArrayHelpers.clear(this.tos);
 	}
 
 	/**
@@ -1134,6 +1134,9 @@ export class SourceNode extends PassNode {
  * @extends {SourceNode}
  */
 export class SoundNode extends SourceNode {
+	/** @type {GameAudio|null} */
+	static #current = null;
+
 	/**
 	 * @param {SoundNode} createInfo 
 	 */
@@ -1156,9 +1159,12 @@ export class SoundNode extends SourceNode {
 	 * @override
 	 */
 	execute(app) {
+		if (SoundNode.#current)
+			SoundNode.#current.stop();
 		let elm = app.media.audioDatabase.elm(this.src.Value);
 		let sound = new GameAudio(elm);
 		sound.play();
+		SoundNode.#current = sound;
 		return super.execute(app);
 	}
 }
@@ -1274,17 +1280,16 @@ export class JumpNode extends SourceNode {
 	 * @override
 	 */
 	execute(app) {
-		if (!this.src.Value && this.nodeId.Value > 0) {
+		if (!this.src.Value) {
 			app.jumpTo(this.nodeId.Value);
 		} else {
 			// Check to see if this.src.Value ends with .json
-			if (this.src.Value.endsWith(".json")) {
-				app.load(`json/${this.src.Value}`, this.id, this.nodeId.Value);
-			} else {
-				app.load(`json/${this.src.Value}.json`, this.id, this.nodeId.Value);
-			}
+			if (this.src.Value.endsWith(".json"))
+				app.load(`${this.src.Value}`, this.id, this.nodeId.Value);
+			else
+				app.load(`${this.src.Value}.json`, this.id, this.nodeId.Value);
 		}
-		return super.execute(app);
+		return null;
 	}
 }
 
@@ -1345,8 +1350,11 @@ export class BackgroundNode extends SourceNode {
 	 */
 	execute(app) {
 		app.media.backgroundImageBuffer(app.media.backgroundImage());
-		let url = app.media.imageDatabase.url(this.src.Value);
+		let url = "";
+		if (this.src.Value && this.src.Value.trim().length > 0)
+			url = app.media.imageDatabase.url(this.src.Value);
 		app.media.backgroundImage(url);
+		app.media.backgroundImageForceFit(this.forceFit.Value);
 		return super.execute(app);
 	}
 }
