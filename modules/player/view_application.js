@@ -189,7 +189,7 @@ export class ViewApplication extends Application {
 			this.characterDatabase.addMany(json.characters);
 	}
 
-	import(json, jumpToId) {
+	import(json, jumpToId, skipExecute) {
 		this.nodes = {};
 		for (let i = 0; i < json.nodes.length; i++)
 			this.nodes[json.nodes[i].id] = new NodeTypeMap[json.nodes[i].type](json.nodes[i], this);
@@ -209,10 +209,12 @@ export class ViewApplication extends Application {
 			});
 			this.node(jump);
 		}
-		let out = this.node().execute(this);
-		if (out)
-			this.next(out);
-		this.updateText();
+		if (!skipExecute) {
+			let out = this.node().execute(this);
+			if (out)
+				this.next(out);
+			this.updateText();
+		}
 	}
 
 	/**
@@ -242,7 +244,7 @@ export class ViewApplication extends Application {
 		});
 	}
 
-	load(loadedFile, holdId, jumpToId) {
+	load(loadedFile, holdId, jumpToId, skipExecute) {
 		if (typeof loadedFile === "string") {
 			let found = false;
 			for (let i = 0; i < this.loadedFiles.length && !found; ++i) {
@@ -258,7 +260,7 @@ export class ViewApplication extends Application {
 			});
 		}
 		if (jumpToId > 0)
-			this.import(loadedFile.json, jumpToId);
+			this.import(loadedFile.json, jumpToId, skipExecute);
 		else
 			this.import(loadedFile.json);
 		this.currentFile = loadedFile;
@@ -266,7 +268,7 @@ export class ViewApplication extends Application {
 
 	async returnToPrevious() {
 		let target = this.fileStack.pop();
-		await this.load(target.file);
+		await this.load(target.file, undefined, target.id, true);
 		this.returnTo(target.id);
 	};
 
