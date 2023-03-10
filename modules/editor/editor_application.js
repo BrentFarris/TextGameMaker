@@ -221,7 +221,7 @@ export class EditorApplication extends Application {
 				this.project.Name = names[0];
 			else
 				await this.project.setupNew(this);
-			if (!await this.project.deserialize(this))
+			if (!await this.project.deserialize())
 				await this.project.initialize(this, this.#blankJson());
 			else {
 				let mf = this.project.root.file(Project.META_FILE_NAME);
@@ -259,6 +259,9 @@ export class EditorApplication extends Application {
 				return true;
 			case Input.keys.V:
 				this.showManager(this.variableManager);
+				return true;
+			case Input.keys.F:
+				this.toggleFileOptions();
 				return true;
 			case Input.keys.Space:
 				this.showNodeSearch(true);
@@ -373,13 +376,9 @@ export class EditorApplication extends Application {
 
 	/**
 	 * @param {Manager} manager
-	 * @param {CoreNode} [node]
 	 */
-	showManager(manager, node) {
-		if (node)
-			manager.showForNode(node);
-		else
-			manager.show();
+	showManager(manager) {
+		manager.show();
 		this.fileOptionsVisible(false);
 	}
 
@@ -475,10 +474,12 @@ export class EditorApplication extends Application {
 	/**
 	 * @template T
 	 * @param {object} type 
-	 * @param {object} existing 
+	 * @param {object} [existing] 
+	 * @param {number} [x]
+	 * @param {number} [y]
 	 * @returns {T}
 	 */
-	initializeNode(type, existing) {
+	initializeNode(type, existing, x, y) {
 		let node = null;
 		if (existing) {
 			node = new type(existing, this);
@@ -489,6 +490,8 @@ export class EditorApplication extends Application {
 			node.x = window.scrollX + window.innerWidth * 0.5;
 			node.y = window.scrollY + window.innerHeight * 0.5;
 		}
+		node.x = x ?? node.x;
+		node.y = y ?? node.y;
 		if (node.x > this.#farthestX) {
 			let elm = this.nodeManager.elementMap[node.id];
 			this.#farthestX = node.x + elm?.clientWidth ?? 250;
@@ -1018,17 +1021,18 @@ export class EditorApplication extends Application {
 	}
 
 	/**
+	 * @param {Application} self
 	 * @param {DragEvent} evt 
 	 */
 	bodyDrop(self, evt) {
 		if (this.dragFile) {
-			if (this.dragFile.fileData instanceof File) {
+			if (this.dragFile.fileData instanceof File || this.dragFile.fileData instanceof Blob) {
 				switch (this.dragFile.fileData.type) {
 					case "audio/mpeg":
 					case "video/ogg":
 					{
 						/** @type {MusicNode} */
-						let n = this.initializeNode(MusicNode);
+						let n = this.initializeNode(MusicNode, undefined, evt.x, evt.y);
 						n.src.Value = this.dragFile.Path;
 						break;
 					}
@@ -1036,7 +1040,7 @@ export class EditorApplication extends Application {
 					case "audio/x-wav":
 					{
 						/** @type {SoundNode} */
-						let n = this.initializeNode(SoundNode);
+						let n = this.initializeNode(SoundNode, undefined, evt.x, evt.y);
 						n.src.Value = this.dragFile.Path;
 						break;
 					}
@@ -1047,14 +1051,14 @@ export class EditorApplication extends Application {
 					case "image/svg+xml":
 					{
 						/** @type {BackgroundNode} */
-						let n = this.initializeNode(BackgroundNode);
+						let n = this.initializeNode(BackgroundNode, undefined, evt.x, evt.y);
 						n.src.Value = this.dragFile.Path;
 						break;
 					}
 				}
 			} else if (this.dragFile.Name.endsWith(".json")) {
 				/** @type {JumpNode} */
-				let n = this.initializeNode(JumpNode);
+				let n = this.initializeNode(JumpNode, undefined, evt.x, evt.y);
 				n.src.Value = this.dragFile.Path;
 			}
 		}
