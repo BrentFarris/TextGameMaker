@@ -383,7 +383,6 @@ export class ViewApplication extends Application {
 	}
 
 	async requestSampleGame() {
-		debugger;
 		let sample = getURLParam("sample");
 		this.loadSampleGame(sample.Value);
 	}
