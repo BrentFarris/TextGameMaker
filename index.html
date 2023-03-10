@@ -272,7 +272,6 @@
 		</script>
 		<div class="projectWindow" data-bind="template: { name: 'folderTemplate', data: project.root }, css: keepProjectWindowOpen()?'openProjectWindow':''"></div>
 		<div class="writerPreview" data-bind="visible: $root.nodeManager.focusededNode() != null, with: $root.nodeManager.focusededNode">
-			<h2>TEST</h2>
 			<!-- ko if: $data && 'character' in $data -->
 			<p class="characterNameActive" data-bind="text: $root.characterName(character.Value)"></p>
 			<!-- /ko -->

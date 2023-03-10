@@ -505,8 +505,11 @@ export class Project {
 	 */
 	async deserialize() {
 		let projectData = await this.#db.readProject(this.Name);
-		await this.deserializeFolder(this.root, projectData.root);
-		return true;
+		if (projectData != null) {
+			await this.deserializeFolder(this.root, projectData.root);
+			return true;
+		} else
+			return false;
 	}
 
 	/**

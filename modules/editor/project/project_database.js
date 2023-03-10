@@ -120,12 +120,13 @@ export class ProjectDatabase {
 
 	/**
 	 * @param {(store:IDBObjectStore,out:TransactionOut)=>void} exec
+	 * @param {IDBTransactionMode} [mode]
 	 * @returns {Promise<any>}
 	 */
-	#transaction(exec) {
+	#transaction(exec, mode = "readwrite") {
 		return new Promise((res, rej) => {
 			let out = {val: null};
-			const transaction = this.#db.transaction([ProjectDatabase.#DB_STORE_NAME]);
+			const transaction = this.#db.transaction([ProjectDatabase.#DB_STORE_NAME], mode);
 			transaction.oncomplete = evt => res(out.val);
 			transaction.onerror = evt => rej();
 			const store = transaction.objectStore(ProjectDatabase.#DB_STORE_NAME);
@@ -141,7 +142,7 @@ export class ProjectDatabase {
 		return this.#transaction((store, out) => {
 			const req = store.get(projectName);
 			req.onsuccess = evt => out.val = req.result;
-		});
+		}, undefined);
 	}
 
 	/**
@@ -177,7 +178,8 @@ export class ProjectDatabase {
 			const req = store.get(oldName);
 			req.onsuccess = evt => {
 				if (req.result) {
-					const movReq = store.add(newName, req.result);
+					req.result.name = newName;
+					const movReq = store.add(req.result);
 					store.delete(oldName);
 				}
 			}
