@@ -1,5 +1,5 @@
 import { GameAudio } from "./engine/game_audio.js";
-import { ArrayHelpers, each, random } from "./engine/std.js";
+import { each, random } from "./engine/std.js";
 import { Application } from "./application.js";
 import { Log } from "./database/log_database.js";
 
