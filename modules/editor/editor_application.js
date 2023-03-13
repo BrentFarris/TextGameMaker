@@ -725,12 +725,14 @@ export class EditorApplication extends Application {
 			if (!name || !name.trim().length)
 				return;
 			name = name.trim();
+			if (!name.endsWith(".json"))
+				name += ".json";
 			if (name === Project.META_FILE_NAME)
 				this.popup.showAlert("Invalid file name", "The specified name is reserved by the system, please try a different name");
 			else if (this.project.openFile.parent.fileExists(`${name}.json`))
 				this.popup.showAlert("Invalid file name", "The specified name already exists, please try a different name");
 			else {
-				this.project.openFile.Name = `${name}.json`;
+				this.project.openFile.Name = name;
 				this.name(this.project.openFile.Name);
 				await this.#saveFileInternal();
 			}
