@@ -484,7 +484,7 @@ export class CoreNode {
 /**
  * @typedef {Object} NodeOptionEntry
  * @property {KnockoutObservable<string>} text
- * @property {KnockoutObservable<boolean>} active
+ * @property {KnockoutObservable<string>} active
  */
 
 /**
@@ -506,7 +506,7 @@ export class OptionNode extends CoreNode {
 
 	/**
 	 * @param {string} text 
-	 * @param {boolean} active 
+	 * @param {string} active 
 	 */
 	_addOption(text, active) {
 		this.options.push({text:ko.observable(text),active:ko.observable(active)});
@@ -525,20 +525,9 @@ export class OptionNode extends CoreNode {
 	 * Add an option to this node and create an output for it
 	 */
 	addOption() {
-		this._addOption("", true);
+		this._addOption("", "on");
 		if (this.options().length > 1)
 			this.outs.push(new Output());
-	}
-	
-	/**
-	 * @param {number} index 
-	 * @param {HTMLInputElement} elm 
-	 */
-	toggleActive(index, elm) {
-		// This is nonsense, but KO is trippin, probably because I'm trippin...
-		setTimeout(() => {
-			elm.checked = this.options()[index].active();
-		}, 10);
 	}
 
 	/**
@@ -1223,6 +1212,10 @@ export class MusicNode extends SourceNode {
  * @extends {PassNode}
  */
 export class OptionAvailabilityNode extends PassNode {
+	static get OPTION_ON() { return "on"; }
+	static get OPTION_LOCK() { return "lock"; }
+	static get OPTION_HIDE() { return "hide"; }
+
 	/**
 	 * @type {NodeOptionIndex}
 	 */

@@ -1,5 +1,5 @@
 import { each, getURLParam, Optional, StringHelpers } from "../engine/std.js";
-import { CoreNode, NodeTypeMap, OptionNode, Output, StartNode, StoryNode } from "../node.js";
+import { CoreNode, NodeTypeMap, OptionAvailabilityNode, OptionNode, Output, StartNode, StoryNode } from "../node.js";
 import { Application } from "../application.js";
 import { AudioDatabase, ImageDatabase, Media } from "../media.js";
 import { Variable } from "../database/variable_database.js";
@@ -354,7 +354,7 @@ export class ViewApplication extends Application {
 	 * @param {number} optionId 
 	 */
 	activateNodeOption(nodeId, optionId) {
-		this.nodeById(nodeId).options()[optionId].active(true);
+		this.nodeById(nodeId).options()[optionId].active(OptionAvailabilityNode.OPTION_ON);
 	}
 
 	/**
@@ -362,7 +362,7 @@ export class ViewApplication extends Application {
 	 * @param {number} optionId 
 	 */
 	deactivateNodeOption(nodeId, optionId) {
-		this.nodeById(nodeId).options()[optionId].active(false);
+		this.nodeById(nodeId).options()[optionId].active(OptionAvailabilityNode.OPTION_LOCK);
 	}
 
 	/**

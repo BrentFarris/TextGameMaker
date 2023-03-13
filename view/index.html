@@ -43,7 +43,7 @@
 						<div class="optionBox">
 							<!-- ko if: isOptionNode(node()) && node().options().length -->
 							<ul data-bind="foreach: node().options">
-								<li><button data-bind="text:text, enable:active, click: $root.next.bind($root, $index())"></button></li>
+								<li><button data-bind="visible:active()!='hide', text:text, enable:active()=='on', click: $root.next.bind($root, $index())"></button></li>
 							</ul>
 							<!-- /ko -->
 							<!-- ko if: !isOptionNode(node()) || !node().options().length -->

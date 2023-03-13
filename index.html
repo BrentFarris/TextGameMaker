@@ -107,7 +107,11 @@
 						<!-- ko if: $root.isOptionNode($data) -->
 						<div data-bind="foreach: options">
 							<div class="nodeOption" data-bind="click:$root.optionClick.bind($root, $parent, $index())">
-								<input type="checkbox" data-bind="checked:active, click:$root.toggleCheck.bind(null, active, $element)"/>
+								<select data-bind="value:active">
+									<option value="on">On</option>
+									<option value="lock">Lock</option>
+									<option value="hide">Hide</option>
+								</select>
 								<input class="inputs value" type="text" data-bind="textInput:text" />
 								<button data-bind="click:$parent.removeOption.bind($parent, $index())">x</button>
 							</div>
