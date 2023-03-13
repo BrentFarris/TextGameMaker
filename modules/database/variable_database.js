@@ -71,6 +71,14 @@ export class VariableDatabase extends Database {
 	}
 
 	/**
+	 * @param {string} name 
+	 * @return {any}
+	 */
+	valueByName(name) {
+		return this.variableByName(name).value;
+	}
+
+	/**
 	 * @param {number} id 
 	 * @param {any} value
 	 */

@@ -81,7 +81,7 @@ export class Application {
 			for (let i = 0; i < matches.length; i++) {
 				let varName = matches[i].substring(1, matches[i].length - 1);
 				if (this.variableDatabase.exists(varName))
-					text = text.replace(matches[i], this.variableDatabase.value(varName));
+					text = text.replace(matches[i], this.variableDatabase.valueByName(varName));
 			}
 		}
 		var stripper = document.createElement("div");
